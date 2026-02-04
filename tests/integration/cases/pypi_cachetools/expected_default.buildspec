@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.18.0",
+    "macaron_version": "0.20.0",
     "group_id": null,
     "artifact_id": "cachetools",
     "version": "6.2.1",
@@ -24,6 +24,7 @@
             "-n"
         ]
     ],
+    "has_binaries": false,
     "build_requires": {
         "setuptools": "==80.9.0",
         "wheel": ""

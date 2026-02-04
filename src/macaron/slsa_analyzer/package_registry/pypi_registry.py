@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the pypi package registry."""
@@ -22,9 +22,10 @@ from typing import TYPE_CHECKING
 
 import requests
 from bs4 import BeautifulSoup, Tag
+from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError, WheelTagError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -863,8 +864,29 @@ class PyPIPackageJsonAsset:
         return None
 
     @contextmanager
-    def wheel(self) -> Generator[None]:
-        """Download and cleanup wheel of the package with a context manager."""
+    def wheel(self, download_binaries: bool) -> Generator[None]:
+        """Download and cleanup wheel of the package with a context manager.
+
+        Parameters
+        ----------
+        download_binaries: bool
+            Whether or not to download a wheel with binaries.
+
+        Returns
+        -------
+        Generator[None]
+            Generator that yields None and takes care of resource cleanup on
+            exiting the context in which it was called
+
+        Raises
+        ------
+        WheelTagError
+            If download_binaries is True
+        SourceCodeError
+            If we are unable to download the requested wheel
+        """
+        if download_binaries:
+            raise WheelTagError("Macaron does not currently support analysis of non-pure Python wheels.")
         if not self.download_wheel():
             raise SourceCodeError("Unable to download requested wheel.")
         yield
@@ -887,6 +909,38 @@ class PyPIPackageJsonAsset:
                 return True
             except InvalidHTTPResponseError as error:
                 logger.debug(error)
+        return False
+
+    def has_pure_wheel(self) -> bool:
+        """Check whether the PURL has a pure wheel from its package json.
+
+        Returns
+        -------
+        bool
+            Whether the PURL has a pure wheel or not.
+        """
+        if self.component_version:
+            urls = json_extract(self.package_json, ["releases", self.component_version], list)
+        else:
+            # Get the latest version.
+            urls = json_extract(self.package_json, ["urls"], list)
+        if not urls:
+            return False
+        for distribution in urls:
+            file_name: str = distribution.get("filename") or ""
+            # Parse out and check none and any
+            # Catch exceptions
+            try:
+                _, _, _, tags = parse_wheel_filename(file_name)
+                # Check if none and any are in the tags (i.e. the wheel is pure)
+                # Technically a wheel can have multiple tag sets. Our condition for
+                # a pure wheel is that it has only one tag set with abi "none" and
+                # platform "any"
+                if len(tags) == 1 and all(tag.abi == "none" and tag.platform == "any" for tag in tags):
+                    return True
+            except InvalidWheelFilename:
+                logger.debug("Could not parse wheel name.")
+                return False
         return False
 
     @contextmanager

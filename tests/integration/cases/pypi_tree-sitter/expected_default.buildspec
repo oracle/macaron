@@ -1,0 +1,26 @@
+{
+    "macaron_version": "0.20.0",
+    "group_id": null,
+    "artifact_id": "tree-sitter",
+    "version": "0.25.2",
+    "git_repo": "https://github.com/tree-sitter/py-tree-sitter",
+    "git_tag": "e2a5b21449c30c6a4fb49a55567a4699c3271f10",
+    "newline": "lf",
+    "language_version": [
+        ">=3.10"
+    ],
+    "ecosystem": "pypi",
+    "purl": "pkg:pypi/tree-sitter@0.25.2",
+    "language": "python",
+    "build_tools": [
+        "pip"
+    ],
+    "build_commands": [],
+    "has_binaries": true,
+    "build_requires": {
+        "setuptools": ">=43"
+    },
+    "build_backends": [
+        "setuptools.build_meta"
+    ]
+}
