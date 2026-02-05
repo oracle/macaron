@@ -119,19 +119,25 @@ setup-go:
 setup-binaries: souffle gnu-sed
 
 # Install SLSA Verifier if not already installed.
+# Get the checksum from https://github.com/slsa-framework/slsa-verifier/blob/main/SHA256SUM.md.
 SLSA_VERIFIER_TAG := v2.7.1
 SLSA_VERIFIER_BIN := slsa-verifier-linux-amd64
 SLSA_VERIFIER_BIN_PATH := $(HOME)/.local/bin
-SLSA_VERIFIER_PROVENANCE := $(SLSA_VERIFIER_BIN).intoto.jsonl
+SLSA_VERIFIER_CHECKSUM := 946dbec729094195e88ef78e1734324a27869f03e2c6bd2f61cbc06bd5350339
 .PHONY: install-slsa-verifier
 install-slsa-verifier:
 	if ! command -v slsa-verifier >/dev/null 2>&1; then \
-		mkdir -p $(SLSA_VERIFIER_BIN_PATH) \
-			&& curl --fail -L -o $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_BIN) \
-			&& curl --fail -L -o $(SLSA_VERIFIER_PROVENANCE) https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_PROVENANCE) \
-			&& chmod +x $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier \
-			&& command -v $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier; \
-	fi
+	  mkdir -p $(SLSA_VERIFIER_BIN_PATH) \
+	    && curl --fail -L -o $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier https://github.com/slsa-framework/slsa-verifier/releases/download/$(SLSA_VERIFIER_TAG)/$(SLSA_VERIFIER_BIN) \
+	    && SLSA_VERIFIER_COMPUTED_HASH=$$(sha256sum $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier | cut -d' ' -f1) \
+	    && if [ $$SLSA_VERIFIER_COMPUTED_HASH != $(SLSA_VERIFIER_CHECKSUM) ]; then \
+	      echo "slsa-verifier checksum could not be verified. Removing slsa-verifier binary and exiting." >&2 \
+	      && rm -f ${SLSA_VERIFIER_BIN_PATH}/slsa-verifier \
+	      && exit 1; \
+	    fi; \
+	    chmod +x $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier \
+	    && command -v $(SLSA_VERIFIER_BIN_PATH)/slsa-verifier; \
+	fi;
 
 # Set up schemastore for GitHub Actions specs.
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
