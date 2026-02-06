@@ -3,12 +3,10 @@
 
 module github.com/oracle/macaron
 
-go 1.23.0
-
-toolchain go1.23.2
+go 1.24.0
 
 require (
-	cuelang.org/go v0.14.1
+	cuelang.org/go v0.15.4
 	mvdan.cc/sh/v3 v3.12.0
 )
 
@@ -18,8 +16,9 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/protocolbuffers/txtpbfmt v0.0.0-20250627152318-f293424e46b5 // indirect
-	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	github.com/protocolbuffers/txtpbfmt v0.0.0-20251016062345-16587c79cd91 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/net v0.46.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
