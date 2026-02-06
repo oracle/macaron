@@ -116,6 +116,12 @@ make setup
 
 **Note**: Running the above command will prompt you for sudo access to install [Soufflé Datalog engine](https://github.com/souffle-lang/souffle). You can install Soufflé on your system before running `make setup` to avoid getting prompted.
 
+**Note**: The [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) dependency needs to be installed separately using the following command. This dependency is only used to verify some provenances, so you might not always need it for development.
+
+```bash
+make install-slsa-verifier
+```
+
 With that in place, you’re ready to build and contribute to Macaron!
 
 ### Updating dependent packages
