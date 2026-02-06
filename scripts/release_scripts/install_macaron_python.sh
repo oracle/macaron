@@ -78,7 +78,7 @@ fi
 # Macaron Installer
 
 # Configuration.
-PYTHON_VERSION="3.11"
+PYTHON_VERSION="3"
 MACARON_DISTRO="py3-none-linux_x86_64"
 MACARON_WHEEL="macaron-${MACARON_VERSION}-${MACARON_DISTRO}.whl"
 MACARON_REQUIREMENTS="macaron-${MACARON_VERSION}-${MACARON_DISTRO}-requirements.txt"

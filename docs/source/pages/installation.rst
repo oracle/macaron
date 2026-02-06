@@ -68,7 +68,7 @@ Download the ``install_macaron_python.sh`` script and make it executable by runn
   curl -O https://raw.githubusercontent.com/oracle/macaron/refs/tags/<tag>/scripts/release_scripts/install_macaron_python.sh
   chmod +x install_macaron_python.sh
 
-Install the package by providing a version, e.g.,
+Install the package by providing a version. The installation will automatically create a virtual environment at ``./.venv`` if one does not already exist. The script uses your system's ``python3`` interpreter, and requires Python ``3.11.14`` or later to be available:
 
 .. code-block:: shell
 
