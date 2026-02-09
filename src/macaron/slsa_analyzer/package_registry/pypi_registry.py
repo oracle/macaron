@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from packaging.version import InvalidVersion, Version
 
 from macaron.config.defaults import defaults
