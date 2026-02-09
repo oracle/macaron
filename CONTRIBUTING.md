@@ -85,7 +85,7 @@ Please see the [README for the malware analyzer](./src/macaron/malware_analyzer/
 ### Prerequisites
 
 - Python 3.11.14
-- Go 1.23
+- Go 1.24
 - JDK 17
 
 ### Prepare the environment

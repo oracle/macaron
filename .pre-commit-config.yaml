@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # See https://pre-commit.com for more information
@@ -224,7 +224,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: v2.3.0
+  rev: v2.8.0
   hooks:
   - id: golangci-lint
 
@@ -236,7 +236,7 @@ repos:
 # Other staged files shouldn't trigger these hooks.
 # Documentation: https://github.com/TekWizely/pre-commit-golang/blob/v1.0.0-rc.1/README.md.
 - repo: https://github.com/tekwizely/pre-commit-golang
-  rev: v1.0.0-rc.1
+  rev: v1.0.0-rc.4
   hooks:
   - id: go-build-mod
   - id: go-build-repo-mod
