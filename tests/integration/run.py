@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Integration test utility."""
@@ -1220,7 +1220,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     path = shutil.which(args.macaron)
     if path is None:
-        logger.error("'%s' is not a command.")
+        logger.error("'%s' is not a command.", args.macaron)
         return 1
     macaron_cmd = os.path.abspath(path)
 
