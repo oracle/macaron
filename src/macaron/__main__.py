@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This is the main entrypoint to run Macaron."""
@@ -92,7 +92,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
 
         local_maven_repo = os.path.join(home_dir, ".m2")
         if not os.path.isdir(local_maven_repo):
-            logger.debug("The default local Maven repo at %s does not exist. Ignore ...")
+            logger.debug("The default local Maven repo at %s does not exist. Ignore ...", local_maven_repo)
             global_config.local_maven_repo = None
 
         global_config.local_maven_repo = local_maven_repo

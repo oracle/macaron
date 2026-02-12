@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
@@ -179,7 +179,7 @@ class DepsDevRepoFinder(BaseRepoFinder):
             and a flag for whether the attestation is verified.
         """
         if purl.type != "pypi":
-            logger.debug("PURL type (%s) attestation not yet supported via deps.dev.")
+            logger.debug("PURL type (%s) attestation not yet supported via deps.dev.", purl.type)
             return None, None, False
 
         if not purl.version:

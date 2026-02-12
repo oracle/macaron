@@ -25,7 +25,7 @@ dependencies = [
     "requests >=2.32.3,<3.0.0",
     "pydriller >=2.0,<3.0.0",
     "yamale >=6.0.0,<7.0.0",
-    "packaging >=24.0,<25.0.0",
+    "packaging >=25.0,<27.0.0",
     "jinja2 >=3.1.2,<4.0.0",
     "SQLAlchemy >=2.0.0,<3.0.0",
     "defusedxml >=0.7.1,<1.0.0",
@@ -33,11 +33,11 @@ dependencies = [
     "ruamel.yaml >= 0.18.6,<1.0.0",
     "jsonschema >= 4.22.0,<5.0.0",
     "cyclonedx-bom >=7.0.0,<8.0.0",
-    "cyclonedx-python-lib[validation] >=8.0.0,<11.0.0",
+    "cyclonedx-python-lib[validation] >=9.0.0,<12.0.0",
     "beautifulsoup4 >= 4.12.0,<5.0.0",
     "problog >= 2.2.6,<3.0.0",
-    "cryptography >=44.0.0,<45.0.0",
-    "semgrep == 1.149.0",
+    "cryptography >=46.0.5,<47.0.0",
+    "semgrep == 1.151.0",
     "email-validator >=2.2.0,<3.0.0",
     "rich >=13.5.3,<15.0.0",
     "lark >= 1.3.0,<2.0.0",
@@ -71,16 +71,16 @@ macaron = 'macaron.__main__:main'
 # installed. Make sure to keep the requirements in sync with the workflows!
 actions = [
     "commitizen >=4.0.0,<5.0.0",
-    "twine >=5.0.0,<6.0.0",
+    "twine >=6.0.0,<7.0.0",
 ]
 dev = [
     "flit >=3.2.0,<4.0.0",
-    "mypy >=1.0.0,<1.16",
+    "mypy >=1.19.1,<1.20",
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
     "types-jsonschema >=4.22.0,<5.0.0",
     "pip-audit >=2.5.6,<3.0.0",
-    "pylint >=3.0.3,<4.0.0",
+    "pylint >=4.0.4,<5.0.0",
     "cyclonedx-bom >=7.0.0,<8.0.0",
     "types-beautifulsoup4 >= 4.12.0,<5.0.0",
 ]
@@ -98,12 +98,12 @@ hooks = [
 # Note that the `custom_exit_code` and `env` plugins may currently be unmaintained.
 test = [
     "hypothesis >=6.100.1,<7.0.0",
-    "pytest >=8.2.2,<9.0.0",
+    "pytest >=9.0.2,<10.0.0",
     "pytest-custom_exit_code >=0.3.0,<1.0.0",
-    "pytest-cov >=6.0.0,<7.0.0",
+    "pytest-cov >=7.0.0,<8.0.0",
     "pytest-env >=1.0.0,<2.0.0",
     "pytest_httpserver >=1.0.10,<2.0.0",
-    "syrupy >=4.0.0,<5.0.0",
+    "syrupy >=5.1.0,<6.0.0",
 ]
 
 test-docker = [
@@ -217,7 +217,6 @@ ignore_missing_imports = true
 # https://pylint.pycqa.org/en/latest/user_guide/configuration/index.html
 [tool.pylint.MASTER]
 fail-under = 10.0
-suggestion-mode = true  # Remove this setting when pylint v4 is released.
 load-plugins = [
     "pylint.extensions.check_elif",
     "pylint.extensions.for_any_all",
