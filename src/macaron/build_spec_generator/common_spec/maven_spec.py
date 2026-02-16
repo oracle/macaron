@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes build specification and helper classes for Maven packages."""
@@ -115,15 +115,20 @@ class MavenBuildSpec(BaseBuildSpec):
         self.data["language_version"] = [major_jdk_version]
 
         # Resolve and patch build commands.
-        selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
-            self.data["build_tools"]
-        )
+        try:
+            selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
+                self.data["build_tools"]
+            )
+            patched_build_commands = patch_commands(
+                cmds_sequence=selected_build_commands,
+                patches=CLI_COMMAND_PATCHES,
+            )
+            if not patched_build_commands:
+                logger.debug("Failed to patch build command sequences %s", selected_build_commands)
+                self.data["build_commands"] = []
+                return
 
-        patched_build_commands = patch_commands(
-            cmds_sequence=selected_build_commands,
-            patches=CLI_COMMAND_PATCHES,
-        )
-        if not patched_build_commands:
-            raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
-
-        self.data["build_commands"] = patched_build_commands
+            self.data["build_commands"] = patched_build_commands
+        except GenerateBuildSpecError as error:
+            logger.debug("Failed to select the build command sequence: %s", error)
+            self.data["build_commands"] = []

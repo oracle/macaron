@@ -252,7 +252,10 @@ class PyPIBuildSpec(
         self.data["build_backends"] = list(build_backends_set)
         # We do not generate a build command for non-pure packages
         if not self.data["has_binaries"]:
-            patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
+            try:
+                patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
+            except GenerateBuildSpecError as error:
+                logger.debug("Failed to generate the default build commands: %s", error)
         self.data["build_commands"] = patched_build_commands
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:

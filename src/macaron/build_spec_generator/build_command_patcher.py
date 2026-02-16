@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the build command patching."""
@@ -83,23 +83,26 @@ def _patch_commands(
     which just holds the original command as a list of string, without any changes.
     """
     result: list[CLICommand] = []
-    for cmds in cmds_sequence:
+    for cmd in cmds_sequence:
+        # Checking if the command is a valid non-empty list.
+        if not cmd:
+            continue
         effective_cli_parser = None
         for cli_parser in cli_parsers:
-            if cli_parser.is_build_tool(cmds[0]):
+            if cli_parser.is_build_tool(cmd[0]):
                 effective_cli_parser = cli_parser
                 break
 
         if not effective_cli_parser:
-            result.append(UnparsedCLICommand(original_cmds=cmds))
+            result.append(UnparsedCLICommand(original_cmds=cmd))
             continue
 
         try:
-            cli_command = effective_cli_parser.parse(cmds)
+            cli_command = effective_cli_parser.parse(cmd)
         except CommandLineParseError as error:
             logger.error(
                 "Failed to patch the cli command %s. Error %s.",
-                " ".join(cmds),
+                " ".join(cmd),
                 error,
             )
             return None
@@ -117,7 +120,7 @@ def _patch_commands(
         except PatchBuildCommandError as error:
             logger.error(
                 "Failed to patch the build command %s. Error %s.",
-                " ".join(cmds),
+                " ".join(cmd),
                 error,
             )
             return None
