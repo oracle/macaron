@@ -47,7 +47,6 @@ CLI_COMMAND_PATCHES: dict[
             # To remove "-Dgpg.passphrase=$MACARON_UNKNOWN"
             "gpg.passphrase": None,
             "skipTests": "true",
-            "maven.test.skip": "true",
             "maven.site.skip": "true",
             "rat.skip": "true",
             "maven.javadoc.skip": "true",

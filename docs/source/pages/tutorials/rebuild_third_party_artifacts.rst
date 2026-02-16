@@ -131,7 +131,6 @@ By default we generate the buildspec in JSON format as follows:
             [
             "mvn",
             "-DskipTests=true",
-            "-Dmaven.test.skip=true",
             "-Dmaven.site.skip=true",
             "-Drat.skip=true",
             "-Dmaven.javadoc.skip=true",
@@ -161,7 +160,7 @@ The resulting file will be saved as ``output/buildspec/maven/org_apache_hugegrap
     tool=mvn
     jdk=8
     newline=lf
-    command="mvn -DskipTests=true -Dmaven.test.skip=true -Dmaven.site.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true clean package"
+    command="mvn -Dmaven.test.skip=true -DskipTests=true -Dmaven.site.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true clean package"
     buildinfo=target/computer-k8s-1.0.0.buildinfo
 
 You can now use this file to automate rebuilding artifacts, for example as part of the Reproducible Central infrastructure.
