@@ -168,7 +168,7 @@ def pick_specific_version(inferred_constraints: list[str]) -> str | None:
 
     Parameters
     ----------
-    inferred_constraints: set[str]
+    inferred_constraints: list[str]
         List of inferred Python version constraints
 
     Returns
@@ -179,15 +179,15 @@ def pick_specific_version(inferred_constraints: list[str]) -> str | None:
 
     Examples
     --------
-    >>> pick_specific_version(set([">=3.0"]))
+    >>> pick_specific_version([">=3.0"])
     '3.4.10'
-    >>> pick_specific_version(set([">=3.8"]))
+    >>> pick_specific_version([">=3.8"])
     '3.8.20'
-    >>> pick_specific_version(set([">=3.0", "!=3.4", "!=3.3", "!=3.5"]))
+    >>> pick_specific_version([">=3.0", "!=3.4", "!=3.3", "!=3.5"])
     '3.6.15'
-    >>> pick_specific_version(set(["<=3.12"]))
+    >>> pick_specific_version(["<=3.12"])
     '3.4.10'
-    >>> pick_specific_version(set(["<=3.12", "==3.6"]))
+    >>> pick_specific_version(["<=3.12", "==3.6"])
     '3.6.15'
     """
     # We cannot create virtual environments for Python versions <= 3.3.0, as
