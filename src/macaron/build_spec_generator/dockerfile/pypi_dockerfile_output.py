@@ -46,6 +46,10 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     except InvalidVersion as error:
         logger.debug("Ran into issue converting %s to a version: %s", language_version, error)
         raise GenerateBuildSpecError("Derived interpreter version could not be parsed") from error
+    if not buildspec["build_tools"]:
+        raise GenerateBuildSpecError("Cannot generate dockerfile when build tool is unknown")
+    if not buildspec["build_commands"]:
+        raise GenerateBuildSpecError("Cannot generate dockerfile when build command is unknown")
     backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
     build_tool_install: str = ""
     if (
@@ -289,27 +293,31 @@ def get_latest_cpython_patch(major: int, minor: int) -> str:
     response = send_get_http_raw("https://www.python.org/ftp/python/")
     if not response:
         raise GenerateBuildSpecError("Failed to fetch index of CPython versions.")
+
+    html: str = ""
+    soup: BeautifulSoup | None = None
+
     try:
         html = response.content.decode("utf-8")
         soup = BeautifulSoup(html, "html.parser")
-
-        # Versions can most reliably be found in anchor tags like:
-        # <a href="{Version}/"> {Version}/ </a>
-        for anchor in soup.find_all("a", href=True):
-            # Get text enclosed in the anchor tag stripping spaces.
-            text = anchor.get_text(strip=True)
-            sanitized_text = text.rstrip("/")
-            # Try to convert to a version.
-            try:
-                parsed_version = Version(sanitized_text)
-                if parsed_version.major == major and parsed_version.minor == minor:
-                    if latest_patch is None or parsed_version > latest_patch:
-                        latest_patch = parsed_version
-            except InvalidVersion:
-                # Try the next tag
-                continue
     except (UnicodeDecodeError, FeatureNotFound) as error:
         raise GenerateBuildSpecError("Failed to parse index of CPython versions.") from error
+
+    # Versions can most reliably be found in anchor tags like:
+    # <a href="{Version}/"> {Version}/ </a>
+    for anchor in soup.find_all("a", href=True):
+        # Get text enclosed in the anchor tag stripping spaces.
+        text = anchor.get_text(strip=True)
+        sanitized_text = text.rstrip("/")
+        # Try to convert to a version.
+        try:
+            parsed_version = Version(sanitized_text)
+            if parsed_version.major == major and parsed_version.minor == minor:
+                if latest_patch is None or parsed_version > latest_patch:
+                    latest_patch = parsed_version
+        except InvalidVersion:
+            # Try the next tag
+            continue
 
     if not latest_patch:
         raise GenerateBuildSpecError(f"Failed to infer latest patch for CPython {major}.{minor}")
