@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains tests for Reproducible Central build spec generation."""
@@ -40,7 +40,7 @@ def test_successful_build_spec(base_build_spec: BaseBuildSpecDict) -> None:
     assert "groupId=com.oracle" in content
     assert "artifactId=example-artifact" in content
     assert "tool=mvn" in content
-    assert 'command="mvn package"' in content
+    assert 'command="mvn -Dmaven.test.skip=true package"' in content
 
 
 def test_unsupported_build_tool(base_build_spec: BaseBuildSpecDict) -> None:
@@ -80,6 +80,8 @@ def test_compose_shell_commands_integration(base_build_spec: BaseBuildSpecDict) 
     """Test that the correct compose_shell_commands function is used."""
     base_build_spec["build_commands"] = [["mvn", "clean", "package"], ["echo", "done"]]
     content = gen_reproducible_central_build_spec(base_build_spec)
-    expected_commands = compose_shell_commands([["mvn", "clean", "package"], ["echo", "done"]])
+    expected_commands = compose_shell_commands(
+        [["mvn", "-Dmaven.test.skip=true", "clean", "package"], ["echo", "done"]]
+    )
     assert content
     assert f'command="{expected_commands}"' in content
