@@ -112,9 +112,9 @@ class PyPIBuildSpec(
         parsed_build_requires: dict[str, str] = {}
         sdist_build_requires: dict[str, str] = {}
         python_version_set: set[str] = set()
-        wheel_name_python_version_list: list[str] = []
+        wheel_name_python_version_set: set[str] = set()
         wheel_name_platforms: set[str] = set()
-        version_constraint_set: set[str] = set()
+        dependency_python_version_set: set[str] = set()
         # Precautionary fallback to default version
         chronologically_likeliest_version: str = defaults.get("heuristic.pypi", "default_setuptools")
 
@@ -128,6 +128,8 @@ class PyPIBuildSpec(
                     for release in releases:
                         if py_version := json_extract(release, ["requires_python"], str):
                             python_version_set.add(py_version.replace(" ", ""))
+
+                logger.debug("From package JSON inferred Python constraints: %s", python_version_set)
 
                 self.data["has_binaries"] = not pypi_package_json.has_pure_wheel()
 
@@ -163,9 +165,13 @@ class PyPIBuildSpec(
                             logger.debug(pypi_package_json.wheel_filename)
                             _, _, _, tags = parse_wheel_filename(pypi_package_json.wheel_filename)
                             for tag in tags:
-                                wheel_name_python_version_list.append(tag.interpreter)
+                                wheel_name_python_version_set.add(tag.interpreter)
                                 wheel_name_platforms.add(tag.platform)
-                            logger.debug(python_version_set)
+                            if wheel_name_python_version_set:
+                                logger.debug(
+                                    "From wheel name inferred Python constraints: %s", wheel_name_python_version_set
+                                )
+                                python_version_set.update(wheel_name_python_version_set)
                         except InvalidWheelFilename:
                             logger.debug("Could not parse wheel file name to extract version")
                 except WheelTagError:
@@ -235,8 +241,6 @@ class PyPIBuildSpec(
                     if requirement_name not in parsed_build_requires:
                         parsed_build_requires[requirement_name] = specifier
 
-                self.data["language_version"] = list(python_version_set) or wheel_name_python_version_list
-
         # If we were not able to find any build  and backends, use the default setuptools.
         if not parsed_build_requires:
             parsed_build_requires["setuptools"] = "==" + defaults.get("heuristic.pypi", "default_setuptools")
@@ -249,9 +253,15 @@ class PyPIBuildSpec(
             package_requirement = package + constraint
             python_version_constraints = registry.get_python_requires_for_package_requirement(package_requirement)
             if python_version_constraints:
-                version_constraint_set.add(python_version_constraints)
+                dependency_python_version_set.add(python_version_constraints)
 
-        self.data["language_version"] = sorted(version_constraint_set)
+        # We will prefer to use Python version constraints from the package's
+        # dependencies. In the case that such inference was unsuccessful, we default
+        # to the Python version constraints inferred from other sources.
+        if dependency_python_version_set:
+            self.data["language_version"] = sorted(dependency_python_version_set)
+        else:
+            self.data["language_version"] = sorted(python_version_set)
 
         self.data["build_requires"] = parsed_build_requires
         self.data["build_backends"] = list(build_backends_set)

@@ -7,7 +7,7 @@ import logging
 import re
 from textwrap import dedent
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, FeatureNotFound
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 
@@ -38,7 +38,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     """
     if buildspec["has_binaries"]:
         raise GenerateBuildSpecError("We currently do not support generating a dockerfile for non-pure Python packages")
-    language_version: str | None = pick_specific_version(buildspec)
+    language_version: str | None = pick_specific_version(buildspec["language_version"])
     if language_version is None:
         raise GenerateBuildSpecError("Could not derive specific interpreter version")
     try:
@@ -163,24 +163,37 @@ def openssl_install_commands(version: Version) -> str:
     EOF"""
 
 
-def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
+def pick_specific_version(inferred_constraints: list[str]) -> str | None:
     """Find the latest python interpreter version satisfying inferred constraints.
 
     Parameters
     ----------
-    buildspec: BaseBuildSpecDict
-        The base build spec generated for the artifact.
+    inferred_constraints: set[str]
+        List of inferred Python version constraints
 
     Returns
     -------
     str | None
         String in format major.minor.patch for the latest valid Python
         interpreter version, or None if no such version can be found.
+
+    Examples
+    --------
+    >>> pick_specific_version(set([">=3.0"]))
+    '3.4.10'
+    >>> pick_specific_version(set([">=3.8"]))
+    '3.8.20'
+    >>> pick_specific_version(set([">=3.0", "!=3.4", "!=3.3", "!=3.5"]))
+    '3.6.15'
+    >>> pick_specific_version(set(["<=3.12"]))
+    '3.4.10'
+    >>> pick_specific_version(set(["<=3.12", "==3.6"]))
+    '3.6.15'
     """
     # We cannot create virtual environments for Python versions <= 3.3.0, as
     # it did not exist back then
     version_set = SpecifierSet(">=3.4.0")
-    for version in buildspec["language_version"]:
+    for version in inferred_constraints:
         try:
             version_set &= SpecifierSet(version)
         except InvalidSpecifier as error:
@@ -204,7 +217,7 @@ def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
     for minor in range(3, 15, 1):
         try:
             if Version(f"3.{minor}.0") in version_set:
-                return get_latest_patch(3, minor)
+                return get_latest_cpython_patch(3, minor)
         except InvalidVersion as error:
             logger.debug("Ran into issue converting %s to a version: %s", minor, error)
             return None
@@ -255,7 +268,7 @@ def infer_interpreter_version(specifier: str) -> str | None:
     return None
 
 
-def get_latest_patch(major: int, minor: int) -> str:
+def get_latest_cpython_patch(major: int, minor: int) -> str:
     """Given major and minor interpreter version, return latest CPython patched version.
 
     Parameters
@@ -271,29 +284,32 @@ def get_latest_patch(major: int, minor: int) -> str:
         Full major.minor.patch version string corresponding to latest
         patch for input major and minor.
     """
+    latest_patch: Version | None = None
     # We install CPython source
     response = send_get_http_raw("https://www.python.org/ftp/python/")
     if not response:
         raise GenerateBuildSpecError("Failed to fetch index of CPython versions.")
-    html = response.content.decode("utf-8")
-    soup = BeautifulSoup(html, "html.parser")
-    latest_patch: Version | None = None
+    try:
+        html = response.content.decode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
 
-    # Versions can most reliably be found in anchor tags like:
-    # <a href="{Version}/"> {Version}/ </a>
-    for anchor in soup.find_all("a", href=True):
-        # Get text enclosed in the anchor tag stripping spaces.
-        text = anchor.get_text(strip=True)
-        sanitized_text = text.rstrip("/")
-        # Try to convert to a version.
-        try:
-            parsed_version = Version(sanitized_text)
-            if parsed_version.major == major and parsed_version.minor == minor:
-                if latest_patch is None or parsed_version > latest_patch:
-                    latest_patch = parsed_version
-        except InvalidVersion:
-            # Try the next tag
-            continue
+        # Versions can most reliably be found in anchor tags like:
+        # <a href="{Version}/"> {Version}/ </a>
+        for anchor in soup.find_all("a", href=True):
+            # Get text enclosed in the anchor tag stripping spaces.
+            text = anchor.get_text(strip=True)
+            sanitized_text = text.rstrip("/")
+            # Try to convert to a version.
+            try:
+                parsed_version = Version(sanitized_text)
+                if parsed_version.major == major and parsed_version.minor == minor:
+                    if latest_patch is None or parsed_version > latest_patch:
+                        latest_patch = parsed_version
+            except InvalidVersion:
+                # Try the next tag
+                continue
+    except (UnicodeDecodeError, FeatureNotFound) as error:
+        raise GenerateBuildSpecError("Failed to parse index of CPython versions.") from error
 
     if not latest_patch:
         raise GenerateBuildSpecError(f"Failed to infer latest patch for CPython {major}.{minor}")
