@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes the functions for obtaining the JDK version from a Java artifact."""
@@ -198,7 +198,7 @@ def find_jdk_version_from_remote_maven_repo_standalone(
                 local_artifact_path,
             )
         except InvalidHTTPResponseError as error:
-            logger.error("Failed why trying to download jar file. Error: %s", error)
+            logger.debug("Failed while trying to download jar file. Error: %s", error)
             return None
         except OSError as os_error:
             logger.critical("Critical %s", os_error)
@@ -278,7 +278,7 @@ def find_jdk_version_from_remote_maven_repo_cache(
             local_artifact_path,
         )
     except InvalidHTTPResponseError as error:
-        logger.error("Failed why trying to download jar file. Error: %s", error)
+        logger.debug("Failed while trying to download jar file. Error: %s", error)
         return None
     except OSError as os_error:
         logger.critical("Critical %s", os_error)

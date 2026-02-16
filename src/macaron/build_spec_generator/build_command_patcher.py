@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the build command patching."""
@@ -47,7 +47,6 @@ CLI_COMMAND_PATCHES: dict[
             # To remove "-Dgpg.passphrase=$MACARON_UNKNOWN"
             "gpg.passphrase": None,
             "skipTests": "true",
-            "maven.test.skip": "true",
             "maven.site.skip": "true",
             "rat.skip": "true",
             "maven.javadoc.skip": "true",

@@ -19,7 +19,6 @@
         [
             "mvn",
             "-DskipTests=true",
-            "-Dmaven.test.skip=true",
             "-Dmaven.site.skip=true",
             "-Drat.skip=true",
             "-Dmaven.javadoc.skip=true",
