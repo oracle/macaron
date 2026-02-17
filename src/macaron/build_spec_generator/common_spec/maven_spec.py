@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes build specification and helper classes for Maven packages."""
@@ -12,7 +12,6 @@ from macaron.build_spec_generator.build_command_patcher import CLI_COMMAND_PATCH
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
 from macaron.build_spec_generator.common_spec.jdk_finder import find_jdk_version_from_central_maven_repo
 from macaron.build_spec_generator.common_spec.jdk_version_normalizer import normalize_jdk_version
-from macaron.errors import GenerateBuildSpecError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -46,11 +45,6 @@ class MavenBuildSpec(BaseBuildSpec):
         -------
         list[list[str]]
             The build command as a list[list[str]].
-
-        Raises
-        ------
-        GenerateBuildSpecError
-            If there is no default build command available for the specified build tool.
         """
         default_build_commands = []
 
@@ -65,11 +59,10 @@ class MavenBuildSpec(BaseBuildSpec):
                     pass
 
         if not default_build_commands:
-            logger.critical(
+            logger.debug(
                 "There is no default build command available for the build tools %s.",
                 build_tool_names,
             )
-            raise GenerateBuildSpecError("Unable to find a default build command.")
 
         return default_build_commands
 
@@ -118,12 +111,13 @@ class MavenBuildSpec(BaseBuildSpec):
         selected_build_commands = self.data["build_commands"] or self.get_default_build_commands(
             self.data["build_tools"]
         )
-
         patched_build_commands = patch_commands(
             cmds_sequence=selected_build_commands,
             patches=CLI_COMMAND_PATCHES,
         )
         if not patched_build_commands:
-            raise GenerateBuildSpecError(f"Failed to patch command sequences {selected_build_commands}.")
+            logger.debug("Failed to patch build command sequences %s", selected_build_commands)
+            self.data["build_commands"] = []
+            return
 
         self.data["build_commands"] = patched_build_commands
