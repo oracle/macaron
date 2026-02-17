@@ -33,6 +33,6 @@ steps:
   options:
     command_args:
     - -purl
-    - pkg:pypi/markdown-it-py@0.25.2
+    - pkg:pypi/tree-sitter@0.25.2
     - --output-format
     - dockerfile

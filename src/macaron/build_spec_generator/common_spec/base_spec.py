@@ -85,7 +85,7 @@ class BaseBuildSpecDict(TypedDict, total=False):
     has_binaries: NotRequired[bool]
 
     #: The artifacts that were analyzed in generating the build specification.
-    upstream_artifacts: dict[str, str]
+    upstream_artifacts: dict[str, list[str]]
 
 
 class BaseBuildSpec(ABC):

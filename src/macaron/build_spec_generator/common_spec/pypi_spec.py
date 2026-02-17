@@ -106,7 +106,7 @@ class PyPIBuildSpec(
             metadata=[],
         )
 
-        artifacts: dict[str, str] = {}
+        upstream_artifacts: dict[str, list[str]] = {}
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
         patched_build_commands: list[list[str]] = []
         build_backends_set: set[str] = set()
@@ -142,7 +142,7 @@ class PyPIBuildSpec(
                 try:
                     # The wheel function handles downloading binaries in the case that we cannot find a pure wheel.
                     with pypi_package_json.wheel(download_binaries=self.data["has_binaries"]):
-                        artifacts["wheel"] = pypi_package_json.wheel_url
+                        upstream_artifacts["wheels"] = pypi_package_json.wheel_urls
                         logger.debug("Wheel at %s", pypi_package_json.wheel_path)
                         # Should only have .dist-info directory.
                         logger.debug("It has directories %s", ",".join(os.listdir(pypi_package_json.wheel_path)))
@@ -186,8 +186,8 @@ class PyPIBuildSpec(
 
                 try:
                     with pypi_package_json.sourcecode():
-                        artifacts["sdist"] = pypi_package_json.sdist_url
-                        logger.debug("sdist url at %s", artifacts["sdist"])
+                        upstream_artifacts["sdist"] = [pypi_package_json.sdist_url]
+                        logger.debug("sdist url at %s", upstream_artifacts["sdist"])
                         try:
                             # Get the build time requirements from ["build-system", "requires"]
                             pyproject_content = pypi_package_json.get_sourcecode_file_contents("pyproject.toml")
@@ -273,7 +273,7 @@ class PyPIBuildSpec(
         if not self.data["has_binaries"]:
             patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
         self.data["build_commands"] = patched_build_commands
-        self.data["upstream_artifacts"] = artifacts
+        self.data["upstream_artifacts"] = upstream_artifacts
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:
         """

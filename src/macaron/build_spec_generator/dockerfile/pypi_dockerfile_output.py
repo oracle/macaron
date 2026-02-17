@@ -69,8 +69,16 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         "else python -m build --wheel -n; fi"
     )
 
-    wheel_url = buildspec["upstream_artifacts"]["wheel"]
-    wheel_name = wheel_url.rsplit("/", 1)[-1]
+    wheel_url: str = ""
+    wheel_name: str = ""
+
+    wheel_urls = buildspec["upstream_artifacts"]["wheels"]
+    # We currently only look for the pure wheel, if it exists
+    if wheel_urls:
+        wheel_url = list(wheel_urls)[0]
+        wheel_name = wheel_url.rsplit("/", 1)[-1]
+    else:
+        logger.debug("We could not find an upstream artifact, and therefore we cannot run validation")
 
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
@@ -134,20 +142,23 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
 
     # Validate script
     RUN cat <<'EOF' >/validate
+        [ -n "{wheel_url}" ] || {{ echo "No upstream artifact to validate against."; exit 1; }}
         # Capture artifacts generated
-        ARTIFACTS=(/src/dist/*)
-        # Ensure we only have one artefact
-        [ ${{#ARTIFACTS[@]}} -eq 1 ] || {{ echo "Unexpected artifacts prodced!"; exit 1; }}
-        # BUILT_WHEEL is the artefact we built
-        BUILT_WHEEL=${{ARTIFACTS[0]}}
+        WHEELS=(/src/dist/*.whl)
+        # Ensure we only have one artifact
+        [ ${{#WHEELS[@]}} -eq 1 ] || {{ echo "Unexpected artifacts produced!"; exit 1; }}
+        # BUILT_WHEEL is the artifact we built
+        BUILT_WHEEL=${{WHEELS[0]}}
+        # Ensure the artifact produced is not the literal returned by the glob
+        [ -e $BUILT_WHEEL ] || {{ echo "No wheels found!"; exit 1; }}
         # Download the wheel
         wget -q {wheel_url}
         # Compare wheel names
         [ $(basename $BUILT_WHEEL) == "{wheel_name}" ] || {{ echo "Wheel name does not match!"; exit 1; }}
         # Compare file tree
         (unzip -Z1 $BUILT_WHEEL | grep -v '\\.dist-info' | sort) > built.tree
-        (unzip -Z1 "{wheel_name}" | grep -v '\\.dist-info' | sort ) > pypi_artefact.tree
-        diff -u built.tree pypi_artefact.tree || {{ echo "File trees do not match!"; exit 1; }}
+        (unzip -Z1 "{wheel_name}" | grep -v '\\.dist-info' | sort ) > pypi_artifact.tree
+        diff -u built.tree pypi_artifact.tree || {{ echo "File trees do not match!"; exit 1; }}
         echo "Success!"
     EOF
 

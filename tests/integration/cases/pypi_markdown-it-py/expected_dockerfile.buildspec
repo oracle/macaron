@@ -68,20 +68,23 @@ RUN source /deps/bin/activate &&  pip install flit && if test -f "flit.ini"; the
 
 # Validate script
 RUN cat <<'EOF' >/validate
+    [ -n "https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl" ] || { echo "No upstream artifact to validate against."; exit 1; }
     # Capture artifacts generated
-    ARTIFACTS=(/src/dist/*)
-    # Ensure we only have one artefact
-    [ ${#ARTIFACTS[@]} -eq 1 ] || { echo "Unexpected artifacts prodced!"; exit 1; }
-    # BUILT_WHEEL is the artefact we built
-    BUILT_WHEEL=${ARTIFACTS[0]}
+    WHEELS=(/src/dist/*.whl)
+    # Ensure we only have one artifact
+    [ ${#WHEELS[@]} -eq 1 ] || { echo "Unexpected artifacts produced!"; exit 1; }
+    # BUILT_WHEEL is the artifact we built
+    BUILT_WHEEL=${WHEELS[0]}
+    # Ensure the artifact produced is not the literal returned by the glob
+    [ -e $BUILT_WHEEL ] || { echo "No wheels found!"; exit 1; }
     # Download the wheel
     wget -q https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl
     # Compare wheel names
     [ $(basename $BUILT_WHEEL) == "markdown_it_py-4.0.0-py3-none-any.whl" ] || { echo "Wheel name does not match!"; exit 1; }
     # Compare file tree
     (unzip -Z1 $BUILT_WHEEL | grep -v '\.dist-info' | sort) > built.tree
-    (unzip -Z1 "markdown_it_py-4.0.0-py3-none-any.whl" | grep -v '\.dist-info' | sort ) > pypi_artefact.tree
-    diff -u built.tree pypi_artefact.tree || { echo "File trees do not match!"; exit 1; }
+    (unzip -Z1 "markdown_it_py-4.0.0-py3-none-any.whl" | grep -v '\.dist-info' | sort ) > pypi_artifact.tree
+    diff -u built.tree pypi_artifact.tree || { echo "File trees do not match!"; exit 1; }
     echo "Success!"
 EOF
 
