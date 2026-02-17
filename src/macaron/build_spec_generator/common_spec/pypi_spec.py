@@ -16,7 +16,7 @@ from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
 from macaron.config.defaults import defaults
-from macaron.errors import GenerateBuildSpecError, SourceCodeError, WheelTagError
+from macaron.errors import SourceCodeError, WheelTagError
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry import pypi_registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -55,11 +55,6 @@ class PyPIBuildSpec(
         -------
         list[list[str]]
             The build command as a list[list[str]].
-
-        Raises
-        ------
-        GenerateBuildSpecError
-            If there is no default build command available for the specified build tool.
         """
         default_build_commands = []
 
@@ -77,16 +72,16 @@ class PyPIBuildSpec(
                 case "hatch":
                     default_build_commands.append("hatch build".split())
                 case "conda":
-                    default_build_commands.append('echo("Not supported")'.split())
+                    # TODO: update this if a build command can be used for conda.
+                    pass
                 case _:
                     pass
 
         if not default_build_commands:
-            logger.critical(
+            logger.debug(
                 "There is no default build command available for the build tools %s.",
                 build_tool_names,
             )
-            raise GenerateBuildSpecError("Unable to find a default build command.")
 
         return default_build_commands
 
@@ -252,10 +247,7 @@ class PyPIBuildSpec(
         self.data["build_backends"] = list(build_backends_set)
         # We do not generate a build command for non-pure packages
         if not self.data["has_binaries"]:
-            try:
-                patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
-            except GenerateBuildSpecError as error:
-                logger.debug("Failed to generate the default build commands: %s", error)
+            patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
         self.data["build_commands"] = patched_build_commands
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:
