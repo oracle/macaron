@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Dataflow analysis implementation for analysing GitHub Actions Workflow build pipelines."""
@@ -317,6 +317,15 @@ class GitHubActionsWorkflowNode(core.ControlFlowGraphNode):
         return result
 
     @staticmethod
+    def _find_job_id_case_insensitive(jobs: dict[str, RawGitHubActionsJobNode], job_id: str) -> str | None:
+        if job_id in jobs:
+            return job_id
+        for actual_job_id in jobs:
+            if actual_job_id.lower() == job_id.lower():
+                return actual_job_id
+        return None
+
+    @staticmethod
     def create(
         workflow: github_workflow_model.Workflow, context: core.NonOwningContextRef[GitHubActionsWorkflowContext]
     ) -> GitHubActionsWorkflowNode:
@@ -352,10 +361,16 @@ class GitHubActionsWorkflowNode(core.ControlFlowGraphNode):
                 needs = job_node.definition["needs"]
                 if isinstance(needs, list):
                     for need in needs:
-                        # TODO invalid needs id?
-                        edges.append(need)
+                        actual_need = GitHubActionsWorkflowNode._find_job_id_case_insensitive(jobs, need)
+                        if actual_need is None:
+                            raise CallGraphError("needs refers to invalid job")
+                        edges.append(actual_need)
                 elif isinstance(needs, str):
-                    edges.append(needs)
+                    actual_need = GitHubActionsWorkflowNode._find_job_id_case_insensitive(jobs, needs)
+                    if actual_need is None:
+                        raise CallGraphError("needs refers to invalid job")
+                    edges.append(actual_need)
+
             dependency_graph[job_id] = edges
 
         ts = TopologicalSorter(dependency_graph)
