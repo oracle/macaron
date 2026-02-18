@@ -704,6 +704,12 @@ class PyPIPackageJsonAsset:
     #: The source code temporary location name.
     package_sourcecode_path: str = field(init=False)
 
+    #: URL of the sdist file.
+    sdist_url: str = field(init=False)
+
+    #: URL of the wheel file.
+    wheel_urls: list[str] = field(init=False)
+
     #: The wheel temporary location name.
     wheel_path: str = field(init=False)
 
@@ -832,6 +838,7 @@ class PyPIPackageJsonAsset:
                         fragment="",
                     ).geturl()
                     logger.debug("Found source URL: %s", configured_source_url)
+                    self.sdist_url = configured_source_url
                     return configured_source_url
         return None
 
@@ -892,6 +899,7 @@ class PyPIPackageJsonAsset:
                         fragment="",
                     ).geturl()
                     logger.debug("Found wheel URL: %s", configured_wheel_url)
+                    self.wheel_urls = [configured_wheel_url]
                     return configured_wheel_url
         return None
 

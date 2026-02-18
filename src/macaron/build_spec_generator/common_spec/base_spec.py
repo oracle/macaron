@@ -84,6 +84,9 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: Flag to indicate if the artifact includes binaries.
     has_binaries: NotRequired[bool]
 
+    #: The artifacts that were analyzed in generating the build specification.
+    upstream_artifacts: dict[str, list[str]]
+
 
 class BaseBuildSpec(ABC):
     """Abstract base class for build specification behavior and field resolution."""

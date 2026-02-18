@@ -62,18 +62,30 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         build_tool_install = (
             f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
         )
+
     modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0])
     legacy_build_command = (
         'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
         "else python -m build --wheel -n; fi"
     )
 
+    wheel_url: str = ""
+    wheel_name: str = ""
+
+    wheel_urls = buildspec["upstream_artifacts"]["wheels"]
+    # We currently only look for the pure wheel, if it exists
+    if wheel_urls:
+        wheel_url = list(wheel_urls)[0]
+        wheel_name = wheel_url.rsplit("/", 1)[-1]
+    else:
+        logger.debug("We could not find an upstream artifact, and therefore we cannot run validation")
+
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
 
     # Install core tools
-    RUN dnf -y install which wget tar git
+    RUN dnf -y install which wget tar unzip git
 
     # Install compiler and make
     RUN dnf -y install gcc make
@@ -127,6 +139,30 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
 
     # Run the build
     RUN source /deps/bin/activate &&  {modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command}
+
+    # Validate script
+    RUN cat <<'EOF' >/validate
+        [ -n "{wheel_url}" ] || {{ echo "No upstream artifact to validate against."; exit 1; }}
+        # Capture artifacts generated
+        WHEELS=(/src/dist/*.whl)
+        # Ensure we only have one artifact
+        [ ${{#WHEELS[@]}} -eq 1 ] || {{ echo "Unexpected artifacts produced!"; exit 1; }}
+        # BUILT_WHEEL is the artifact we built
+        BUILT_WHEEL=${{WHEELS[0]}}
+        # Ensure the artifact produced is not the literal returned by the glob
+        [ -e $BUILT_WHEEL ] || {{ echo "No wheels found!"; exit 1; }}
+        # Download the wheel
+        wget -q {wheel_url}
+        # Compare wheel names
+        [ $(basename $BUILT_WHEEL) == "{wheel_name}" ] || {{ echo "Wheel name does not match!"; exit 1; }}
+        # Compare file tree
+        (unzip -Z1 $BUILT_WHEEL | grep -v '\\.dist-info' | sort) > built.tree
+        (unzip -Z1 "{wheel_name}" | grep -v '\\.dist-info' | sort ) > pypi_artifact.tree
+        diff -u built.tree pypi_artifact.tree || {{ echo "File trees do not match!"; exit 1; }}
+        echo "Success!"
+    EOF
+
+    ENTRYPOINT ["/bin/bash","/validate"]
     """
 
     return dedent(dockerfile_content)

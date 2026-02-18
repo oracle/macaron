@@ -33,5 +33,13 @@
     },
     "build_backends": [
         "setuptools.build_meta"
-    ]
+    ],
+    "upstream_artifacts": {
+        "wheels": [
+            "https://files.pythonhosted.org/packages/2b/1a/6a9c8230ad30e819f0965bbd596c736a03e16003d27b0363c632c84d4861/toga-0.5.1-py3-none-any.whl"
+        ],
+        "sdist": [
+            "https://files.pythonhosted.org/packages/17/e7/0924150329474d61e9f40f8bba1056d640cba22438e05355924019111b46/toga-0.5.1.tar.gz"
+        ]
+    }
 }
