@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -7,7 +7,7 @@ Test the logic to dispatch dockerfile generation
 
 import pytest
 
-from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.build_spec_generator.dockerfile import dockerfile_output
 from macaron.errors import GenerateBuildSpecError
 
@@ -28,7 +28,7 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "build_tools": ["maven"],
             "newline": "lf",
             "language_version": ["17"],
-            "build_commands": [["mvn", "package"]],
+            "build_commands": [SpecBuildCommandDict(build_tool="maven", command=["mvn", "package"])],
             "purl": "pkg:maven/com.oracle/example-artifact@1.2.3",
         }
     )

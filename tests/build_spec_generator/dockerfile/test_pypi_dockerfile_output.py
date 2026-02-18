@@ -7,7 +7,7 @@ Test the logic for dockerfile generation to rebuild PyPI packages.
 
 import pytest
 
-from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.build_spec_generator.dockerfile.pypi_dockerfile_output import gen_dockerfile
 
 
@@ -29,7 +29,7 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "language": "python",
             "has_binaries": False,
             "build_tools": ["pip"],
-            "build_commands": [["python", "-m", "build"]],
+            "build_commands": [SpecBuildCommandDict(build_tool="pip", command=["python", "-m", "build"])],
             "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
             "build_backends": ["setuptools.build_meta"],
             "upstream_artifacts": {

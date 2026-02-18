@@ -14,7 +14,7 @@ from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import InvalidSpecifier
 from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 
-from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpec, BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.config.defaults import defaults
 from macaron.errors import SourceCodeError, WheelTagError
 from macaron.json_tools import json_extract
@@ -43,7 +43,7 @@ class PyPIBuildSpec(
     def get_default_build_commands(
         self,
         build_tool_names: list[str],
-    ) -> list[list[str]]:
+    ) -> list[SpecBuildCommandDict]:
         """Return the default build commands for the build tools.
 
         Parameters
@@ -53,37 +53,44 @@ class PyPIBuildSpec(
 
         Returns
         -------
-        list[list[str]]
-            The build command as a list[list[str]].
+        list[SpecBuildCommandDict]
+            The build command as a list[SpecBuildCommandDict].
         """
-        default_build_commands = []
-
+        default_build_cmd_list = []
         for build_tool_name in build_tool_names:
 
             match build_tool_name:
                 case "pip":
-                    default_build_commands.append("python -m build --wheel -n".split())
+                    default_build_cmd_list.append(
+                        SpecBuildCommandDict(build_tool=build_tool_name, command="python -m build --wheel -n".split())
+                    )
                 case "poetry":
-                    default_build_commands.append("poetry build".split())
+                    default_build_cmd_list.append(
+                        SpecBuildCommandDict(build_tool=build_tool_name, command="poetry build".split())
+                    )
                 case "flit":
                     # We might also want to deal with existence flit.ini, we can do so via
                     # "python -m flit.tomlify"
-                    default_build_commands.append("flit build".split())
+                    default_build_cmd_list.append(
+                        SpecBuildCommandDict(build_tool=build_tool_name, command="flit build".split())
+                    )
                 case "hatch":
-                    default_build_commands.append("hatch build".split())
+                    default_build_cmd_list.append(
+                        SpecBuildCommandDict(build_tool=build_tool_name, command="hatch build".split())
+                    )
                 case "conda":
                     # TODO: update this if a build command can be used for conda.
                     pass
                 case _:
                     pass
 
-        if not default_build_commands:
+        if not default_build_cmd_list:
             logger.debug(
                 "There is no default build command available for the build tools %s.",
                 build_tool_names,
             )
 
-        return default_build_commands
+        return default_build_cmd_list
 
     def resolve_fields(self, purl: PackageURL) -> None:
         """
@@ -108,7 +115,7 @@ class PyPIBuildSpec(
 
         upstream_artifacts: dict[str, list[str]] = {}
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
-        patched_build_commands: list[list[str]] = []
+        patched_build_commands: list[SpecBuildCommandDict] = []
         build_backends_set: set[str] = set()
         parsed_build_requires: dict[str, str] = {}
         sdist_build_requires: dict[str, str] = {}

@@ -104,7 +104,9 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         "newline": build_spec["newline"],
         "buildinfo": f"target/{build_spec['artifact_id']}-{build_spec['version']}.buildinfo",
         "jdk": build_spec["language_version"][0],
-        "command": compose_shell_commands(adapted_build_commands),
+        "command": compose_shell_commands(
+            [b_info["command"] for b_info in adapted_build_commands["build_commands"] if b_info["command"]]
+        ),
     }
 
     return STRING_TEMPLATE.format_map(template_format_values)

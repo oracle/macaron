@@ -16,13 +16,16 @@
         "pip"
     ],
     "build_commands": [
-        [
-            "python",
-            "-m",
-            "build",
-            "--wheel",
-            "-n"
-        ]
+        {
+            "build_tool": "pip",
+            "command": [
+                "python",
+                "-m",
+                "build",
+                "--wheel",
+                "-n"
+            ]
+        }
     ],
     "has_binaries": false,
     "build_requires": {
