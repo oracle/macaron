@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.18.0",
+    "macaron_version": "0.20.0",
     "group_id": null,
     "artifact_id": "toga",
     "version": "0.5.1",
@@ -7,6 +7,7 @@
     "git_tag": "ef1912b0a1b5c07793f9aa372409f5b9d36f2604",
     "newline": "lf",
     "language_version": [
+        ">=3.8",
         ">=3.9"
     ],
     "ecosystem": "pypi",

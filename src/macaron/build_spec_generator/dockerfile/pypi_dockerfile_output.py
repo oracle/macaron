@@ -7,11 +7,13 @@ import logging
 import re
 from textwrap import dedent
 
+from bs4 import BeautifulSoup, FeatureNotFound
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
 from macaron.errors import GenerateBuildSpecError
+from macaron.util import send_get_http_raw
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -36,9 +38,18 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     """
     if buildspec["has_binaries"]:
         raise GenerateBuildSpecError("We currently do not support generating a dockerfile for non-pure Python packages")
-    language_version: str | None = pick_specific_version(buildspec)
+    language_version: str | None = pick_specific_version(buildspec["language_version"])
     if language_version is None:
         raise GenerateBuildSpecError("Could not derive specific interpreter version")
+    try:
+        version = Version(language_version)
+    except InvalidVersion as error:
+        logger.debug("Ran into issue converting %s to a version: %s", language_version, error)
+        raise GenerateBuildSpecError("Derived interpreter version could not be parsed") from error
+    if not buildspec["build_tools"]:
+        raise GenerateBuildSpecError("Cannot generate dockerfile when build tool is unknown")
+    if not buildspec["build_commands"]:
+        raise GenerateBuildSpecError("Cannot generate dockerfile when build command is unknown")
     backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
     build_tool_install: str = ""
     if (
@@ -51,6 +62,12 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         build_tool_install = (
             f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
         )
+    modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0])
+    legacy_build_command = (
+        'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
+        "else python -m build --wheel -n; fi"
+    )
+
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
@@ -73,13 +90,22 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
       gcc-c++ gdb lzma glibc-devel libstdc++-devel openssl-devel \\
       readline-devel zlib-devel libzstd-devel libffi-devel bzip2-devel \\
       xz-devel sqlite sqlite-devel sqlite-libs libuuid-devel gdbm-libs \\
-      perf expat expat-devel mpdecimal python3-pip
+      perf expat expat-devel mpdecimal python3-pip \\
+      perl perl-File-Compare
+
+    {openssl_install_commands(version)}
+
+    ENV LD_LIBRARY_PATH=/opt/openssl/lib
+    ENV CPPFLAGS=-I/opt/openssl/include
+    ENV LDFLAGS=-L/opt/openssl/lib
 
     # Build interpreter and create venv
     RUN <<EOF
         cd Python-{language_version}
         ./configure --with-pydebug
         make -s -j $(nproc)
+        make install
+        ./python -m ensurepip
         ./python -m venv /deps
     EOF
 
@@ -100,29 +126,78 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN {"source /deps/bin/activate && " + build_tool_install + " ".join(x for x in buildspec["build_commands"][0])}
+    RUN source /deps/bin/activate &&  {modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command}
     """
 
     return dedent(dockerfile_content)
 
 
-def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
+def openssl_install_commands(version: Version) -> str:
+    """Appropriate openssl install commands for a given CPython version.
+
+    Parameters
+    ----------
+    version: Version
+        CPython version we are trying to build
+
+    Returns
+    -------
+    str
+       Install commands for the corresponding openssl version
+    """
+    # As per https://peps.python.org/pep-0644, all Python >= 3.10 requires at least OpenSSL 1.1.1,
+    # and 3.6 to 3.9 can be compiled with OpenSSL 1.1.1. Therefore, we compile as below:
+    if version in SpecifierSet(">=3.6"):
+        openssl_version = "1.1.1w"
+        source_url = "https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz"
+    # From the same document, "Python versions 3.6 to 3.9 are compatible with OpenSSL 1.0.2,
+    # 1.1.0, and 1.1.1". As an attempt to generalize for any >= 3.3, we use OpenSSL 1.0.2.
+    else:
+        openssl_version = "1.0.2u"
+        source_url = "https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz"
+
+    return f"""# Build OpenSSL {openssl_version}
+    RUN <<EOF
+        wget {source_url}
+        tar xzf openssl-{openssl_version}.tar.gz
+        cd openssl-{openssl_version}
+        ./config --prefix=/opt/openssl --openssldir=/opt/openssl shared zlib
+        make -j"$(nproc)"
+        make install_sw
+    EOF"""
+
+
+def pick_specific_version(inferred_constraints: list[str]) -> str | None:
     """Find the latest python interpreter version satisfying inferred constraints.
 
     Parameters
     ----------
-    buildspec: BaseBuildSpecDict
-        The base build spec generated for the artifact.
+    inferred_constraints: list[str]
+        List of inferred Python version constraints
 
     Returns
     -------
     str | None
         String in format major.minor.patch for the latest valid Python
         interpreter version, or None if no such version can be found.
+
+    Examples
+    --------
+    >>> pick_specific_version([">=3.0"])
+    '3.4.10'
+    >>> pick_specific_version([">=3.8"])
+    '3.8.20'
+    >>> pick_specific_version([">=3.0", "!=3.4", "!=3.3", "!=3.5"])
+    '3.6.15'
+    >>> pick_specific_version(["<=3.12"])
+    '3.4.10'
+    >>> pick_specific_version(["<=3.12", "==3.6"])
+    '3.6.15'
     """
-    # We can most smoothly rebuild Python 3.0.0 and above on OL
-    version_set = SpecifierSet(">=3.0.0")
-    for version in buildspec["language_version"]:
+    # We cannot create virtual environments for Python versions <= 3.3.0, as
+    # it did not exist back then
+    version_set = SpecifierSet(">=3.4.0")
+    for version in inferred_constraints:
         try:
             version_set &= SpecifierSet(version)
         except InvalidSpecifier as error:
@@ -139,14 +214,14 @@ def pick_specific_version(buildspec: BaseBuildSpecDict) -> str | None:
 
     logger.debug(version_set)
 
-    # Now to get the latest acceptable one, we can step through all interpreter
+    # Now to get the earliest acceptable one, we can step through all interpreter
     # versions. For the most accurate result, we can query python.org for a
-    # list of all versions, but for now we can approximate by stepping down
-    # through every minor version from 3.14.0 to 3.0.0
-    for minor in range(14, -1, -1):
+    # list of all versions, but for now we can approximate by stepping up
+    # through every minor version from 3.3.0 to 3.14.0
+    for minor in range(3, 15, 1):
         try:
             if Version(f"3.{minor}.0") in version_set:
-                return f"3.{minor}.0"
+                return get_latest_cpython_patch(3, minor)
         except InvalidVersion as error:
             logger.debug("Ran into issue converting %s to a version: %s", minor, error)
             return None
@@ -197,6 +272,59 @@ def infer_interpreter_version(specifier: str) -> str | None:
     return None
 
 
+def get_latest_cpython_patch(major: int, minor: int) -> str:
+    """Given major and minor interpreter version, return latest CPython patched version.
+
+    Parameters
+    ----------
+    major: int
+        Major component of version
+    minor: int
+        Minor component of version
+
+    Returns
+    -------
+    str
+        Full major.minor.patch version string corresponding to latest
+        patch for input major and minor.
+    """
+    latest_patch: Version | None = None
+    # We install CPython source
+    response = send_get_http_raw("https://www.python.org/ftp/python/")
+    if not response:
+        raise GenerateBuildSpecError("Failed to fetch index of CPython versions.")
+
+    html: str = ""
+    soup: BeautifulSoup | None = None
+
+    try:
+        html = response.content.decode("utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+    except (UnicodeDecodeError, FeatureNotFound) as error:
+        raise GenerateBuildSpecError("Failed to parse index of CPython versions.") from error
+
+    # Versions can most reliably be found in anchor tags like:
+    # <a href="{Version}/"> {Version}/ </a>
+    for anchor in soup.find_all("a", href=True):
+        # Get text enclosed in the anchor tag stripping spaces.
+        text = anchor.get_text(strip=True)
+        sanitized_text = text.rstrip("/")
+        # Try to convert to a version.
+        try:
+            parsed_version = Version(sanitized_text)
+            if parsed_version.major == major and parsed_version.minor == minor:
+                if latest_patch is None or parsed_version > latest_patch:
+                    latest_patch = parsed_version
+        except InvalidVersion:
+            # Try the next tag
+            continue
+
+    if not latest_patch:
+        raise GenerateBuildSpecError(f"Failed to infer latest patch for CPython {major}.{minor}")
+
+    return str(latest_patch)
+
+
 def build_backend_commands(buildspec: BaseBuildSpecDict) -> list[str]:
     """Generate the installation commands for each inferred build backend.
 
@@ -214,7 +342,10 @@ def build_backend_commands(buildspec: BaseBuildSpecDict) -> list[str]:
         return []
     commands: list[str] = []
     for backend, version_constraint in buildspec["build_requires"].items():
-        commands.append(f'/deps/bin/pip install "{backend}{version_constraint}"')
+        if backend == "setuptools":
+            commands.append("/deps/bin/pip install --upgrade setuptools")
+        else:
+            commands.append(f'/deps/bin/pip install "{backend}{version_constraint}"')
     # For a stable order on the install commands
     commands.sort()
     return commands
