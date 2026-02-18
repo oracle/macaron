@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the logic to generate a build spec in a generic format that can be transformed if needed."""
@@ -13,7 +13,7 @@ from importlib import metadata as importlib_metadata
 import sqlalchemy.orm
 from packageurl import PackageURL
 
-from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.build_spec_generator.common_spec.maven_spec import MavenBuildSpec
 from macaron.build_spec_generator.common_spec.pypi_spec import PyPIBuildSpec
 from macaron.build_spec_generator.macaron_db_extractor import (
@@ -75,8 +75,8 @@ def format_build_command_info(build_command_info: list[GenericBuildCommandInfo])
     str
         The prettified output.
     """
-    pretty_formatted_ouput = [pprint.pformat(build_command_info) for build_command_info in build_command_info]
-    return "\n".join(pretty_formatted_ouput)
+    pretty_formatted_output = [pprint.pformat(build_command_info) for build_command_info in build_command_info]
+    return "\n".join(pretty_formatted_output)
 
 
 def remove_shell_quote(cmd: list[str]) -> list[str]:
@@ -351,18 +351,22 @@ def gen_generic_build_spec(
     if build_tools is not None:
         build_tool_names = [build_tool.value for build_tool in build_tools]
 
-    build_command_info = get_build_command_info(
+    db_build_command_info = get_build_command_info(
         component_id=latest_component.id,
         session=session,
     )
-    logger.info(
-        "Attempted to find build command from the database. Result: %s",
-        build_command_info or "Cannot find any.",
-    )
 
-    selected_build_command = build_command_info.command if build_command_info else []
-
-    lang_version = get_language_version(build_command_info) if build_command_info else ""
+    lang_version = None
+    spec_build_commad_info = None
+    if db_build_command_info:
+        logger.info(
+            "Attempted to find build command from the database. Result: %s",
+            db_build_command_info or "Cannot find any.",
+        )
+        lang_version = get_language_version(db_build_command_info) if db_build_command_info else ""
+        spec_build_commad_info = SpecBuildCommandDict(
+            build_tool=db_build_command_info.build_tool_name, command=db_build_command_info.command
+        )
 
     base_build_spec_dict = BaseBuildSpecDict(
         {
@@ -378,8 +382,11 @@ def gen_generic_build_spec(
             "purl": str(purl),
             "language": target_language,
             "build_tools": build_tool_names,
-            "build_commands": [selected_build_command] if selected_build_command else [],
+            "build_commands": (
+                [spec_build_commad_info] if spec_build_commad_info and spec_build_commad_info["command"] else []
+            ),
         }
     )
+
     ECOSYSTEMS[purl.type.upper()].value(base_build_spec_dict).resolve_fields(purl)
     return base_build_spec_dict

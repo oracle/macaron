@@ -66,80 +66,74 @@ CLI_COMMAND_PATCHES: dict[
 }
 
 
-def _patch_commands(
-    cmds_sequence: Sequence[list[str]],
+def _patch_command(
+    cmd: list[str],
     cli_parsers: Sequence[CLICommandParser],
     patches: Mapping[
         PatchCommandBuildTool,
         Mapping[str, PatchValueType | None],
     ],
-) -> list[CLICommand] | None:
-    """Patch the sequence of build commands, using the provided CLICommandParser instances.
+) -> CLICommand | None:
+    """Patch the build command, using the provided CLICommandParser instances.
 
-    For each command in `cmds_sequence`, it will be checked against all CLICommandParser instances until there is
+    The command will be checked against all CLICommandParser instances to find
     one that can parse it, then a patch from ``patches`` is applied for this command if provided.
 
     If a command doesn't have any corresponding ``CLICommandParser`` instance it will be parsed as UnparsedCLICommand,
     which just holds the original command as a list of string, without any changes.
     """
-    result: list[CLICommand] = []
-    for cmd in cmds_sequence:
-        # Checking if the command is a valid non-empty list.
-        if not cmd:
-            continue
-        effective_cli_parser = None
-        for cli_parser in cli_parsers:
-            if cli_parser.is_build_tool(cmd[0]):
-                effective_cli_parser = cli_parser
-                break
+    # Checking if the command is a valid non-empty list.
+    if not cmd:
+        return None
 
-        if not effective_cli_parser:
-            result.append(UnparsedCLICommand(original_cmds=cmd))
-            continue
+    effective_cli_parser = None
+    for cli_parser in cli_parsers:
+        if cli_parser.is_build_tool(cmd[0]):
+            effective_cli_parser = cli_parser
+            break
 
-        try:
-            cli_command = effective_cli_parser.parse(cmd)
-        except CommandLineParseError as error:
-            logger.error(
-                "Failed to patch the cli command %s. Error %s.",
-                " ".join(cmd),
-                error,
-            )
-            return None
+    if not effective_cli_parser:
+        return UnparsedCLICommand(original_cmds=cmd)
 
-        patch = patches.get(effective_cli_parser.build_tool, None)
-        if not patch:
-            result.append(cli_command)
-            continue
+    try:
+        cli_command = effective_cli_parser.parse(cmd)
+    except CommandLineParseError as error:
+        logger.error(
+            "Failed to patch the cli command %s. Error %s.",
+            " ".join(cmd),
+            error,
+        )
+        return None
 
-        try:
-            new_cli_command = effective_cli_parser.apply_patch(
-                cli_command=cli_command,
-                patch_options=patch,
-            )
-        except PatchBuildCommandError as error:
-            logger.error(
-                "Failed to patch the build command %s. Error %s.",
-                " ".join(cmd),
-                error,
-            )
-            return None
+    patch = patches.get(effective_cli_parser.build_tool, None)
+    if not patch:
+        return cli_command
 
-        result.append(new_cli_command)
-
-    return result
+    try:
+        patched_command: CLICommand = effective_cli_parser.apply_patch(
+            cli_command=cli_command,
+            patch_options=patch,
+        )
+        return patched_command
+    except PatchBuildCommandError as error:
+        logger.error(
+            "Failed to patch the build command %s. Error %s.",
+            " ".join(cmd),
+            error,
+        )
+        return None
 
 
-def patch_commands(
-    cmds_sequence: Sequence[list[str]],
+def patch_command(
+    cmd: list[str],
     patches: Mapping[
         PatchCommandBuildTool,
         Mapping[str, PatchValueType | None],
     ],
-) -> list[list[str]] | None:
-    """Patch a sequence of CLI commands.
+) -> list[str] | None:
+    """Patch a CLI command.
 
-    For each command in this command sequence:
+    Possible scenarios:
 
     - If the command is not a build command, or it's a tool we do not support, it will be left intact.
 
@@ -159,21 +153,17 @@ def patch_commands(
 
     Returns
     -------
-    list[list[str]] | None
-        The patched command sequence or None if there is an error. The errors that can happen if any command
-        which we support is invalid in ``cmds_sequence``, or the patch value is valid.
+    list[str] | None
+        The patched command or None if there is an error. An error happens if a command,
+        or the patch value is valid.
     """
-    result = []
-    patch_cli_commands = _patch_commands(
-        cmds_sequence=cmds_sequence,
+    patch_cli_command = _patch_command(
+        cmd=cmd,
         cli_parsers=[MVN_CLI_PARSER, GRADLE_CLI_PARSER],
         patches=patches,
     )
 
-    if patch_cli_commands is None:
+    if patch_cli_command is None:
         return None
 
-    for patch_cmd in patch_cli_commands:
-        result.append(patch_cmd.to_cmds())
-
-    return result
+    return patch_cli_command.to_cmds()

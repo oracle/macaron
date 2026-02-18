@@ -17,19 +17,22 @@
         "pip"
     ],
     "build_commands": [
-        [
-            "python",
-            "-m",
-            "build",
-            "--wheel",
-            "-n"
-        ]
+        {
+            "build_tool": "pip",
+            "command": [
+                "python",
+                "-m",
+                "build",
+                "--wheel",
+                "-n"
+            ]
+        }
     ],
     "has_binaries": false,
     "build_requires": {
         "setuptools": "==80.3.1",
-        "setuptools_dynamic_dependencies": "==1.0.0",
-        "setuptools_scm": "==8.3.1"
+        "setuptools_scm": "==8.3.1",
+        "setuptools_dynamic_dependencies": "==1.0.0"
     },
     "build_backends": [
         "setuptools.build_meta"

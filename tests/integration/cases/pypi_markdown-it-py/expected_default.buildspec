@@ -17,10 +17,13 @@
         "flit"
     ],
     "build_commands": [
-        [
-            "flit",
-            "build"
-        ]
+        {
+            "build_tool": "flit",
+            "command": [
+                "flit",
+                "build"
+            ]
+        }
     ],
     "has_binaries": false,
     "build_requires": {

@@ -63,7 +63,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
             f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
         )
 
-    modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0])
+    modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0]["command"])
     legacy_build_command = (
         'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
         "else python -m build --wheel -n; fi"

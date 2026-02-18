@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.18.0",
+    "macaron_version": "0.20.0",
     "group_id": "org.apache.hugegraph",
     "artifact_id": "computer-k8s",
     "version": "1.0.0",
@@ -16,15 +16,18 @@
         "maven"
     ],
     "build_commands": [
-        [
-            "mvn",
-            "-DskipTests=true",
-            "-Dmaven.test.skip=true",
-            "-Dmaven.site.skip=true",
-            "-Drat.skip=true",
-            "-Dmaven.javadoc.skip=true",
-            "clean",
-            "package"
-        ]
+        {
+            "build_tool": "maven",
+            "command": [
+                "mvn",
+                "-DskipTests=true",
+                "-Dmaven.test.skip=true",
+                "-Dmaven.site.skip=true",
+                "-Drat.skip=true",
+                "-Dmaven.javadoc.skip=true",
+                "clean",
+                "package"
+            ]
+        }
     ]
 }

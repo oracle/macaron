@@ -9,6 +9,32 @@ from typing import NotRequired, Required, TypedDict
 from packageurl import PackageURL
 
 
+class SpecBuildCommandDict(TypedDict, total=False):
+    """
+    Initialize build command section of the build specification.
+
+    It contains helpful information related to a build command.
+    """
+
+    #: The build tool.
+    build_tool: Required[str]
+
+    #: The build tool version.
+    build_tool_version: NotRequired[str]
+
+    #: The build configuration path
+    build_tool_path: NotRequired[str]
+
+    #: The build command.
+    command: Required[list[str]]
+
+    #: The pre-build commands.
+    pre_build_cmds: NotRequired[list[list[str]]]
+
+    #: The post-build commands.
+    post_build_cmds: NotRequired[list[list[str]]]
+
+
 class BaseBuildSpecDict(TypedDict, total=False):
     """
     Initialize base build specification.
@@ -58,8 +84,8 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: List of build dependencies, which includes tests.
     build_dependencies: NotRequired[list[str]]
 
-    #: List of shell commands to build the project.
-    build_commands: NotRequired[list[list[str]]]
+    #: List of shell commands and related information to build the project.
+    build_commands: NotRequired[list[SpecBuildCommandDict]]
 
     #: List of shell commands to test the project.
     test_commands: NotRequired[list[list[str]]]
@@ -106,7 +132,7 @@ class BaseBuildSpec(ABC):
     def get_default_build_commands(
         self,
         build_tool_names: list[str],
-    ) -> list[list[str]]:
+    ) -> list[SpecBuildCommandDict]:
         """Return the default build commands for the build tools.
 
         Parameters
@@ -116,8 +142,8 @@ class BaseBuildSpec(ABC):
 
         Returns
         -------
-        list[list[str]]
-            The build command as a list[list[str]].
+        list[SpecBuildCommandDict]
+            The build command and relevant information as a list[SpecBuildCommandDict].
 
         Raises
         ------
