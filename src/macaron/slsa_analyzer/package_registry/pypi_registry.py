@@ -987,9 +987,6 @@ class PyPIPackageJsonAsset:
             try:
                 _, _, _, tags = parse_wheel_filename(file_name)
                 # Check if none and any are in the tags (i.e. the wheel is pure)
-                # Technically a wheel can have multiple tag sets. Our condition for
-                # a pure wheel is that it has only one tag set with abi "none" and
-                # platform "any"
                 if all(tag.abi == "none" and tag.platform == "any" for tag in tags):
                     return True
             except InvalidWheelFilename:
