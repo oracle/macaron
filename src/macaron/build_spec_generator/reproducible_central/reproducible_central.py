@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the logic to generate a build spec in the Reproducible Central format."""
@@ -85,6 +85,14 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
     if build_spec["group_id"] is None:
         raise GenerateBuildSpecError(f"Version is missing in PURL {build_spec['purl']}")
 
+    # Add -Dmaven.test.skip for Maven builds.
+    # TODO: Use the build tool associated with the build command once
+    # https://github.com/oracle/macaron/issues/1300 is closed.
+    adapted_build_commands = [
+        cmd[:1] + ["-Dmaven.test.skip=true"] + cmd[1:] if ReproducibleCentralBuildTool.MAVEN in cmd[0] else cmd
+        for cmd in build_spec["build_commands"]
+    ]
+
     template_format_values: dict[str, str] = {
         "macaron_version": importlib_metadata.version("macaron"),
         "group_id": build_spec["group_id"],
@@ -96,7 +104,7 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         "newline": build_spec["newline"],
         "buildinfo": f"target/{build_spec['artifact_id']}-{build_spec['version']}.buildinfo",
         "jdk": build_spec["language_version"][0],
-        "command": compose_shell_commands(build_spec["build_commands"]),
+        "command": compose_shell_commands(adapted_build_commands),
     }
 
     return STRING_TEMPLATE.format_map(template_format_values)
