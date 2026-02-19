@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the logic to generate a build spec in the Reproducible Central format."""
@@ -96,7 +96,9 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         "newline": build_spec["newline"],
         "buildinfo": f"target/{build_spec['artifact_id']}-{build_spec['version']}.buildinfo",
         "jdk": build_spec["language_version"][0],
-        "command": compose_shell_commands(build_spec["build_commands"]),
+        "command": compose_shell_commands(
+            [b_info["command"] for b_info in build_spec["build_commands"] if b_info["command"]]
+        ),
     }
 
     return STRING_TEMPLATE.format_map(template_format_values)

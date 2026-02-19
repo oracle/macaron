@@ -6,7 +6,7 @@
 import pytest
 from packageurl import PackageURL
 
-from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.build_spec_generator.common_spec.core import (
     ECOSYSTEMS,
     LANGUAGES,
@@ -185,7 +185,7 @@ def test_get_language_version(
                     "purl": "pkg:maven/foo/bar@1.0.0",
                     "language": LANGUAGES.MAVEN.value,
                     "build_tools": ["ant"],
-                    "build_commands": [["ant", "dist"]],
+                    "build_commands": [SpecBuildCommandDict(build_tool="ant", command=["ant", "dist"])],
                 }
             ),
             id="unsupported build tool for maven",
@@ -225,7 +225,7 @@ def test_get_language_version(
                     "purl": "pkg:pypi/bar@1.0.0",
                     "language": LANGUAGES.PYPI.value,
                     "build_tools": ["uv"],
-                    "build_commands": [["python", "-m", "build"]],
+                    "build_commands": [SpecBuildCommandDict(build_tool="uv", command=["python", "-m", "build"])],
                 }
             ),
             id="unsupported build tool for pypi",
