@@ -990,7 +990,7 @@ class PyPIPackageJsonAsset:
                 # Technically a wheel can have multiple tag sets. Our condition for
                 # a pure wheel is that it has only one tag set with abi "none" and
                 # platform "any"
-                if len(tags) == 1 and all(tag.abi == "none" and tag.platform == "any" for tag in tags):
+                if all(tag.abi == "none" and tag.platform == "any" for tag in tags):
                     return True
             except InvalidWheelFilename:
                 logger.debug("Could not parse wheel name.")
