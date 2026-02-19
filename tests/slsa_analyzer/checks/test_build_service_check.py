@@ -8,7 +8,7 @@ from typing import cast
 
 import pytest
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
 from macaron.slsa_analyzer.checks.build_service_check import BuildServiceCheck, BuildServiceFacts
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
@@ -44,7 +44,7 @@ def test_build_service_check_no_callgraph(
     """Test the Build Service Check when no callgraph is built for the CI service."""
     ci_info = CIInfo(
         service=ci_services[ci_name],
-        callgraph=CallGraph(BaseNode(), ""),
+        callgraph=NodeForest([]),
         provenance_assets=[],
         release={},
         provenances=[],

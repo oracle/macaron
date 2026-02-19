@@ -42,7 +42,7 @@ Common Options
 
     Disable Rich UI output. This will turn off any rich formatting (e.g., colored output, tables, etc.) used in the terminal UI.
 
-.. option:: -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+.. option:: -o OUTPUT, --output OUTPUT_DIR
 
     The output destination path for Macaron. This is where Macaron will store the results of the analysis.
 

@@ -17,6 +17,7 @@ from macaron.build_spec_generator.dockerfile.dockerfile_output import gen_docker
 from macaron.build_spec_generator.reproducible_central.reproducible_central import gen_reproducible_central_build_spec
 from macaron.console import access_handler
 from macaron.errors import GenerateBuildSpecError
+from macaron.output_reporter import find_report_output_path
 from macaron.path_utils.purl_based_path import get_purl_based_dir
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -97,8 +98,8 @@ def gen_build_spec_for_purl(
             case BuildSpecFormat.DOCKERFILE:
                 try:
                     build_spec_content = gen_dockerfile(build_spec)
-                except ValueError as error:
-                    logger.error("Error while serializing the build spec: %s.", error)
+                except GenerateBuildSpecError as error:
+                    logger.error("Error while generating the build spec: %s.", error)
                     return os.EX_DATAERR
                 build_spec_file_path = os.path.join(build_spec_dir_path, "dockerfile.buildspec")
 
@@ -120,17 +121,17 @@ def gen_build_spec_for_purl(
     logger.info(
         "Generating the %s format build spec to %s",
         build_spec_format.value,
-        os.path.relpath(build_spec_file_path, os.getcwd()),
+        find_report_output_path(build_spec_file_path),
     )
     rich_handler = access_handler.get_handler()
-    rich_handler.update_gen_build_spec("Build Spec Path:", os.path.relpath(build_spec_file_path, os.getcwd()))
+    rich_handler.update_gen_build_spec("Build Spec Path:", find_report_output_path(build_spec_file_path))
     try:
         with open(build_spec_file_path, mode="w", encoding="utf-8") as file:
             file.write(build_spec_content)
     except OSError as error:
         logger.error(
             "Could not create the build spec at %s. Error: %s",
-            os.path.relpath(build_spec_file_path, os.getcwd()),
+            find_report_output_path(build_spec_file_path),
             error,
         )
         return os.EX_OSERR

@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains methods for verifying provenance files."""
@@ -6,6 +6,7 @@ import glob
 import hashlib
 import logging
 import os
+import shutil
 import subprocess  # nosec B404
 import tarfile
 import zipfile
@@ -16,6 +17,7 @@ from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.output_reporter import find_report_output_path
 from macaron.provenance.provenance_extractor import ProvenancePredicate, SLSAGithubGenericBuildDefinitionV01
 from macaron.provenance.provenance_finder import ProvenanceAsset
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
@@ -201,7 +203,6 @@ def verify_ci_provenance(analyze_ctx: AnalyzeContext, ci_info: CIInfo, download_
                     return False
 
             sub_verified = _verify_slsa(
-                analyze_ctx.macaron_path,
                 download_path,
                 provenance.asset,
                 sub_asset["name"],
@@ -302,19 +303,42 @@ def _extract_archive(file_path: str, temp_path: str) -> bool:
     return False
 
 
-def _verify_slsa(
-    macaron_path: str, download_path: str, prov_asset: AssetLocator, asset_name: str, repository_url: str
-) -> bool:
+def _is_slsa_verifier_installed() -> bool:
+    """Check if slsa-verifer is present on the execution path.
+
+    Returns
+    -------
+    bool
+        True if slsa-verifer is present on the execution path.
+    """
+    if shutil.which("slsa-verifier") is None:
+        logger.debug("slsa-verifier is not on the execution path.")
+        return False
+    return True
+
+
+def _verify_slsa(download_path: str, prov_asset: AssetLocator, asset_name: str, repository_url: str) -> bool:
     """Run SLSA verifier to verify the artifact."""
     source_path = get_repo_dir_name(repository_url, sanitize=False)
     if not source_path:
         logger.error("Invalid repository source path to verify: %s.", repository_url)
         return False
 
+    if not _is_slsa_verifier_installed():
+        os.environ["PATH"] = os.path.join(Path.home(), ".local", "bin") + os.pathsep + os.environ.get("PATH", "")
+        logger.debug("PATH: %s", os.environ["PATH"])
+        # Try the ~/.local/bin path.
+        if not _is_slsa_verifier_installed():
+            logger.error(
+                "slsa-verifier is not installed or is not present on the execution path."
+                " See https://github.com/slsa-framework/slsa-verifier for instructions."
+            )
+            return False
+
     errors: list[str] = []
     verified = False
     cmd = [
-        os.path.join(macaron_path, "bin/slsa-verifier"),
+        "slsa-verifier",
         "verify-artifact",
         os.path.join(download_path, asset_name),
         "--provenance-path",
@@ -336,7 +360,7 @@ def _verify_slsa(
         verified = "PASSED: SLSA verification passed" in output
         log_path = os.path.join(global_config.build_log_path, f"{os.path.basename(source_path)}.slsa_verifier.log")
         with open(log_path, mode="a", encoding="utf-8") as log_file:
-            logger.info("Storing SLSA verifier output for %s to %s", asset_name, os.path.relpath(log_path, os.getcwd()))
+            logger.info("Storing SLSA verifier output for %s to %s", asset_name, find_report_output_path(log_path))
             log_file.writelines(
                 [f"SLSA verifier output for cmd: {' '.join(cmd)}\n", output, "--------------------------------\n"]
             )
@@ -359,7 +383,7 @@ def _verify_slsa(
             )
             with open(error_log_path, mode="a", encoding="utf-8") as log_file:
                 logger.info(
-                    "Storing SLSA verifier log for%s to %s", asset_name, os.path.relpath(error_log_path, os.getcwd())
+                    "Storing SLSA verifier log for%s to %s", asset_name, find_report_output_path(error_log_path)
                 )
                 log_file.write(f"SLSA verifier output for cmd: {' '.join(cmd)}\n")
                 log_file.writelines(errors)

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 - 2022, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 package filewriter
@@ -26,8 +26,7 @@ func Test_store_to_file(t *testing.T) {
 
 	read_content, err := os.ReadFile(out_path)
 	if err != nil {
-		t.Errorf("Error when trying to store to %s.", out_path)
-		t.Errorf(err.Error())
+		t.Errorf("Error when trying to store to %s: %v.", out_path, err)
 	} else {
 		if string(read_content) != store_content {
 			t.Errorf("The store content is not correct")

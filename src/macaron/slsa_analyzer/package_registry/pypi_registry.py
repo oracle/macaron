@@ -1,9 +1,10 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides abstractions for the pypi package registry."""
 from __future__ import annotations
 
+import bisect
 import hashlib
 import logging
 import os
@@ -15,15 +16,18 @@ import urllib.parse
 import zipfile
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 import requests
 from bs4 import BeautifulSoup, Tag
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.utils import InvalidWheelFilename, parse_wheel_filename
+from packaging.version import InvalidVersion, Version
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError, WheelTagError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -502,6 +506,86 @@ class PyPIRegistry(PackageRegistry):
 
         return res.replace(tzinfo=None) if res else None
 
+    def get_matching_setuptools_version(self, package_release_datetime: datetime) -> str:
+        """Find the setuptools that would be "latest" for the input datetime.
+
+        Parameters
+        ----------
+        package_release_datetime: str
+            Release datetime of a package we wish to rebuild
+
+        Returns
+        -------
+            str: Matching version of setuptools
+        """
+        setuptools_endpoint = urllib.parse.urljoin(self.registry_url, "pypi/setuptools/json")
+        setuptools_json = self.download_package_json(setuptools_endpoint)
+        releases = json_extract(setuptools_json, ["releases"], dict)
+        if releases:
+            release_tuples = [
+                (version, release_info[0].get("upload_time"))
+                for version, release_info in releases.items()
+                if release_info
+            ]
+            # Cannot assume this is sorted, as releases is just a dict
+            release_tuples.sort(key=lambda x: x[1])
+            # bisect_left gives position to insert package_release_datetime to maintain order, hence we do -1
+            index = (
+                bisect.bisect_left(
+                    release_tuples, package_release_datetime, key=lambda x: datetime.strptime(x[1], "%Y-%m-%dT%H:%M:%S")
+                )
+                - 1
+            )
+            return str(release_tuples[index][0])
+        # This realistically cannot happen: it would mean we somehow are trying to rebuild
+        # for a package and version with no releases.
+        # Return default just in case.
+        return defaults.get("heuristic.pypi", "default_setuptools")
+
+    def get_python_requires_for_package_requirement(self, package_requirement: str) -> str | None:
+        """Return the Python version constraint string for earliest version of the package satisfying package_requirement.
+
+        Parameters
+        ----------
+        package_constraint: str
+            pip style requirement string.
+
+        Returns
+        -------
+        str | None
+            Corresponding Python version constraint string.
+        """
+        try:
+            parsed_requirement = Requirement(package_requirement)
+            endpoint = urllib.parse.urljoin(self.registry_url, f"pypi/{parsed_requirement.name}/json")
+            json = self.download_package_json(endpoint)
+            releases = json_extract(json, ["releases"], dict)
+            if releases:
+                # Find smallest requirement satisfying parsed_requirement.name
+                version_tuples: list[tuple[str, Version]] = []
+                for version in releases.keys():
+                    try:
+                        version_name = str(version)
+                        parsed_version = Version(version_name)
+                        if parsed_version in parsed_requirement.specifier:
+                            version_tuple = (version_name, parsed_version)
+                            version_tuples.append(version_tuple)
+                    except InvalidVersion:
+                        continue
+                if not version_tuples:
+                    return None
+                lowest_staisfying_version = min(version_tuples, key=lambda version_tuple: version_tuple[1])
+                release_info = releases[lowest_staisfying_version[0]]
+                if isinstance(release_info, list) and release_info:
+                    release = release_info[0]
+                    if isinstance(release, dict):
+                        constraint_specification = release.get("requires_python")
+                        if isinstance(constraint_specification, str):
+                            return constraint_specification
+            return None
+        except InvalidRequirement:
+            return None
+
     @staticmethod
     def extract_attestation(attestation_data: dict) -> dict | None:
         """Extract the first attestation file from a PyPI attestation response.
@@ -618,13 +702,22 @@ class PyPIPackageJsonAsset:
     package_json: dict
 
     #: The source code temporary location name.
-    package_sourcecode_path: str
+    package_sourcecode_path: str = field(init=False)
+
+    #: URL of the sdist file.
+    sdist_url: str = field(init=False)
+
+    #: URL of the wheel file.
+    wheel_urls: list[str] = field(init=False)
 
     #: The wheel temporary location name.
-    wheel_path: str
+    wheel_path: str = field(init=False)
 
     #: Name of the wheel file.
-    wheel_filename: str
+    wheel_filename: str = field(init=False)
+
+    #: The datetime that the wheel was uploaded.
+    package_upload_time: datetime | None = field(default=None, init=False)
 
     #: The pypi inspector information about this package
     inspector_asset: PyPIInspectorAsset
@@ -745,6 +838,7 @@ class PyPIPackageJsonAsset:
                         fragment="",
                     ).geturl()
                     logger.debug("Found source URL: %s", configured_source_url)
+                    self.sdist_url = configured_source_url
                     return configured_source_url
         return None
 
@@ -769,6 +863,11 @@ class PyPIPackageJsonAsset:
         if not urls:
             return None
         for distribution in urls:
+            # In this way we have a package_upload_time even if we cannot find the wheel.
+            try:
+                self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
+            except ValueError:
+                logging.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
             # Only examine wheels
             if distribution.get("packagetype") != "bdist_wheel":
                 continue
@@ -779,6 +878,12 @@ class PyPIPackageJsonAsset:
             # Continue to getting url
             wheel_url: str = distribution.get("url") or ""
             if wheel_url:
+                try:
+                    self.package_upload_time = datetime.strptime(
+                        distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S"
+                    )
+                except ValueError:
+                    logging.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
                 try:
                     parsed_url = urllib.parse.urlparse(wheel_url)
                 except ValueError:
@@ -794,6 +899,7 @@ class PyPIPackageJsonAsset:
                         fragment="",
                     ).geturl()
                     logger.debug("Found wheel URL: %s", configured_wheel_url)
+                    self.wheel_urls = [configured_wheel_url]
                     return configured_wheel_url
         return None
 
@@ -812,8 +918,29 @@ class PyPIPackageJsonAsset:
         return None
 
     @contextmanager
-    def wheel(self) -> Generator[None]:
-        """Download and cleanup wheel of the package with a context manager."""
+    def wheel(self, download_binaries: bool) -> Generator[None]:
+        """Download and cleanup wheel of the package with a context manager.
+
+        Parameters
+        ----------
+        download_binaries: bool
+            Whether or not to download a wheel with binaries.
+
+        Returns
+        -------
+        Generator[None]
+            Generator that yields None and takes care of resource cleanup on
+            exiting the context in which it was called
+
+        Raises
+        ------
+        WheelTagError
+            If download_binaries is True
+        SourceCodeError
+            If we are unable to download the requested wheel
+        """
+        if download_binaries:
+            raise WheelTagError("Macaron does not currently support analysis of non-pure Python wheels.")
         if not self.download_wheel():
             raise SourceCodeError("Unable to download requested wheel.")
         yield
@@ -836,6 +963,35 @@ class PyPIPackageJsonAsset:
                 return True
             except InvalidHTTPResponseError as error:
                 logger.debug(error)
+        return False
+
+    def has_pure_wheel(self) -> bool:
+        """Check whether the PURL has a pure wheel from its package json.
+
+        Returns
+        -------
+        bool
+            Whether the PURL has a pure wheel or not.
+        """
+        if self.component_version:
+            urls = json_extract(self.package_json, ["releases", self.component_version], list)
+        else:
+            # Get the latest version.
+            urls = json_extract(self.package_json, ["urls"], list)
+        if not urls:
+            return False
+        for distribution in urls:
+            file_name: str = distribution.get("filename") or ""
+            # Parse out and check none and any
+            # Catch exceptions
+            try:
+                _, _, _, tags = parse_wheel_filename(file_name)
+                # Check if none and any are in the tags (i.e. the wheel is pure)
+                if all(tag.abi == "none" and tag.platform == "any" for tag in tags):
+                    return True
+            except InvalidWheelFilename:
+                logger.debug("Could not parse wheel name.")
+                return False
         return False
 
     @contextmanager
@@ -918,6 +1074,33 @@ class PyPIPackageJsonAsset:
             error_msg = f"Unable to read file {path}: {read_error}"
             logger.debug(error_msg)
             raise SourceCodeError(error_msg) from read_error
+
+    def file_exists(self, path: str) -> bool:
+        """Check if a file exists in the downloaded source code.
+
+        The path can be relative to the package_sourcecode_path attribute, or an absolute path.
+
+        Parameters
+        ----------
+        path: str
+            The absolute or relative to package_sourcecode_path file path to check for.
+
+        Returns
+        -------
+            bool: Whether or not a file at path absolute or relative to package_sourcecode_path exists.
+        """
+        if not self.package_sourcecode_path:
+            # No source code files were downloaded
+            return False
+
+        if not os.path.isabs(path):
+            path = os.path.join(self.package_sourcecode_path, path)
+
+        if not os.path.exists(path):
+            # Could not find a file at that path
+            return False
+
+        return True
 
     def iter_sourcecode(self) -> Iterator[tuple[str, bytes]]:
         """
@@ -1054,6 +1237,19 @@ class PyPIPackageJsonAsset:
         # If all distributions were invalid and went along a 'continue' path.
         return bool(self.inspector_asset)
 
+    def get_chronologically_suitable_setuptools_version(self) -> str:
+        """Find version of setuptools that would be "latest" for this package.
+
+        Returns
+        -------
+        str
+            Chronologically likeliest setuptools version
+        """
+        if self.package_upload_time:
+            return self.pypi_registry.get_matching_setuptools_version(self.package_upload_time)
+        # If we cannot infer upload time for the package, return the default
+        return defaults.get("heuristic.pypi", "default_setuptools")
+
 
 def find_or_create_pypi_asset(
     asset_name: str, asset_version: str | None, pypi_registry_info: PackageRegistryInfo
@@ -1091,8 +1287,6 @@ def find_or_create_pypi_asset(
         logger.debug("Failed to create PyPIPackageJson asset.")
         return None
 
-    asset = PyPIPackageJsonAsset(
-        asset_name, asset_version, False, package_registry, {}, "", "", "", PyPIInspectorAsset("", [], {})
-    )
+    asset = PyPIPackageJsonAsset(asset_name, asset_version, False, package_registry, {}, PyPIInspectorAsset("", [], {}))
     pypi_registry_info.metadata.append(asset)
     return asset

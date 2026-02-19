@@ -1,7 +1,7 @@
 # Go module documentation
 ## Quick start
 Prerequisites
-- Go (tested on `go 1.23.0 linux/amd64`). Installation instructions [here](https://go.dev/doc/install).
+- Go (tested on `go 1.24 linux/amd64`). Installation instructions [here](https://go.dev/doc/install).
 
 - Prepare the required libraries by running this command from the root dir of this repository:
 ```bash

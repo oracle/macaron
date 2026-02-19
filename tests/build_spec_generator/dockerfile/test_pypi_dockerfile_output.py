@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -27,10 +27,21 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "ecosystem": "pypi",
             "purl": "pkg:pypi/cachetools@6.2.1",
             "language": "python",
+            "has_binaries": False,
             "build_tools": ["pip"],
             "build_commands": [["python", "-m", "build"]],
             "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
             "build_backends": ["setuptools.build_meta"],
+            "upstream_artifacts": {
+                "wheels": [
+                    "https://files.pythonhosted.org/packages/96/c5/"
+                    "1e741d26306c42e2bf6ab740b2202872727e0f606033c9dd713f8b93f5a8/cachetools-6.2.1-py3-none-any.whl"
+                ],
+                "sdist": [
+                    "https://files.pythonhosted.org/packages/cc/7e/"
+                    "b975b5814bd36faf009faebe22c1072a1fa1168db34d285ef0ba071ad78c/cachetools-6.2.1.tar.gz"
+                ],
+            },
         }
     )
 

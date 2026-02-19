@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Integration test utility."""
@@ -82,6 +82,7 @@ COMPARE_SCRIPTS: dict[str, Sequence[str]] = {
     "find_source": ["tests", "find_source", "compare_source_reports.py"],
     "rc_build_spec": ["tests", "build_spec_generator", "reproducible_central", "compare_rc_build_spec.py"],
     "default_build_spec": ["tests", "build_spec_generator", "common_spec", "compare_default_buildspec.py"],
+    "dockerfile_build_spec": ["tests", "build_spec_generator", "dockerfile", "compare_dockerfile_buildspec.py"],
 }
 
 VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
@@ -389,6 +390,7 @@ class AnalyzeStepOptions(TypedDict):
     expectation: str | None
     provenance: str | None
     sbom: str | None
+    output: str | None
 
 
 @dataclass
@@ -403,15 +405,7 @@ class AnalyzeStep(Step):
             None,
             *[
                 cfgv.NoAdditionalKeys(
-                    [
-                        "main_args",
-                        "command_args",
-                        "env",
-                        "ini",
-                        "expectation",
-                        "provenance",
-                        "sbom",
-                    ],
+                    ["main_args", "command_args", "env", "ini", "expectation", "provenance", "sbom", "output"],
                 ),
                 cfgv.Optional(
                     key="main_args",
@@ -443,6 +437,11 @@ class AnalyzeStep(Step):
                     check_fn=check_required_file(cwd),
                     default=None,
                 ),
+                cfgv.Optional(
+                    key="output",
+                    check_fn=cfgv.check_string,
+                    default=None,
+                ),
             ],
         )
 
@@ -453,6 +452,9 @@ class AnalyzeStep(Step):
         ini_file = self.options.get("ini", None)
         if ini_file is not None:
             args.extend(["--defaults-path", ini_file])
+        output = self.options.get("output", None)
+        if output is not None:
+            args.extend(["--output", output])
         args.append("analyze")
         expectation_file = self.options.get("expectation", None)
         if expectation_file is not None:
@@ -1218,7 +1220,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     path = shutil.which(args.macaron)
     if path is None:
-        logger.error("'%s' is not a command.")
+        logger.error("'%s' is not a command.", args.macaron)
         return 1
     macaron_cmd = os.path.abspath(path)
 

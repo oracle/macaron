@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 name: Test Macaron Action (tutorials)
@@ -111,7 +111,7 @@ jobs:
     - name: Run Macaron (analyze purl - log4j-core example)
       uses: ./
       with:
-        package_url: pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta3
+        package_url: pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3
         output_dir: macaron_output/detect_vulnerable_github_actions
 
     - name: Run Macaron (verify policy - github_actions_vulns for purl)
@@ -184,7 +184,7 @@ jobs:
         package_url: pkg:maven/io.github.behnazh-w.demo/example-maven-app@2.0?type=jar
         repo_path: https://github.com/behnazh-w/example-maven-app
         output_dir: macaron_output/detect_malicious_java_dep
-        sbom_path: ./resources/detect_malicious_java_dep/example-sbom.json
+        sbom_path: ./tests/tutorial_resources/detect_malicious_java_dep/example-sbom.json
         deps_depth: '1'
 
     - name: Run Macaron (verify policy - detect-malicious-upload)

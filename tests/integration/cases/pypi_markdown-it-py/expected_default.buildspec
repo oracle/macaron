@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.18.0",
+    "macaron_version": "0.20.0",
     "group_id": null,
     "artifact_id": "markdown-it-py",
     "version": "4.0.0",
@@ -7,7 +7,8 @@
     "git_tag": "c62983f1554124391b47170180e6c62df4d476ca",
     "newline": "lf",
     "language_version": [
-        ">=3.10"
+        ">=3.6",
+        ">=3.8"
     ],
     "ecosystem": "pypi",
     "purl": "pkg:pypi/markdown-it-py@4.0.0",
@@ -21,11 +22,20 @@
             "build"
         ]
     ],
+    "has_binaries": false,
     "build_requires": {
         "flit": "==3.12.0",
         "flit_core": "<4,>=3.4"
     },
     "build_backends": [
         "flit_core.buildapi"
-    ]
+    ],
+    "upstream_artifacts": {
+        "wheels": [
+            "https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl"
+        ],
+        "sdist": [
+            "https://files.pythonhosted.org/packages/5b/f5/4ec618ed16cc4f8fb3b701563655a69816155e79e24a17b651541804721d/markdown_it_py-4.0.0.tar.gz"
+        ]
+    }
 }

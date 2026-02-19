@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This is the main entrypoint to run Macaron."""
@@ -22,6 +22,7 @@ from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.console import RichConsoleHandler, access_handler
 from macaron.errors import ConfigurationError
+from macaron.output_reporter import find_report_output_path
 from macaron.output_reporter.reporter import HTMLReporter, JSONReporter, PolicyReporter
 from macaron.policy_engine.policy_engine import run_policy_engine, show_prelude
 from macaron.repo_finder import repo_finder
@@ -91,7 +92,7 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
 
         local_maven_repo = os.path.join(home_dir, ".m2")
         if not os.path.isdir(local_maven_repo):
-            logger.debug("The default local Maven repo at %s does not exist. Ignore ...")
+            logger.debug("The default local Maven repo at %s does not exist. Ignore ...", local_maven_repo)
             global_config.local_maven_repo = None
 
         global_config.local_maven_repo = local_maven_repo
@@ -280,14 +281,14 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
         rich_handler = access_handler.get_handler()
         if vsa is not None:
             vsa_filepath = os.path.join(global_config.output_path, "vsa.intoto.jsonl")
-            rich_handler.update_vsa(os.path.relpath(vsa_filepath, os.getcwd()))
+            rich_handler.update_vsa(find_report_output_path(vsa_filepath))
             logger.info(
                 "Generating the Verification Summary Attestation (VSA) to %s.",
-                os.path.relpath(vsa_filepath, os.getcwd()),
+                find_report_output_path(vsa_filepath),
             )
             logger.info(
                 "To decode and inspect the payload, run `cat %s | jq -r '.payload' | base64 -d | jq`.",
-                os.path.relpath(vsa_filepath, os.getcwd()),
+                find_report_output_path(vsa_filepath),
             )
             try:
                 with open(vsa_filepath, mode="w", encoding="utf-8") as file:
@@ -295,7 +296,7 @@ def verify_policy(verify_policy_args: argparse.Namespace) -> int:
             except OSError as err:
                 logger.error(
                     "Could not generate the VSA to %s. Error: %s",
-                    os.path.relpath(vsa_filepath, os.getcwd()),
+                    find_report_output_path(vsa_filepath),
                     err,
                 )
         else:
@@ -372,7 +373,7 @@ def perform_action(action_args: argparse.Namespace) -> None:
             if not action_args.disable_rich_output:
                 rich_handler.start("dump-defaults")
             # Create the defaults.ini file in the output dir and exit.
-            create_defaults(action_args.output_dir, os.getcwd())
+            create_defaults(action_args.output)
             sys.exit(os.EX_OK)
 
         case "verify-policy":
@@ -466,6 +467,9 @@ def main(argv: list[str] | None = None) -> None:
     global_config.gl_token = _get_token_from_dict_or_env("MCN_GITLAB_TOKEN", token_dict)
     global_config.gl_self_host_token = _get_token_from_dict_or_env("MCN_SELF_HOSTED_GITLAB_TOKEN", token_dict)
 
+    # Set the host output path, which would be set if Macaron is running inside a container.
+    global_config.host_output_path = _get_host_output_path_env()
+
     main_parser = argparse.ArgumentParser(prog="macaron")
 
     main_parser.add_argument(
@@ -492,7 +496,7 @@ def main(argv: list[str] | None = None) -> None:
 
     main_parser.add_argument(
         "-o",
-        "--output-dir",
+        "--output",
         default=os.path.join(os.getcwd(), "output"),
         help="The output destination path for Macaron",
     )
@@ -724,29 +728,29 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         # Set the output directory.
-        if not args.output_dir:
+        if not args.output:
             logger.error("The output path cannot be empty. Exiting ...")
             sys.exit(os.EX_USAGE)
 
-        if os.path.isfile(args.output_dir):
+        if os.path.isfile(args.output):
             logger.error("The output directory already exists. Exiting ...")
             sys.exit(os.EX_USAGE)
 
-        if os.path.isdir(args.output_dir):
+        if os.path.isdir(args.output):
             logger.info(
                 "Setting the output directory to %s",
-                os.path.relpath(args.output_dir, os.getcwd()),
+                find_report_output_path(args.output),
             )
         else:
             logger.info(
                 "No directory at %s. Creating one ...",
-                os.path.relpath(args.output_dir, os.getcwd()),
+                find_report_output_path(args.output),
             )
-            os.makedirs(args.output_dir)
+            os.makedirs(args.output)
 
         # Add file handler to the root logger. Remove stream handler from the
         # root logger to prevent dependencies printing logs to stdout.
-        debug_log_path = os.path.join(args.output_dir, "debug.log")
+        debug_log_path = os.path.join(args.output, "debug.log")
         log_file_handler = logging.FileHandler(debug_log_path, "w")
         log_file_handler.setFormatter(logging.Formatter(log_format))
         if args.disable_rich_output:
@@ -769,8 +773,8 @@ def main(argv: list[str] | None = None) -> None:
         # set through analyze sub-command.
         global_config.load(
             macaron_path=macaron.MACARON_PATH,
-            output_path=args.output_dir,
-            build_log_path=os.path.join(args.output_dir, "build_log"),
+            output_path=args.output,
+            build_log_path=os.path.join(args.output, "build_log"),
             debug_level=log_level,
             local_repos_path=args.local_repos_path,
             resources_path=os.path.join(macaron.MACARON_PATH, "resources"),
@@ -798,6 +802,18 @@ def main(argv: list[str] | None = None) -> None:
 def _get_token_from_dict_or_env(token: str, token_dict: dict[str, str]) -> str:
     """Return the value of passed token from passed dictionary or os environment."""
     return token_dict[token] if token in token_dict else os.environ.get(token) or ""
+
+
+def _get_host_output_path_env() -> str:
+    """
+    Get the host output path from the HOST_OUTPUT environment variable.
+
+    Returns
+    -------
+    str
+        The HOST_OUTPUT environment variable or an empty string.
+    """
+    return os.environ.get("HOST_OUTPUT") or ""
 
 
 if __name__ == "__main__":

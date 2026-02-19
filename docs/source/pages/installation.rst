@@ -7,6 +7,8 @@
 Installation Guide
 ==================
 
+.. contents:: :local:
+
 -------------
 Prerequisites
 -------------
@@ -23,9 +25,11 @@ Prerequisites
 Download
 --------
 
-Macaron is currently distributed as a Docker image. We provide a bash script ``run_macaron.sh`` to easily download and run it.
+Macaron is currently distributed as a Docker image and Python package. Note that the Python package is only published as a GitHub release asset. We provide bash scripts to easily download and run Macaron.
 
-.. note:: When run, Macaron will create output files inside the current directory where ``run_macaron.sh`` is run. If you run Docker Desktop, please make sure that the current directory is bind mountable for Docker (see the `File Sharing settings <https://docs.docker.com/desktop/settings/mac/?uuid=95C3E343-F11C-4A35-A10C-6B5431B73E14#file-sharing>`_).
+'''''''''''''''''''''''''''''''''
+Install Macaron as a Docker image
+'''''''''''''''''''''''''''''''''
 
 Download the ``run_macaron.sh`` script and make it executable by running the commands (replace ``tag`` with the version you want or ``release`` for the latest version):
 
@@ -34,9 +38,11 @@ Download the ``run_macaron.sh`` script and make it executable by running the com
   curl -O https://raw.githubusercontent.com/oracle/macaron/refs/tags/<tag>/scripts/release_scripts/run_macaron.sh
   chmod +x run_macaron.sh
 
-----------------------------------------
-Verify that the installation is complete
-----------------------------------------
+.. note:: When run, Macaron will create output files inside the current directory where ``run_macaron.sh`` is run. If you run Docker Desktop, please make sure that the current directory is bind mountable for Docker (see the `File Sharing settings <https://docs.docker.com/desktop/settings/mac/?uuid=95C3E343-F11C-4A35-A10C-6B5431B73E14#file-sharing>`_).
+
+''''''''''''''''''''''
+Check the Docker Image
+''''''''''''''''''''''
 
 To verify your setup, go to the directory containing the downloaded ``run_macaron.sh`` script and run this command in order to print out the help message for Macaron:
 
@@ -50,6 +56,43 @@ To verify your setup, go to the directory containing the downloaded ``run_macaro
 .. note:: By default, ``latest`` is used as the tag for the downloaded image. You can choose a specific tag by assigning the environment variable ``MACARON_IMAGE_TAG``. For example to run Macaron v0.1.0 run: ``MACARON_IMAGE_TAG=v0.1.0 ./run_macaron.sh --help``
 
 .. note:: By default, the script will always check the docker registry to ensure the docker image is up-to-date. This can be overridden if necessary (e.g. if running offline with a pre-installed image) by assigning the environment variable ``DOCKER_PULL``. For example: ``DOCKER_PULL=never ./run_macaron.sh --help``
+
+'''''''''''''''''''''''''''''''''''
+Install Macaron as a Python package
+'''''''''''''''''''''''''''''''''''
+
+Download the ``install_macaron_python.sh`` script and make it executable by running the commands (replace ``tag`` with the version you want or ``release`` for the latest version):
+
+.. code-block:: shell
+
+  curl -O https://raw.githubusercontent.com/oracle/macaron/refs/tags/<tag>/scripts/release_scripts/install_macaron_python.sh
+  chmod +x install_macaron_python.sh
+
+Install the package by providing a version. The installation will automatically create a virtual environment at ``./.venv`` if one does not already exist. The script uses your system's ``python3`` interpreter, and requires Python ``3.11.14`` or later to be available:
+
+.. code-block:: shell
+
+  ./install_macaron_python.sh 0.20.0
+
+Macaron might call `slsa-verifier <https://github.com/slsa-framework/slsa-verifier>`_ for the ``mcn_provenance_verified_1`` check if it is already installed on your machine. You can also pass the ``--install-slsa-verifier`` option to the script to install it for you. Note that if slsa-verifier is not installed, we only log an error but proceed with the rest of the analysis. For further information run:
+
+.. code-block:: shell
+
+  ./install_macaron_python.sh --help
+
+If you run Macaron as a Python package and would like to run the :ref:`verify-policy <verify-policy-command-cli>` or :ref:`gen-build-spec <gen-build-spec-command-cli>` commands, you need to install the Datalog engine `souffle <https://souffle-lang.github.io/install>`_ separately.
+
+''''''''''''''''''''''''
+Check the Python package
+''''''''''''''''''''''''
+
+To verify your setup, activate the virtual environment and run this command in order to print out the help message for Macaron:
+
+.. code-block:: shell
+
+  source .venv/bin/activate
+  macaron --help
+
 
 .. _prepare-github-token:
 

@@ -1,11 +1,15 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for build spec generation"""
 
 import pytest
+from packageurl import PackageURL
 
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
 from macaron.build_spec_generator.common_spec.core import (
+    ECOSYSTEMS,
+    LANGUAGES,
     MacaronBuildToolName,
     compose_shell_commands,
     get_language_version,
@@ -141,3 +145,95 @@ def test_get_language_version(
 ) -> None:
     """Test the get_language_version function."""
     assert get_language_version(build_command_info) == expected
+
+
+@pytest.mark.parametrize(
+    ("base_build_spec_dict"),
+    [
+        pytest.param(
+            BaseBuildSpecDict(
+                {
+                    "macaron_version": "0.20.0",
+                    "group_id": "foo",
+                    "artifact_id": "bar",
+                    "version": "1.0.0",
+                    "git_repo": "bla",
+                    "git_tag": "bla",
+                    "newline": "lf",
+                    "language_version": [],
+                    "ecosystem": "maven",
+                    "purl": "pkg:maven/foo/bar@1.0.0",
+                    "language": LANGUAGES.MAVEN.value,
+                    "build_tools": [MacaronBuildToolName.MAVEN],
+                    "build_commands": [],
+                }
+            ),
+            id="empty build command for maven",
+        ),
+        pytest.param(
+            BaseBuildSpecDict(
+                {
+                    "macaron_version": "0.20.0",
+                    "group_id": "foo",
+                    "artifact_id": "bar",
+                    "version": "1.0.0",
+                    "git_repo": "bla",
+                    "git_tag": "bla",
+                    "newline": "lf",
+                    "language_version": [],
+                    "ecosystem": "maven",
+                    "purl": "pkg:maven/foo/bar@1.0.0",
+                    "language": LANGUAGES.MAVEN.value,
+                    "build_tools": ["ant"],
+                    "build_commands": [["ant", "dist"]],
+                }
+            ),
+            id="unsupported build tool for maven",
+        ),
+        pytest.param(
+            BaseBuildSpecDict(
+                {
+                    "macaron_version": "0.20.0",
+                    "group_id": None,
+                    "artifact_id": "bar",
+                    "version": "1.0.0",
+                    "git_repo": "bla",
+                    "git_tag": "bla",
+                    "newline": "lf",
+                    "language_version": [],
+                    "ecosystem": "pypi",
+                    "purl": "pkg:pypi/bar@1.0.0",
+                    "language": LANGUAGES.PYPI.value,
+                    "build_tools": [MacaronBuildToolName.FLIT],
+                    "build_commands": [],
+                }
+            ),
+            id="empty build command for pypi",
+        ),
+        pytest.param(
+            BaseBuildSpecDict(
+                {
+                    "macaron_version": "0.20.0",
+                    "group_id": None,
+                    "artifact_id": "bar",
+                    "version": "1.0.0",
+                    "git_repo": "bla",
+                    "git_tag": "bla",
+                    "newline": "lf",
+                    "language_version": [],
+                    "ecosystem": "pypi",
+                    "purl": "pkg:pypi/bar@1.0.0",
+                    "language": LANGUAGES.PYPI.value,
+                    "build_tools": ["uv"],
+                    "build_commands": [["python", "-m", "build"]],
+                }
+            ),
+            id="unsupported build tool for pypi",
+        ),
+    ],
+)
+def test_resolve_fields(base_build_spec_dict: BaseBuildSpecDict) -> None:
+    """Test the buildspec field resolution for each ecosystem."""
+    ECOSYSTEMS[base_build_spec_dict["ecosystem"].upper()].value(base_build_spec_dict).resolve_fields(
+        PackageURL.from_string(base_build_spec_dict["purl"])
+    )

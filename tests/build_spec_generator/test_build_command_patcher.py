@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the test for the build command patcher."""
@@ -559,3 +559,26 @@ def test_patching_multiple_commands_error(
         )
         is None
     )
+
+
+@pytest.mark.parametrize(
+    ("original_cmd_sequence"),
+    [
+        pytest.param(
+            [],
+            id="empty sequence",
+        ),
+        pytest.param(
+            [[]],
+            id="empty command",
+        ),
+    ],
+)
+def test_empty_command(maven_cli_parser: MavenCLICommandParser, original_cmd_sequence: list[list[str]]) -> None:
+    """Test the patch command for empty commands."""
+    patch_cmds = _patch_commands(
+        cmds_sequence=original_cmd_sequence,
+        cli_parsers=[maven_cli_parser],
+        patches={PatchCommandBuildTool.MAVEN: {}},
+    )
+    assert patch_cmds == []

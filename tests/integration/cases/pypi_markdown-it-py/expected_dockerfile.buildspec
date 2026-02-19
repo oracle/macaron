@@ -1,0 +1,91 @@
+
+#syntax=docker/dockerfile:1.10
+FROM oraclelinux:9
+
+# Install core tools
+RUN dnf -y install which wget tar unzip git
+
+# Install compiler and make
+RUN dnf -y install gcc make
+
+# Download and unzip interpreter
+RUN <<EOF
+    wget https://www.python.org/ftp/python/3.8.20/Python-3.8.20.tgz
+    tar -xf Python-3.8.20.tgz
+EOF
+
+# Install necessary libraries to build the interpreter
+# From: https://devguide.python.org/getting-started/setup-building/
+RUN dnf install \
+  gcc-c++ gdb lzma glibc-devel libstdc++-devel openssl-devel \
+  readline-devel zlib-devel libzstd-devel libffi-devel bzip2-devel \
+  xz-devel sqlite sqlite-devel sqlite-libs libuuid-devel gdbm-libs \
+  perf expat expat-devel mpdecimal python3-pip \
+  perl perl-File-Compare
+
+# Build OpenSSL 1.1.1w
+RUN <<EOF
+    wget https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz
+    tar xzf openssl-1.1.1w.tar.gz
+    cd openssl-1.1.1w
+    ./config --prefix=/opt/openssl --openssldir=/opt/openssl shared zlib
+    make -j"$(nproc)"
+    make install_sw
+EOF
+
+ENV LD_LIBRARY_PATH=/opt/openssl/lib
+ENV CPPFLAGS=-I/opt/openssl/include
+ENV LDFLAGS=-L/opt/openssl/lib
+
+# Build interpreter and create venv
+RUN <<EOF
+    cd Python-3.8.20
+    ./configure --with-pydebug
+    make -s -j $(nproc)
+    make install
+    ./python -m ensurepip
+    ./python -m venv /deps
+EOF
+
+# Clone code to rebuild
+RUN <<EOF
+    mkdir src
+    cd src
+    git clone https://github.com/executablebooks/markdown-it-py .
+    git checkout --force c62983f1554124391b47170180e6c62df4d476ca
+EOF
+
+WORKDIR /src
+
+# Install build and the build backends
+RUN <<EOF
+    /deps/bin/pip install "flit==3.12.0" && /deps/bin/pip install "flit_core<4,>=3.4"
+    /deps/bin/pip install build
+EOF
+
+# Run the build
+RUN source /deps/bin/activate &&  pip install flit && if test -f "flit.ini"; then python -m flit.tomlify; fi && flit build
+
+# Validate script
+RUN cat <<'EOF' >/validate
+    [ -n "https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl" ] || { echo "No upstream artifact to validate against."; exit 1; }
+    # Capture artifacts generated
+    WHEELS=(/src/dist/*.whl)
+    # Ensure we only have one artifact
+    [ ${#WHEELS[@]} -eq 1 ] || { echo "Unexpected artifacts produced!"; exit 1; }
+    # BUILT_WHEEL is the artifact we built
+    BUILT_WHEEL=${WHEELS[0]}
+    # Ensure the artifact produced is not the literal returned by the glob
+    [ -e $BUILT_WHEEL ] || { echo "No wheels found!"; exit 1; }
+    # Download the wheel
+    wget -q https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl
+    # Compare wheel names
+    [ $(basename $BUILT_WHEEL) == "markdown_it_py-4.0.0-py3-none-any.whl" ] || { echo "Wheel name does not match!"; exit 1; }
+    # Compare file tree
+    (unzip -Z1 $BUILT_WHEEL | grep -v '\.dist-info' | sort) > built.tree
+    (unzip -Z1 "markdown_it_py-4.0.0-py3-none-any.whl" | grep -v '\.dist-info' | sort ) > pypi_artifact.tree
+    diff -u built.tree pypi_artifact.tree || { echo "File trees do not match!"; exit 1; }
+    echo "Success!"
+EOF
+
+ENTRYPOINT ["/bin/bash","/validate"]

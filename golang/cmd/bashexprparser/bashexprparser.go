@@ -1,0 +1,59 @@
+/* Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/oracle/macaron/golang/internal/bashparser"
+	"github.com/oracle/macaron/golang/internal/filewriter"
+)
+
+// Parse the bash expression and provide parsed objects in JSON format to stdout or a file.
+// Params:
+//
+//	-input <EXPR_CONTENT>: the bash expr content in string
+//	-output <OUTPUT_FILE>: the output file path to store the JSON content
+//
+// Return code:
+//
+//	0 - Parse successfully, return the JSON as string to stdout. If -output is set, store the json content to the file.
+//		If there is any errors storing to file, the result is still printed to stdout, but the errors are put to stderr instead.
+//	1 - Error: Missing bash script or output file paths.
+//	2 - Error: Could not parse the bash script file. Parse errors will be printed to stderr.
+func main() {
+	input := flag.String("input", "", "The bash expr content to be parsed.")
+	out_path := flag.String("output", "", "The output file path to store the JSON content.")
+	flag.Parse()
+
+	var json_content string
+	var parse_err error
+	if len(*input) <= 0 {
+		fmt.Fprintln(os.Stderr, "Missing bash expr input.")
+		flag.PrintDefaults()
+		os.Exit(1)
+	} else {
+		// Read the bash script from command line argument.
+		json_content, parse_err = bashparser.ParseExpr(*input)
+	}
+
+	if parse_err != nil {
+		fmt.Fprintln(os.Stderr, parse_err.Error())
+		os.Exit(2)
+	}
+
+	fmt.Println(json_content)
+
+	if len(*out_path) > 0 {
+		err := filewriter.StoreBytesToFile([]byte(json_content), *out_path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+	}
+
+	os.Exit(0)
+}

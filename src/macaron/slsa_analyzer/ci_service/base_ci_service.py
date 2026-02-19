@@ -3,15 +3,15 @@
 
 """This module contains the BaseCIService class to be inherited by a CI service."""
 
+from __future__ import annotations
+
 import logging
 import os
 from abc import abstractmethod
-from collections.abc import Iterable
 from datetime import datetime
 
-from macaron.code_analyzer.call_graph import BaseNode, CallGraph
-from macaron.errors import CallGraphError
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand
+from macaron.code_analyzer.dataflow_analysis.core import NodeForest
+from macaron.output_reporter import find_report_output_path
 from macaron.slsa_analyzer.git_service.api_client import BaseAPIClient
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
 
@@ -92,7 +92,7 @@ class BaseCIService:
         return exists
 
     @abstractmethod
-    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
+    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> NodeForest:
         """Build the call Graph for this CI service.
 
         Parameters
@@ -104,7 +104,7 @@ class BaseCIService:
 
         Returns
         -------
-        CallGraph : CallGraph
+        NodeForest
             The call graph built for the CI.
         """
         raise NotImplementedError
@@ -147,9 +147,7 @@ class BaseCIService:
                                 line.strip(),
                             )
                             return keyword, config
-                logger.info(
-                    "No build command found for %s in %s", build_tool_name, os.path.relpath(file_path, os.getcwd())
-                )
+                logger.info("No build command found for %s in %s", build_tool_name, find_report_output_path(file_path))
                 return "", ""
             except FileNotFoundError as error:
                 logger.debug(error)
@@ -245,31 +243,6 @@ class BaseCIService:
         """
         return False
 
-    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
-        """
-        Traverse the callgraph and find all the reachable build tool commands.
-
-        Parameters
-        ----------
-        callgraph: CallGraph
-            The callgraph reachable from the CI workflows.
-        build_tool: BaseBuildTool
-            The corresponding build tool for which shell commands need to be detected.
-
-        Yields
-        ------
-        BuildToolCommand
-            The object that contains the build command as well useful contextual information.
-
-        Raises
-        ------
-        CallGraphError
-            Error raised when an error occurs while traversing the callgraph.
-        """
-        # By default we assume that there is no callgraph available for a CI service.
-        # Each CI service should override this method if a callgraph is generated for it.
-        raise CallGraphError("There is no callgraph for this CI service.")
-
     def get_third_party_configurations(self) -> list[str]:
         """Get the list of third-party CI configuration files.
 
@@ -309,7 +282,7 @@ class NoneCIService(BaseCIService):
     def set_api_client(self) -> None:
         """Set the API client using the personal access token."""
 
-    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> CallGraph:
+    def build_call_graph(self, repo_path: str, macaron_path: str = "") -> NodeForest:
         """Build the call Graph for this CI service.
 
         Parameters
@@ -321,33 +294,10 @@ class NoneCIService(BaseCIService):
 
         Returns
         -------
-        CallGraph : CallGraph
+        NodeForest
             The call graph built for the CI.
         """
-        return CallGraph(BaseNode(), "")
-
-    def get_build_tool_commands(self, callgraph: CallGraph, build_tool: BaseBuildTool) -> Iterable[BuildToolCommand]:
-        """
-        Traverse the callgraph and find all the reachable build tool commands.
-
-        Parameters
-        ----------
-        callgraph: CallGraph
-            The callgraph reachable from the CI workflows.
-        build_tool: BaseBuildTool
-            The corresponding build tool for which shell commands need to be detected.
-
-        Yields
-        ------
-        BuildToolCommand
-            The object that contains the build command as well useful contextual information.
-
-        Raises
-        ------
-        CallGraphError
-            Error raised when an error occurs while traversing the callgraph.
-        """
-        raise CallGraphError("There is no callgraph for this CI service.")
+        return NodeForest([])
 
     def has_latest_run_passed(
         self, repo_full_name: str, branch_name: str | None, commit_sha: str, commit_date: str, workflow: str

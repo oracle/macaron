@@ -59,7 +59,7 @@ def find_repo(
         if not pypi_registry:
             return "", RepoFinderInfo.PYPI_NO_REGISTRY
         pypi_asset = PyPIPackageJsonAsset(
-            purl.name, purl.version, False, pypi_registry, {}, "", "", "", PyPIInspectorAsset("", [], {})
+            purl.name, purl.version, False, pypi_registry, {}, PyPIInspectorAsset("", [], {})
         )
 
     if not pypi_asset:

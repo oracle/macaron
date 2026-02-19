@@ -14,6 +14,6 @@ jdk=17
 
 newline=lf
 
-command="./mvnw -DskipTests=true -Dmaven.test.skip=true -Dmaven.site.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true clean package"
+command="./mvnw -Dmaven.test.skip=true -DskipTests=true -Dmaven.site.skip=true -Drat.skip=true -Dmaven.javadoc.skip=true clean package"
 
 buildinfo=target/core-2.0.3.buildinfo

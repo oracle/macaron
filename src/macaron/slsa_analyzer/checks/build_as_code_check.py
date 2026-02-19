@@ -5,27 +5,26 @@
 
 import logging
 import os
-from typing import cast
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
+from macaron.code_analyzer.dataflow_analysis.analysis import get_build_tool_commands, get_containing_github_job
+from macaron.code_analyzer.dataflow_analysis.core import traverse_bfs
+from macaron.code_analyzer.dataflow_analysis.github import (
+    GitHubActionsActionStepNode,
+    GitHubActionsReusableWorkflowCallNode,
+    GitHubActionsRunStepNode,
+)
 from macaron.database.table_definitions import CheckFacts
 from macaron.errors import CallGraphError, ProvenanceError
-from macaron.parsers.bashparser import BashNode
-from macaron.parsers.github_workflow_model import ActionStep
 from macaron.provenance.provenance_extractor import ProvenancePredicate
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext, store_inferred_build_info_results
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 from macaron.slsa_analyzer.checks.check_result import CheckResultData, CheckResultType, Confidence, JustificationType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService, NoneCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
-from macaron.slsa_analyzer.ci_service.github_actions.analyzer import (
-    GitHubJobNode,
-    GitHubWorkflowNode,
-    GitHubWorkflowType,
-)
 from macaron.slsa_analyzer.ci_service.gitlab_ci import GitLabCI
 from macaron.slsa_analyzer.ci_service.travis import Travis
 from macaron.slsa_analyzer.registry import registry
@@ -147,95 +146,94 @@ class BuildAsCodeCheck(BaseCheck):
                 if isinstance(ci_service, NoneCIService):
                     continue
 
+                callgraph = ci_info["callgraph"]
+
                 trusted_deploy_actions = tool.ci_deploy_kws["github_actions"] or []
 
                 # Check for use of a trusted GitHub Actions workflow to publish/deploy.
                 # TODO: verify that deployment is legitimate and not a test
                 if trusted_deploy_actions:
-                    for callee in ci_info["callgraph"].bfs():
-                        if isinstance(callee, GitHubWorkflowNode) and callee.node_type in [
-                            GitHubWorkflowType.EXTERNAL,
-                            GitHubWorkflowType.REUSABLE,
-                        ]:
-                            workflow_name = callee.name.split("@")[0]
+                    for root in ci_info["callgraph"].root_nodes:
+                        for callee in traverse_bfs(root):
+                            if isinstance(callee, (GitHubActionsReusableWorkflowCallNode, GitHubActionsActionStepNode)):
+                                workflow_name = callee.uses_name
 
-                            if not workflow_name:
-                                logger.debug("Workflow %s is not relevant. Skipping...", callee.name)
-                                continue
-                            if workflow_name in trusted_deploy_actions:
-                                job_id = None
-                                step_id = None
-                                step_name = None
-                                caller_path = ""
-                                job = callee.caller
+                                if workflow_name in trusted_deploy_actions:
+                                    job_id = None
+                                    step_id = None
+                                    step_name = None
+                                    caller_path = ""
+                                    job = (
+                                        get_containing_github_job(callee, callgraph.parents)
+                                        if isinstance(callee, GitHubActionsActionStepNode)
+                                        else callee
+                                    )
 
-                                # We always expect the caller of the node that calls a third-party
-                                # or Reusable GitHub Action to be a GitHubJobNode.
-                                if not isinstance(job, GitHubJobNode):
-                                    continue
+                                    if not job:
+                                        continue
 
-                                job_id = job.parsed_obj.id
-                                caller_path = job.source_path
+                                    job_id = job.job_id
+                                    caller_path = job.context.ref.workflow_context.ref.source_filepath
 
-                                # Only third-party Actions can be called from a step.
-                                # Reusable workflows have to be directly called from the job.
-                                # See https://docs.github.com/en/actions/sharing-automations/ \
-                                # reusing-workflows#calling-a-reusable-workflow
-                                if callee.node_type == GitHubWorkflowType.EXTERNAL:
-                                    callee_step_obj = cast(ActionStep, callee.parsed_obj)
-                                    if "id" in callee_step_obj:
-                                        step_id = callee_step_obj["id"]
-                                    if "name" in callee_step_obj:
-                                        step_name = callee_step_obj["name"]
+                                    # Only third-party Actions can be called from a step.
+                                    # Reusable workflows have to be directly called from the job.
+                                    # See https://docs.github.com/en/actions/sharing-automations/ \
+                                    # reusing-workflows#calling-a-reusable-workflow
+                                    if isinstance(callee, GitHubActionsActionStepNode):
+                                        callee_node_type = "external"
+                                        if "id" in callee.definition:
+                                            step_id = callee.definition["id"]
+                                        if "name" in callee.definition:
+                                            step_name = callee.definition["name"]
+                                    else:
+                                        callee_node_type = "reusable"
 
-                                trigger_link = ci_service.api_client.get_file_link(
-                                    ctx.component.repository.full_name,
-                                    ctx.component.repository.commit_sha,
-                                    file_path=(
-                                        ci_service.api_client.get_relative_path_of_workflow(
-                                            os.path.basename(caller_path)
+                                    trigger_link = ci_service.api_client.get_file_link(
+                                        ctx.component.repository.full_name,
+                                        ctx.component.repository.commit_sha,
+                                        file_path=(
+                                            ci_service.api_client.get_relative_path_of_workflow(
+                                                os.path.basename(caller_path)
+                                            )
+                                            if caller_path
+                                            else ""
+                                        ),
+                                    )
+
+                                    trusted_workflow_confidence = tool.infer_confidence_deploy_workflow(
+                                        ci_path=caller_path, provenance_workflow=prov_workflow
+                                    )
+                                    # Store or update the inferred build information if the confidence
+                                    # for the current check fact is bigger than the maximum score.
+                                    if (
+                                        not result_tables
+                                        or trusted_workflow_confidence
+                                        > max(result_tables, key=lambda item: item.confidence).confidence
+                                    ):
+                                        store_inferred_build_info_results(
+                                            ctx=ctx,
+                                            ci_info=ci_info,
+                                            ci_service=ci_service,
+                                            trigger_link=trigger_link,
+                                            job_id=job_id,
+                                            step_id=step_id,
+                                            step_name=step_name,
+                                            callee_node_type=callee_node_type,
                                         )
-                                        if caller_path
-                                        else ""
-                                    ),
-                                )
+                                    result_tables.append(
+                                        BuildAsCodeFacts(
+                                            build_tool_name=tool.name,
+                                            ci_service_name=ci_service.name,
+                                            build_trigger=trigger_link,
+                                            language=tool.language.value,
+                                            deploy_command=workflow_name,
+                                            confidence=trusted_workflow_confidence,
+                                        )
+                                    )
+                                    overall_res = CheckResultType.PASSED
 
-                                trusted_workflow_confidence = tool.infer_confidence_deploy_workflow(
-                                    ci_path=caller_path, provenance_workflow=prov_workflow
-                                )
-                                # Store or update the inferred build information if the confidence
-                                # for the current check fact is bigger than the maximum score.
-                                if (
-                                    not result_tables
-                                    or trusted_workflow_confidence
-                                    > max(result_tables, key=lambda item: item.confidence).confidence
-                                ):
-                                    store_inferred_build_info_results(
-                                        ctx=ctx,
-                                        ci_info=ci_info,
-                                        ci_service=ci_service,
-                                        trigger_link=trigger_link,
-                                        job_id=job_id,
-                                        step_id=step_id,
-                                        step_name=step_name,
-                                        callee_node_type=callee.node_type.value,
-                                    )
-                                result_tables.append(
-                                    BuildAsCodeFacts(
-                                        build_tool_name=tool.name,
-                                        ci_service_name=ci_service.name,
-                                        build_trigger=trigger_link,
-                                        language=tool.language.value,
-                                        deploy_command=workflow_name,
-                                        confidence=trusted_workflow_confidence,
-                                    )
-                                )
-                                overall_res = CheckResultType.PASSED
                 try:
-                    for build_command in ci_service.get_build_tool_commands(
-                        callgraph=ci_info["callgraph"], build_tool=tool
-                    ):
-
+                    for build_command in get_build_tool_commands(nodes=callgraph, build_tool=tool):
                         # Yes or no with a confidence score.
                         result, confidence = tool.is_deploy_command(
                             build_command,
@@ -256,23 +254,27 @@ class BuildAsCodeCheck(BaseCheck):
                                 not result_tables
                                 or confidence > max(result_tables, key=lambda item: item.confidence).confidence
                             ):
+                                job_id = None
+                                step_id = None
+                                step_name = None
+                                step_node = build_command["step_node"]
+                                if step_node:
+                                    job_node = get_containing_github_job(step_node, callgraph.parents)
+                                    if job_node is not None:
+                                        job_id = job_node.job_id
+
+                                    if isinstance(step_node, GitHubActionsRunStepNode):
+                                        step_id = step_node.definition.get("id")
+                                        step_name = step_node.definition.get("name")
+
                                 store_inferred_build_info_results(
                                     ctx=ctx,
                                     ci_info=ci_info,
                                     ci_service=ci_service,
                                     trigger_link=trigger_link,
-                                    job_id=(
-                                        build_command["step_node"].caller.name
-                                        if build_command["step_node"]
-                                        and isinstance(build_command["step_node"].caller, GitHubJobNode)
-                                        else None
-                                    ),
-                                    step_id=build_command["step_node"].node_id if build_command["step_node"] else None,
-                                    step_name=(
-                                        build_command["step_node"].name
-                                        if isinstance(build_command["step_node"], BashNode)
-                                        else None
-                                    ),
+                                    job_id=job_id,
+                                    step_id=step_id,
+                                    step_name=step_name,
                                 )
                             result_tables.append(
                                 BuildAsCodeFacts(

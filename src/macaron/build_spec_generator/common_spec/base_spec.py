@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes base build specification and helper classes."""
@@ -62,7 +62,7 @@ class BaseBuildSpecDict(TypedDict, total=False):
     build_commands: NotRequired[list[list[str]]]
 
     #: List of shell commands to test the project.
-    test_commands: NotRequired[list[str]]
+    test_commands: NotRequired[list[list[str]]]
 
     #: Environment variables required during build or test.
     environment: NotRequired[dict[str, str]]
@@ -80,6 +80,12 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: package the source distribution into the wheel format. build_backends would
     #: be a list of these that were used in building the wheel alongside their version.
     build_backends: NotRequired[list[str]]
+
+    #: Flag to indicate if the artifact includes binaries.
+    has_binaries: NotRequired[bool]
+
+    #: The artifacts that were analyzed in generating the build specification.
+    upstream_artifacts: dict[str, list[str]]
 
 
 class BaseBuildSpec(ABC):

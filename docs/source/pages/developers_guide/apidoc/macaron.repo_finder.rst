@@ -57,6 +57,14 @@ macaron.repo\_finder.repo\_finder\_java module
    :show-inheritance:
    :undoc-members:
 
+macaron.repo\_finder.repo\_finder\_npm module
+---------------------------------------------
+
+.. automodule:: macaron.repo_finder.repo_finder_npm
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 macaron.repo\_finder.repo\_finder\_pypi module
 ----------------------------------------------
 
