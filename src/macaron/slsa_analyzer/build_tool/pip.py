@@ -56,19 +56,23 @@ class Pip(BaseBuildTool):
         bool
             True if this build tool is detected, else False.
         """
+        results: list[tuple[str, float, str | None]] = [] # (config_path, confidence_score, build_tool_version)
+        confidence_score = 1.0
         for config_name in self.build_configs:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
                 if os.path.basename(config_path) == "pyproject.toml":
                     # Check the build-system section. If it doesn't exist, by default setuptools should be used.
                     if pyproject.get_build_system(config_path) is None:
-                        return True
+                        results.append((str(config_path.relative_to(repo_path)), confidence_score, None))
                     for tool in self.build_requires + self.build_backend:
                         if pyproject.build_system_contains_tool(tool, config_path):
-                            return True
+                            results.append((str(config_path.relative_to(repo_path)), confidence_score, None))
+                            break
                 else:
                     # TODO: For other build configuration files, like setup.py, we need to improve the logic.
-                    return True
-        return False
+                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None))
+                confidence_score = confidence_score / 2 * 100
+        return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

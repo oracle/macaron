@@ -137,7 +137,22 @@ class Confidence(float, Enum):
 
         normalized_score = score / max_score
 
-        # Return the confidence level that is closest to the normalized score.
+        return cls.get_confidence_level(normalized_score)
+
+    @classmethod
+    def get_confidence_level(cls, normalized_score) -> "Confidence":
+        """Return the Confidence level closest to a given normalized score.
+
+        Parameters
+        ----------
+        normalized_score : float
+            A score normalized to the range expected by the Confidence values.
+
+        Returns
+        -------
+        Confidence
+            The Confidence enum member whose value is closest to the given normalized score.
+        """          
         return min(cls, key=lambda c: abs(c.value - normalized_score))
 
 

@@ -27,11 +27,20 @@ class BuildToolFacts(CheckFacts):
     #: The primary key.
     id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
 
+    #: The language of the artifact built by build tool.
+    language: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})    
+
     #: The build tool name.
     build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
-    #: The language of the artifact built by build tool.
-    language: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+    #: The build tool version.
+    build_tool_version: Mapped[str | None] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
+
+    #: The build tool configuration path.
+    build_tool_path: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
+
+    #: The build tool configuration path link.
+    build_tool_path_link: Mapped[str | None] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})    
 
     __mapper_args__ = {
         "polymorphic_identity": "_build_tool_check",
@@ -72,9 +81,10 @@ class BuildToolCheck(BaseCheck):
 
         result_tables: list[CheckFacts] = []
         for tool in build_tools:
-            result_tables.append(
-                BuildToolFacts(build_tool_name=tool.name, language=tool.language.value, confidence=Confidence.HIGH)
-            )
+            for build_tool_path, score, _ in tool.build_tool_configs:
+                result_tables.append(
+                    BuildToolFacts(build_tool_name=tool.name, build_tool_path = build_tool_path, language=tool.language.value, confidence=Confidence.get_confidence_level(score))
+                )
 
         return CheckResultData(
             result_tables=result_tables,

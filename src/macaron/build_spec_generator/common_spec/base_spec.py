@@ -28,13 +28,6 @@ class SpecBuildCommandDict(TypedDict, total=False):
     #: The build command.
     command: Required[list[str]]
 
-    #: The pre-build commands.
-    pre_build_cmds: NotRequired[list[list[str]]]
-
-    #: The post-build commands.
-    post_build_cmds: NotRequired[list[list[str]]]
-
-
 class BaseBuildSpecDict(TypedDict, total=False):
     """
     Initialize base build specification.
