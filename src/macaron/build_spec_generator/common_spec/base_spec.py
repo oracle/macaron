@@ -46,6 +46,9 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: The commit SHA or tag in the VCS repository.
     git_tag: NotRequired[str]
 
+    #: The cloned repository filesystem path.
+    fs_path: NotRequired[str]
+
     #: The type of line endings used (e.g., 'lf', 'crlf').
     newline: NotRequired[str]
 

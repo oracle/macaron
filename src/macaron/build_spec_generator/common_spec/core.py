@@ -372,6 +372,7 @@ def gen_generic_build_spec(
             "version": version,
             "git_repo": latest_component_repository.remote_path,
             "git_tag": latest_component_repository.commit_sha,
+            "fs_path": latest_component_repository.fs_path,
             "newline": "lf",
             "language_version": [lang_version] if lang_version else [],
             "ecosystem": purl.type,
