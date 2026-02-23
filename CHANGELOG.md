@@ -1,3 +1,27 @@
+## v0.21.0 (2026-02-23)
+
+### Feat
+
+- validate buildspec dockerfile (#1280)
+- improve buildspec and dockerfile generation (#1279)
+- include has_binaries flag in build spec (#1278)
+- infer chronologically likeliest setuptools version (#1260)
+- prepare Macaron GitHub Action to publish on GitHub Marketplace  (#1259)
+- add new dataflow analysis, replacing existing analysis for GitHub Actions (#1229)
+- add support to use inferred build tools and to extract tool-specific build dependency information (#1256)
+
+### Fix
+
+- **gen-build-spec**: remove the default -Dmaven.test.skip=true mvn option from the default spec (#1301)
+- **gen-build-spec**: handle errors gracefully when build tool is not supported (#1303)
+- handle GitHub Actions job needs field case-insensitively in analysis. (#1305)
+- add the missing provenance asset links to the reports (#1271)
+- use --output option for Macaron Python Package (#1266)
+
+### Refactor
+
+- improve Macaron wheel name and add a new install script (#1291)
+
 ## v0.20.0 (2025-12-04)
 
 ### Feat
