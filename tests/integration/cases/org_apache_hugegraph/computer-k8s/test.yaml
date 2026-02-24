@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
@@ -42,3 +42,9 @@ steps:
     kind: default_build_spec
     result: output/buildspec/maven/org_apache_hugegraph/computer-k8s/macaron.buildspec
     expected: expected_default.buildspec
+- name: Validate the produced buildspec
+  kind: validate_schema
+  options:
+    kind: json_schema
+    schema: macaron_buildspec_json
+    result: output/buildspec/maven/org_apache_hugegraph/computer-k8s/macaron.buildspec

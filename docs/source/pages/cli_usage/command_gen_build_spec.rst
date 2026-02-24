@@ -40,3 +40,11 @@ Options
 .. option:: --output-format OUTPUT_FORMAT
 
     The output format. Can be `default-buildspec` (default), `rc-buildspec` (Reproducible-central build spec for Java), or `dockerfile` (currently only supported for Python packages)
+
+.. _gen-build-spec-schema:
+
+--------------------------
+Build Specification Schema
+--------------------------
+
+The corresponding JSON schema is available in the `resources directory <https://github.com/oracle/macaron/tree/main/src/macaron/resources/schemastore/macaron_buildspec_schema.json>`_ of the repository. Be sure to use the schema that matches your Macaron release by selecting the appropriate GitHub tag.
