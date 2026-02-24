@@ -397,26 +397,6 @@ class PyPIRegistry(PackageRegistry):
             return html_snippets
         return None
 
-    def get_maintainers_of_package(self, package_name: str) -> list | None:
-        """Implement custom API to get all maintainers of the package.
-
-        Parameters
-        ----------
-        package_name: str
-            The package name.
-
-        Returns
-        -------
-        list | None
-            The list of maintainers.
-        """
-        package_page: str | None = self.get_package_page(package_name)
-        if package_page is None:
-            return None
-        soup = BeautifulSoup(package_page, "html.parser")
-        maintainers = soup.find_all("span", class_="sidebar-section__user-gravatar-text")
-        return list({maintainer.get_text(strip=True) for maintainer in maintainers})
-
     def get_maintainer_profile_page(self, username: str) -> str | None:
         """Implement custom API to get maintainer's profile page.
 
@@ -771,6 +751,25 @@ class PyPIPackageJsonAsset:
             Version to metadata.
         """
         return json_extract(self.package_json, ["releases"], dict)
+
+    def get_maintainers_of_package(self) -> list | None:
+        """Return the names of all maintainers of this package.
+
+        Returns
+        -------
+        list | None
+            The list of maintainers.
+        """
+        maintainers: list[str] = []
+        maintainer_roles = json_extract(self.package_json, ["ownership", "roles"], list)
+        if maintainer_roles is None:
+            return None
+
+        for maintainer_with_role in maintainer_roles:
+            if (maintainer := maintainer_with_role.get("user", None)) is not None:
+                maintainers.append(maintainer)
+
+        return maintainers
 
     def get_project_links(self) -> dict | None:
         """Retrieve the project links from the base metadata.
