@@ -18,8 +18,8 @@ When using this action you can reference the action in your workflow. Example:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        - name: Run Macaron Security Analysis
-          uses: oracle/macaron@v0.21.0
+        - name: Run Macaron Security Analysis Action
+          uses: oracle/macaron@v0.22.0
           with:
             repo_path: 'https://github.com/example/project'
             policy_file: check-github-actions
@@ -37,7 +37,7 @@ directory containing ``macaron.db``:
 .. code-block:: yaml
 
   - name: Verify policy
-    uses: oracle/macaron@v0.21.0
+    uses: oracle/macaron@v0.22.0
     with:
       policy_file: policy.dl
       output_dir: macaron-output

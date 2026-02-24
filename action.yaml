@@ -1,9 +1,12 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-name: Macaron Security Analysis
-description: Run Macaron to analyze supply chain security
+name: Macaron Security Analysis Action
+description: Run Macaron to analyze artifacts for supply chain security
 author: Oracle - github.com/oracle/macaron
+branding:
+  icon: shield
+  color: blue
 # This composite GitHub Action wraps the Macaron tool. It exposes inputs for analysis options to shell scripts under `scripts/actions/` for readability.
 
 inputs:
