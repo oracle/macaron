@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the report schema of the repo finder."""
@@ -17,7 +17,7 @@ from macaron.repo_finder.repo_utils import create_report
 def json_schema_() -> Any:
     """Load and return the JSON schema."""
     with open(
-        os.path.join(MACARON_PATH, "resources", "schemastore", "find_source_report_schema.json"), encoding="utf-8"
+        os.path.join(MACARON_PATH, "resources", "schemas", "find_source_report_schema.json"), encoding="utf-8"
     ) as file:
         return json.load(file)
 

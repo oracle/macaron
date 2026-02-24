@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Macaron BuildSpec Schema",
+  "type": "object",
+  "description": "Schema for build specification supporting multiple languages, build tools, and metadata.",
+  "properties": {
+    "ecosystem": {
+      "type": "string",
+      "description": "The package ecosystem."
+    },
+    "purl": {
+      "type": "string",
+      "description": "The PackageURL identifier."
+    },
+    "language": {
+      "type": "string",
+      "description": "The programming language, e.g., 'java', 'python', 'javascript'."
+    },
+    "build_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The build tools or package managers, e.g., 'maven', 'gradle', 'pip', etc."
+    },
+    "macaron_version": {
+      "type": "string",
+      "description": "The version of Macaron used for generating the spec."
+    },
+    "group_id": {
+      "type": ["string", "null"],
+      "description": "The group identifier for the project/component."
+    },
+    "artifact_id": {
+      "type": "string",
+      "description": "The artifact identifier for the project/component."
+    },
+    "version": {
+      "type": "string",
+      "description": "The version of the package or component."
+    },
+    "git_repo": {
+      "type": "string",
+      "description": "The remote path or URL of the git repository."
+    },
+    "git_tag": {
+      "type": "string",
+      "description": "The commit SHA or tag in the VCS repository."
+    },
+    "newline": {
+      "type": "string",
+      "description": "The type of line endings used (e.g., 'lf', 'crlf')."
+    },
+    "language_version": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The version(s) of the programming language or runtime."
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of release dependencies."
+    },
+    "build_dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of build dependencies, which includes tests."
+    },
+    "build_commands": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "description": "List of shell commands to build the project."
+    },
+    "test_commands": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "description": "List of shell commands to test the project."
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Environment variables required during build or test."
+    },
+    "artifact_path": {
+      "type": ["string", "null"],
+      "description": "Path or location of the build artifact/output."
+    },
+    "entry_point": {
+      "type": ["string", "null"],
+      "description": "Entry point script, class, or binary for running the project."
+    },
+    "build_requires": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Required packages that must be available in the build environment."
+    },
+    "build_backends": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of build back-end tools used."
+    },
+    "has_binaries": {
+      "type": "boolean",
+      "description": "Flag to indicate if the artifact includes binaries."
+    },
+    "upstream_artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "description": "The artifacts that were analyzed in generating the build specification."
+    }
+  },
+  "required": [
+    "ecosystem",
+    "purl",
+    "language",
+    "build_tools",
+    "macaron_version",
+    "artifact_id",
+    "version",
+    "language_version"
+  ],
+  "additionalProperties": false
+}

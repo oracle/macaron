@@ -91,7 +91,8 @@ VALIDATE_SCHEMA_SCRIPTS: dict[str, Sequence[str]] = {
 
 DEFAULT_SCHEMAS: dict[str, Sequence[str]] = {
     "output_json_report": ["tests", "schema_validation", "report_schema.json"],
-    "find_source_json_report": ["src", "macaron", "resources", "schemastore", "find_source_report_schema.json"],
+    "find_source_json_report": ["src", "macaron", "resources", "schemas", "find_source_report_schema.json"],
+    "macaron_buildspec_json": ["src", "macaron", "resources", "schemas", "macaron_buildspec_schema.json"],
 }
 
 

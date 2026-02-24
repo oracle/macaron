@@ -106,7 +106,7 @@ In the example above, the buildspec is located at:
 Step 3: Review and Use the Buildspec File
 =========================================
 
-By default we generate the buildspec in JSON format as follows:
+By default we generate the buildspec in JSON format as follows (see more details about the schema :ref:`here <gen-build-spec-schema>`):
 
 .. code-block:: ini
 
