@@ -47,4 +47,4 @@ Options
 Build Specification Schema
 --------------------------
 
-The corresponding JSON schema is available in the `resources directory <https://github.com/oracle/macaron/tree/main/src/macaron/resources/schemastore/macaron_buildspec_schema.json>`_ of the repository. Be sure to use the schema that matches your Macaron release by selecting the appropriate GitHub tag.
+The corresponding JSON schema is available in the `resources directory <https://github.com/oracle/macaron/tree/main/src/macaron/resources/schemas/macaron_buildspec_schema.json>`_ of the repository. Be sure to use the schema that matches your Macaron release by selecting the appropriate GitHub tag.
