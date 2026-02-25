@@ -1,3 +1,10 @@
+## v0.22.0 (2026-02-25)
+
+### Feat
+
+- prepare metadata for Macaron Action to publish on Marketplace (#1315)
+- add the JSON schema for the default Macaron buildspec (#1314)
+
 ## v0.21.0 (2026-02-23)
 
 ### Feat
