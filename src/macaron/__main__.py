@@ -9,15 +9,14 @@ import logging
 import os
 import sys
 from importlib import metadata as importlib_metadata
+from typing import cast
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from packageurl import PackageURL
 
 import macaron
-from macaron.build_spec_generator.build_spec_generator import (
-    BuildSpecFormat,
-    gen_build_spec_for_purl,
-)
+from macaron.build_spec_generator.build_spec_generator import BuildSpecFormat, gen_build_spec_for_purl, gen_dockerfile
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
 from macaron.config.defaults import create_defaults, load_defaults
 from macaron.config.global_config import global_config
 from macaron.console import RichConsoleHandler, access_handler
@@ -357,6 +356,33 @@ def gen_build_spec(gen_build_spec_args: argparse.Namespace) -> int:
     )
 
 
+def generate_dockerfile(gen_dockerfile_args: argparse.Namespace) -> int:
+    """WIP for demo. Generates dockerfile from input buildspec."""
+    buildspec_content = None
+    if gen_dockerfile_args.buildspec:
+        if not os.path.isfile(gen_dockerfile_args.buildspec):
+            logger.critical('The buildspec file "%s" does not exist.', gen_dockerfile_args.buildspec)
+            return os.EX_OSFILE
+
+        with open(gen_dockerfile_args.buildspec, encoding="utf-8") as file:
+            try:
+                buildspec_content = json.load(file)
+            except (json.JSONDecodeError, TypeError):
+                logger.critical("Input buildspec file must be valid JSON")
+                return os.EX_USAGE
+
+    buildspec = cast(BaseBuildSpecDict, buildspec_content)
+
+    try:
+        dockerfile_content = gen_dockerfile(buildspec)
+        print(dockerfile_content)  # noqa: T201
+    # pylint: disable=broad-exception-caught
+    except Exception:
+        logger.critical("Failed to generate dockerfile from input buildspec")
+
+    return os.EX_OK
+
+
 def find_source(find_args: argparse.Namespace) -> int:
     """Perform repo and commit finding for a passed PURL, or commit finding for a passed PURL and repo."""
     if repo_finder.find_source(find_args.package_url, find_args.repo_path or None):
@@ -422,6 +448,10 @@ def perform_action(action_args: argparse.Namespace) -> None:
                 rich_handler.start("gen-build-spec")
             sys.exit(gen_build_spec(action_args))
 
+        case "gen-dockerfile":
+            if not action_args.disable_rich_output:
+                rich_handler.start("gen-dockerfile")
+            sys.exit(generate_dockerfile(action_args))
         case _:
             logger.error("Macaron does not support command option %s.", action_args.action)
             sys.exit(os.EX_USAGE)
@@ -695,6 +725,15 @@ def main(argv: list[str] | None = None) -> None:
             + "or dockerfile (currently only supported for Python packages)"
         ),
         default="default-buildspec",
+    )
+
+    # pylint: disable=redefined-outer-name
+    gen_dockerfile = sub_parser.add_parser(name="gen-dockerfile")
+
+    gen_dockerfile.add_argument(
+        "--buildspec",
+        help="Path to buildspec from which to generate dockerfile.",
+        required=True,
     )
 
     args = main_parser.parse_args(argv)
