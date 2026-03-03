@@ -581,14 +581,32 @@ class GitHubActions(BaseCIService):
 
         Returns
         -------
-        CallGraph: CallGraph
-            The call graph built for GitHub Actions.
+        NodeForest
+            The root nodes of call graphs built for GitHub Actions workflows.
         """
         if not macaron_path:
             macaron_path = global_config.macaron_path
 
         # Parse GitHub Actions workflows.
         files = self.get_workflows(repo_path)
+        return self.build_call_graph_for_files(files, repo_path)
+
+    def build_call_graph_for_files(self, files: list[str], repo_path: str) -> NodeForest:
+        """Build call graphs for a given set of GitHub Actions workflow files.
+
+        Parameters
+        ----------
+        files : list[str]
+            The list of workflow file paths to analyze.
+        repo_path : str
+            The repository path used as the base context for workflow analysis.
+
+        Returns
+        -------
+        NodeForest
+            A forest containing one root node per successfully parsed workflow.
+            Workflows that raise ``ParseError`` are skipped.
+        """
         nodes: list[Node] = []
         for workflow_path in files:
             try:

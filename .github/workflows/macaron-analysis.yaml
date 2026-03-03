@@ -36,28 +36,13 @@ jobs:
     - name: Run Macaron action
       id: run_macaron
       continue-on-error: true
-      uses: oracle/macaron@fda4dda04aa7228fcaba162804891806cf5a1375 # v0.22.0
+      uses: ./
       with:
         repo_path: ./
         policy_file: check-github-actions
         policy_purl: pkg:github.com/oracle/macaron@.*
-
-    - name: Upload Macaron reports
-      if: ${{ always() }}
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      with:
-        name: macaron-reports
-        path: |
-          output/reports/github_com/oracle/macaron/macaron.html
-          output/reports/github_com/oracle/macaron/macaron.json
-          output/macaron.db
-        if-no-files-found: warn
-        retention-days: 90
-
-    - name: Check Verification Summary Attestation check passes
-      if: ${{ always() }}
-      run: |
-        if [ ! -f output/vsa.intoto.jsonl ]; then
-          echo "The check-github-actions policy failed, therefore VSA was not generated at output/vsa.intoto.jsonl. Check the uploaded reports."
-          exit 1
-        fi
+        upload_reports: true
+        reports_artifact_name: macaron-reports
+        reports_retention_days: 90
+        write_job_summary: true
+        require_vsa: true

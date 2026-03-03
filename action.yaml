@@ -43,6 +43,24 @@ inputs:
   output_dir:
     description: The output destination path for Macaron.
     default: output
+  upload_reports:
+    description: Upload Macaron reports as a workflow artifact.
+    default: 'true'
+  reports_artifact_name:
+    description: Name of the uploaded reports artifact.
+    default: macaron-reports
+  reports_retention_days:
+    description: Retention period in days for uploaded reports.
+    default: '90'
+  write_job_summary:
+    description: Write a human-friendly summary to the workflow run page.
+    default: 'true'
+  post_commit_comment:
+    description: Post or update a commit comment with Macaron results.
+    default: 'false'
+  require_vsa:
+    description: Fail the action if VSA is not generated.
+    default: 'false'
   upload_attestation:
     description: 'Upload the generated VSA report. default : false'
     default: false
@@ -51,12 +69,24 @@ inputs:
     default: ${{ github.workspace }}
 
 outputs:
+  report_dir:
+    description: Directory containing HTML/JSON reports.
+    value: ${{ steps.collect-reports.outputs.report_dir }}
+  db_path:
+    description: Path to the generated Macaron SQLite database.
+    value: ${{ steps.collect-reports.outputs.db_path }}
   policy_report:
     description: Paths to the Macaron analysis report
-    value: ${{ steps.run-macaron-policy-verification.outputs.policy_report }}
+    value: ${{ steps.collect-reports.outputs.policy_report }}
   vsa_report:
     description: Verification Summary Attestation
-    value: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
+    value: ${{ steps.collect-reports.outputs.vsa_report }}
+  vsa_generated:
+    description: Whether VSA was generated.
+    value: ${{ steps.collect-reports.outputs.vsa_generated }}
+  vsa_artifact_name:
+    description: Name of the uploaded VSA artifact (if generated).
+    value: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
 
 runs:
   using: composite
@@ -103,10 +133,180 @@ runs:
       POLICY_FILE: ${{ inputs.policy_file }}
       POLICY_PURL: ${{ inputs.policy_purl }}
 
+  - name: Collect report paths
+    id: collect-reports
+    if: ${{ always() }}
+    run: |
+      OUTPUT_DIR="${OUTPUT_DIR:-output}"
+      POLICY_REPORT="${OUTPUT_DIR}/policy_report.json"
+      VSA_REPORT="${OUTPUT_DIR}/vsa.intoto.jsonl"
+      DB_PATH="${OUTPUT_DIR}/macaron.db"
+      REPORT_DIR="${OUTPUT_DIR}/reports"
+
+      if [ -f "${VSA_REPORT}" ]; then
+        VSA_VALUE="${VSA_REPORT}"
+        VSA_GENERATED=true
+      else
+        VSA_VALUE="VSA Not Generated."
+        VSA_GENERATED=false
+      fi
+
+      echo "report_dir=${REPORT_DIR}" >> "${GITHUB_OUTPUT}"
+      echo "db_path=${DB_PATH}" >> "${GITHUB_OUTPUT}"
+      echo "policy_report=${POLICY_REPORT}" >> "${GITHUB_OUTPUT}"
+      echo "vsa_report=${VSA_VALUE}" >> "${GITHUB_OUTPUT}"
+      echo "vsa_generated=${VSA_GENERATED}" >> "${GITHUB_OUTPUT}"
+      echo "vsa_artifact_name=${REPORTS_ARTIFACT_NAME}-vsa" >> "${GITHUB_OUTPUT}"
+
+      {
+        echo "reports_path<<EOF"
+        echo "${REPORT_DIR}"
+        echo "${DB_PATH}"
+        echo "${POLICY_REPORT}"
+        echo "${VSA_REPORT}"
+        echo "EOF"
+      } >> "${GITHUB_OUTPUT}"
+    shell: bash
+    env:
+      OUTPUT_DIR: ${{ inputs.output_dir }}
+      REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
+
+  - name: Upload Macaron Reports
+    if: ${{ always() && inputs.upload_reports == 'true' }}
+    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+    with:
+      name: ${{ inputs.reports_artifact_name }}
+      path: ${{ steps.collect-reports.outputs.reports_path }}
+      if-no-files-found: warn
+      retention-days: ${{ inputs.reports_retention_days }}
+
+  - name: Upload VSA Artifact
+    if: ${{ always() && inputs.upload_reports == 'true' && steps.collect-reports.outputs.vsa_generated == 'true' }}
+    uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+    with:
+      name: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
+      path: ${{ inputs.output_dir }}/vsa.intoto.jsonl
+      if-no-files-found: warn
+      retention-days: ${{ inputs.reports_retention_days }}
+
+  - name: Summarize Macaron Results
+    if: ${{ always() && inputs.write_job_summary == 'true' }}
+    run: |
+      bash "$GITHUB_ACTION_PATH/scripts/actions/write_job_summary.sh"
+    shell: bash
+    env:
+      OUTPUT_DIR: ${{ inputs.output_dir }}
+      VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
+      POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
+      REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
+      VSA_ARTIFACT_NAME: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
+
+  - name: Post Macaron commit comment
+    if: ${{ always() && inputs.post_commit_comment == 'true' }}
+    uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+    env:
+      OUTPUT_DIR: ${{ inputs.output_dir }}
+      POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
+      VSA_REPORT: ${{ steps.collect-reports.outputs.vsa_report }}
+      VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
+      REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
+    with:
+      script: |
+        const fs = require("fs");
+        const path = require("path");
+
+        const marker = "<!-- macaron-results -->";
+        const outputDir = process.env.OUTPUT_DIR || "output";
+        const policyReportPath = process.env.POLICY_REPORT || path.join(outputDir, "policy_report.json");
+        const vsaGenerated = process.env.VSA_GENERATED === "true";
+        const vsaReport = process.env.VSA_REPORT || "VSA Not Generated.";
+        const artifactName = process.env.REPORTS_ARTIFACT_NAME || "macaron-reports";
+
+        let parsed = {};
+        if (fs.existsSync(policyReportPath)) {
+          try {
+            parsed = JSON.parse(fs.readFileSync(policyReportPath, "utf8"));
+          } catch (err) {
+            parsed = {};
+          }
+        }
+
+        const relation = parsed.check_github_actions_vulnerabilities;
+        const lines = [];
+        lines.push(marker);
+        lines.push("## Macaron Results");
+        lines.push("");
+        lines.push(`- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`);
+        lines.push(`- Reports artifact: \`${artifactName}\``);
+        lines.push(`- VSA generated: \`${vsaGenerated}\``);
+        if (vsaGenerated) {
+          lines.push(`- VSA file: \`${vsaReport}\``);
+        }
+        lines.push("");
+
+        if (Array.isArray(relation) && relation.length > 0) {
+          lines.push("### Vulnerable GitHub Actions");
+          lines.push("");
+          lines.push("| ID | Action | Version | Vulnerabilities | Workflow |");
+          lines.push("|---|---|---|---|---|");
+          for (const row of relation) {
+            const [id, urls, actionId, version, callerWorkflow] = row;
+            lines.push(`| \`${id}\` | \`${actionId}\` | \`${version}\` | \`${urls}\` | ${callerWorkflow} |`);
+          }
+        } else {
+          lines.push(":white_check_mark: No `check_github_actions_vulnerabilities` findings in `policy_report.json`.");
+        }
+
+        const body = lines.join("\n");
+
+        const list = await github.rest.repos.listCommentsForCommit({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          commit_sha: context.sha,
+          per_page: 100,
+        });
+
+        const existing = list.data.find((comment) => {
+          return (
+            comment.user &&
+            comment.user.type === "Bot" &&
+            typeof comment.body === "string" &&
+            comment.body.includes(marker)
+          );
+        });
+
+        if (existing) {
+          await github.rest.repos.updateCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: existing.id,
+            body,
+          });
+        } else {
+          await github.rest.repos.createCommitComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: context.sha,
+            body,
+          });
+        }
+
+  - name: Enforce VSA generation
+    if: ${{ always() && inputs.require_vsa == 'true' }}
+    run: |
+      if [ "${VSA_GENERATED}" != "true" ]; then
+        echo "VSA was not generated at ${OUTPUT_DIR}/vsa.intoto.jsonl. Check uploaded reports."
+        exit 1
+      fi
+    shell: bash
+    env:
+      OUTPUT_DIR: ${{ inputs.output_dir }}
+      VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
+
   - name: Upload Attestation
-    if: ${{ inputs.upload_attestation == 'true' && steps.run-macaron-policy-verification.outputs.vsa_report != 'VSA Not Generated.' }}
+    if: ${{ inputs.upload_attestation == 'true' && steps.collect-reports.outputs.vsa_generated == 'true' }}
     uses: actions/attest@daf44fb950173508f38bd2406030372c1d1162b1 #3.0.0
     with:
       subject-path: ${{ inputs.subject_path }}
       predicate-type: https://slsa.dev/verification_summary/v1
-      predicate-path: ${{ steps.run-macaron-policy-verification.outputs.vsa_report }}
+      predicate-path: ${{ steps.collect-reports.outputs.vsa_report }}

@@ -32,8 +32,14 @@ func ParseCommands(data string) (string, error) {
 		return "", reg_error
 	}
 
-	// We replace the GH Actions variables with "$MACARON_UNKNOWN".
-	data = string(re.ReplaceAll([]byte(data), []byte("$$MACARON_UNKNOWN")))
+	// Remove '{', '}', and spaces from each matched value.
+	data = string(re.ReplaceAllFunc([]byte(data), func(m []byte) []byte {
+		s := string(m)
+		s = strings.ReplaceAll(s, "{", "")
+		s = strings.ReplaceAll(s, "}", "")
+		s = strings.ReplaceAll(s, " ", "")
+		return []byte(s)
+	}))
 	data_str := strings.NewReader(data)
 	data_parsed, parse_err := syntax.NewParser().Parse(data_str, "")
 	if parse_err != nil {
@@ -81,8 +87,14 @@ func ParseRaw(data string) (string, error) {
 		return "", reg_error
 	}
 
-	// We replace the GH Actions variables with "$MACARON_UNKNOWN".
-	data = string(re.ReplaceAll([]byte(data), []byte("$$MACARON_UNKNOWN")))
+	// Remove '{', '}', and spaces from each matched value.
+	data = string(re.ReplaceAllFunc([]byte(data), func(m []byte) []byte {
+		s := string(m)
+		s = strings.ReplaceAll(s, "{", "")
+		s = strings.ReplaceAll(s, "}", "")
+		s = strings.ReplaceAll(s, " ", "")
+		return []byte(s)
+	}))
 	data_str := strings.NewReader(data)
 	data_parsed, parse_err := syntax.NewParser().Parse(data_str, "")
 	if parse_err != nil {
