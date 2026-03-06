@@ -61,6 +61,9 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: List of shell commands to build the project.
     build_commands: NotRequired[list[list[str]]]
 
+    #: Set this flag to true if the specific setuptools version does not matter.
+    upgrade_setuptools: bool
+
     #: List of shell commands to test the project.
     test_commands: NotRequired[list[list[str]]]
 

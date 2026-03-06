@@ -379,7 +379,10 @@ def build_backend_commands(buildspec: BaseBuildSpecDict) -> list[str]:
     commands: list[str] = []
     for backend, version_constraint in buildspec["build_requires"].items():
         if backend == "setuptools":
-            commands.append("/deps/bin/pip install --upgrade setuptools")
+            if buildspec["upgrade_setuptools"]:
+                commands.append("/deps/bin/pip install --upgrade setuptools")
+            else:
+                commands.append(f'/deps/bin/pip install "{backend}{version_constraint}"')
         else:
             commands.append(f'/deps/bin/pip install "{backend}{version_constraint}"')
     # For a stable order on the install commands
