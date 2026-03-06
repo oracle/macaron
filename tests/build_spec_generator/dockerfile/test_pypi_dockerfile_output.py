@@ -28,6 +28,7 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "purl": "pkg:pypi/cachetools@6.2.1",
             "language": "python",
             "has_binaries": False,
+            "upgrade_setuptools": True,
             "build_tools": ["pip"],
             "build_commands": [["python", "-m", "build"]],
             "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
