@@ -3,13 +3,11 @@
 
 module github.com/oracle/macaron
 
-go 1.24.0
-
-toolchain go1.24.13
+go 1.25.0
 
 require (
 	cuelang.org/go v0.15.4
-	mvdan.cc/sh/v3 v3.12.0
+	mvdan.cc/sh/v3 v3.13.0
 )
 
 require (
