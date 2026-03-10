@@ -1,0 +1,39 @@
+# Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+# Run Macaron's policies and generate Verification Summary Attestation reports.
+# See https://github.com/oracle/macaron
+
+name: Run Macaron to check supply chain security issues
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - .github/workflows/**
+  pull_request:
+    paths:
+    - .github/workflows/**
+permissions:
+  contents: read
+
+jobs:
+  run_macaron:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Check out repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    # Check the GitHub Actions workflows in the repository for vulnerabilities.
+    # Note: adjust the policy_purl to refer to your repository URL.
+    - name: Run Macaron action
+      uses: oracle/macaron@fda4dda04aa7228fcaba162804891806cf5a1375 # v0.22.0
+      with:
+        repo_path: ./
+        policy_file: check-github-actions
+        policy_purl: pkg:github.com/oracle/macaron@.*
