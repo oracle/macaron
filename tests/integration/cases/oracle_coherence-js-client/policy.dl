@@ -1,0 +1,17 @@
+/* Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("check-github-actions-vulnerabilities", component_id, "Check GitHub Actions vulnerabilities for coherence-js-client") :-
+    check_failed(component_id, "mcn_githubactions_vulnerabilities_1"),
+    github_actions_vulnerabilities_check(
+        _,
+        "[\"https://osv.dev/vulnerability/GHSA-69fq-xp46-6x23\", \"https://osv.dev/vulnerability/GHSA-9p44-j4g5-cfx5\"]",
+        "aquasecurity/trivy-action",
+        "0.32.0",
+        "https://github.com/oracle/coherence-js-client/blob/39166341bc31f75b663ff439dae36170fb3e99a9/.github/workflows/trivy-scan.yml"
+    ).
+
+apply_policy_to("check-github-actions-vulnerabilities", component_id) :-
+    is_component(component_id, "pkg:github.com/oracle/coherence-js-client@39166341bc31f75b663ff439dae36170fb3e99a9").

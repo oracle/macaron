@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains implementation of osv.dev service."""
@@ -102,10 +102,7 @@ class OSVDevService:
         APIAccessError
             If there is an issue with querying the OSV API or if the results do not match the expected size.
         """
-        query_data: dict[str, list] = {"queries": []}
-
-        for pkg in packages:
-            query_data["queries"].append({"package": {"ecosystem": pkg["ecosystem"], "name": pkg["name"]}})
+        query_data: dict[str, list] = {"queries": packages}
 
         # The results returned by OSV reports the vulnerabilities, preserving the order.
         osv_res = OSVDevService.call_osv_querybatch_api(query_data, len(packages))

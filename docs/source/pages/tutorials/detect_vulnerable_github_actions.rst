@@ -126,6 +126,8 @@ Run the ``verify-policy`` command to verify that the check passes:
 
   ./run_macaron.sh verify-policy --database ./output/macaron.db --file ./check_github_actions_vuln.dl
 
+.. _detect-vuln-gh-actions-results:
+
 ******************
 Review the Results
 ******************

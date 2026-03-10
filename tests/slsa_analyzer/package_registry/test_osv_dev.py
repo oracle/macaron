@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the osv.dev service."""
@@ -222,3 +222,45 @@ def test_is_affected_version_ranges(vuln: dict, workflow: str, version: str, exp
         OSVDevService.is_version_affected(vuln=vuln, pkg_name=workflow, pkg_version=version, ecosystem="GitHub Actions")
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    ("packages", "osv_batch_response", "expected"),
+    [
+        pytest.param(
+            [{"package": {"ecosystem": "GitHub Actions", "name": "aquasecurity/trivy-action"}}],
+            {
+                "results": [
+                    {
+                        "vulns": [
+                            {"id": "GHSA-69fq-xp46-6x23", "modified": "2026-03-24T18:02:32.837793Z"},
+                            {"id": "GHSA-9p44-j4g5-cfx5", "modified": "2026-02-22T23:23:29.929429Z"},
+                        ]
+                    }
+                ]
+            },
+            [{"package": {"ecosystem": "GitHub Actions", "name": "aquasecurity/trivy-action"}}],
+            id="Single vulnerable package",
+        ),
+        pytest.param(
+            [{"package": {"ecosystem": "GitHub Actions", "name": ""}}],
+            {"results": [{}]},
+            [],
+            id="Empty package name",
+        ),
+    ],
+)
+def test_get_vulnerabilities_package_name_batch(
+    monkeypatch: pytest.MonkeyPatch, packages: list, osv_batch_response: dict[str, list], expected: list
+) -> None:
+    """Test filtering vulnerable packages from OSV batch query results."""
+
+    def mock_call_osv_querybatch_api(query_data: dict, expected_size: int | None = None) -> list:
+        assert query_data == {"queries": packages}
+        assert query_data["queries"][0]["package"]["name"] == packages[0]["package"]["name"]
+        assert expected_size == len(packages)
+        return osv_batch_response["results"]
+
+    monkeypatch.setattr(OSVDevService, "call_osv_querybatch_api", staticmethod(mock_call_osv_querybatch_api))
+
+    assert OSVDevService.get_vulnerabilities_package_name_batch(packages) == expected

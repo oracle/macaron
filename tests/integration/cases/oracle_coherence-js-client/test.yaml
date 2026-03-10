@@ -1,0 +1,23 @@
+# Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing oracle/coherence-js-client at commit 39166341bc31f75b663ff439dae36170fb3e99a9
+  and verifying that the GitHub Actions vulnerabilities check fails.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -rp
+    - https://github.com/oracle/coherence-js-client
+    - -d
+    - 39166341bc31f75b663ff439dae36170fb3e99a9
+- name: Run macaron verify-policy to verify that the GitHub Actions vulnerabilities check fails.
+  kind: verify
+  options:
+    policy: policy.dl

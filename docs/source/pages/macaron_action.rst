@@ -9,7 +9,7 @@ This document describes the composite GitHub Action defined in ``action.yaml`` a
 Quick usage
 -----------
 
-When using this action you can reference the action in your workflow. Example:
+When you use this action, you can reference it directly in your workflow. For a real-world example, check out our `workflow <https://github.com/oracle/macaron/blob/main/.github/workflows/macaron-analysis.yaml>`_ (we use it for dogfooding), or follow the example below to understand how it works:
 
 .. code-block:: yaml
 
@@ -19,13 +19,14 @@ When using this action you can reference the action in your workflow. Example:
       steps:
         - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         - name: Run Macaron Security Analysis Action
-          uses: oracle/macaron@v0.22.0
+          uses: oracle/macaron@fda4dda04aa7228fcaba162804891806cf5a1375 # v0.22.0
           with:
             repo_path: 'https://github.com/example/project'
             policy_file: check-github-actions
             policy_purl: 'pkg:github.com/example/project'
             output_dir: 'macaron-output'
-            upload_attestation: true
+
+If you upload the results like in this `workflow <https://github.com/oracle/macaron/blob/main/.github/workflows/macaron-analysis.yaml>`_ check this :ref:`documentation <detect-vuln-gh-actions-results>` to see how to read and understand them.
 
 Example: policy verification only
 ----------------------------------
@@ -37,11 +38,10 @@ directory containing ``macaron.db``:
 .. code-block:: yaml
 
   - name: Verify policy
-    uses: oracle/macaron@v0.22.0
+    uses: oracle/macaron@fda4dda04aa7228fcaba162804891806cf5a1375 # v0.22.0
     with:
       policy_file: policy.dl
       output_dir: macaron-output
-      upload_attestation: true
 
 Inputs
 ------
@@ -103,7 +103,9 @@ options. Key inputs are listed below (see ``action.yaml`` for the full list):
      - ``output``
    * - ``upload_attestation``
      - When ``true``, the action will attempt to upload a generated
-       verification attestation (VSA) after policy verification.
+       verification attestation (VSA) after policy verification. The attestation will be available
+       under the ``Actions/management`` tab. This feature requires ``id-token: write`` and
+       ``attestations: write`` Job permissions in the GitHub Actions workflow.
      - ``false``
    * - ``subject_path``
      - Path to the artifact serving as the subject of the attestation.
@@ -129,7 +131,8 @@ The composite action exposes the following outputs (set by the
      - Path to the generated VSA (Verification Summary Attestation) in
        `in-toto <https://in-toto.io/>`_ JSONL format. If no VSA was produced
        during verification, the action emits the string ``"VSA Not Generated."``
-       instead of a path.
+       instead of a path. The attestation will be available
+       under the ``Actions/management`` tab.
 
 Default Policies
 ----------------
