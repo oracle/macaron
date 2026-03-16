@@ -42,18 +42,29 @@ class Conda(BaseBuildTool):
                 if item in self.ci_deploy_kws:
                     self.ci_deploy_kws[item] = defaults.get_list("builder.conda.ci.deploy", item)
 
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
+    def is_detected(
+        self, repo_path: str, groupID: str | None = None, artifactID: str | None = None
+    ) -> list[tuple[str, float, str | None, str | None]]:
+        """
+        Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
         repo_path : str
             The path to the target repo.
+        groupID : str | None
+            Optional Maven `groupId` used to refine detection (e.g., selecting the
+            correct `pom.xml` when multiple are present). If ``None``, no filtering
+            is applied.
+        artifactID : str | None
+            Optional Maven `artifactId` used to refine detection. If ``None``, no
+            filtering is applied.
 
         Returns
         -------
-        bool
-            True if this build tool is detected, else False.
+        list[tuple[str, float, str | None, str | None]]
+            Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
+            where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
         return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
 

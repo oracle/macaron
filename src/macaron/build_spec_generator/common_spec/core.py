@@ -120,9 +120,9 @@ def compose_shell_commands(cmds_sequence: list[list[str]]) -> str:
     return result
 
 
-def get_macaron_build_tool_names(
+def get_macaron_build_tools(
     build_tool_facts: Sequence[BuildToolFacts], target_language: str
-) -> list[MacaronBuildToolName] | None:
+) -> dict[str, dict[str, str | None]] | None:
     """
     Retrieve the Macaron build tool names for supported projects from the database facts.
 
@@ -138,23 +138,28 @@ def get_macaron_build_tool_names(
 
     Returns
     -------
-    list[MacaronBuildToolName]  None
-        The corresponding Macaron build tool names, or None otherwise.
+    dict[str, dict[str, float, str | None]]| None:
+        The corresponding Macaron build tool name, config_path, confidence score, optional build tool version,
+        and optional root config path if present.
     """
-    build_tool_names = []
+    build_tools = {}
     for fact in build_tool_facts:
         if fact.language.lower() == target_language:
             try:
-                build_tool_names.append(MacaronBuildToolName(fact.build_tool_name))
+                build_tools[MacaronBuildToolName(fact.build_tool_name).value] = {
+                    "build_config_path": fact.build_config_path,
+                    "confidence_score": fact.confidence,
+                    "build_tool_version": fact.build_tool_version,
+                    "root_build_config_path": fact.root_build_config_path,
+                }
             except ValueError:
                 continue
+    return build_tools or None
 
-    return build_tool_names or None
 
-
-def get_build_tool_names(
+def get_build_tools(
     component_id: int, session: sqlalchemy.orm.Session, target_language: str
-) -> list[MacaronBuildToolName] | None:
+) -> dict[str, dict[str, float, str | None]] | None:
     """Retrieve the Macaron build tool names for a given component.
 
     Queries the database for build tool facts associated with the specified component ID.
@@ -171,8 +176,9 @@ def get_build_tool_names(
 
     Returns
     -------
-    list[MacaronBuildToolName] | None
-        The corresponding build tool name for the component if available, otherwise None.
+    dict[str, dict[str, float, str | None]]| None:
+        The corresponding Macaron build tool name, config_path, confidence score, optional build tool version,
+        and optional root config path if present.
     """
     try:
         build_tool_facts = lookup_build_tools_check(
@@ -195,10 +201,19 @@ def get_build_tool_names(
     logger.info(
         "Build tools discovered from the %s table: %s",
         BuildToolFacts.__tablename__,
-        [(fact.build_tool_name, fact.language) for fact in build_tool_facts],
+        [
+            (
+                fact.build_tool_name,
+                fact.language,
+                fact.build_config_path,
+                fact.root_build_config_path,
+                fact.build_tool_version,
+            )
+            for fact in build_tool_facts
+        ],
     )
 
-    return get_macaron_build_tool_names(build_tool_facts, target_language)
+    return get_macaron_build_tools(build_tool_facts, target_language)
 
 
 def get_build_command_info(
@@ -341,15 +356,13 @@ def gen_generic_build_spec(
     )
 
     build_tool_names = []
-    build_tools = get_build_tool_names(
-        component_id=latest_component.id, session=session, target_language=target_language
-    )
+    build_tools = get_build_tools(component_id=latest_component.id, session=session, target_language=target_language)
     if not build_tools:
         raise GenerateBuildSpecError(f"Failed to determine build tool for {purl}.")
 
     # This check is for Pylint, which is not able to iterate over build_tools, even though it cannot be None.
     if build_tools is not None:
-        build_tool_names = [build_tool.value for build_tool in build_tools]
+        build_tool_names = list(build_tools.keys())
 
     db_build_command_info = get_build_command_info(
         component_id=latest_component.id,
@@ -357,16 +370,35 @@ def gen_generic_build_spec(
     )
 
     lang_version = None
-    spec_build_commad_info = None
+    spec_build_commad_info_list = []
     if db_build_command_info:
         logger.info(
             "Attempted to find build command from the database. Result: %s",
             db_build_command_info or "Cannot find any.",
         )
         lang_version = get_language_version(db_build_command_info) if db_build_command_info else ""
-        spec_build_commad_info = SpecBuildCommandDict(
-            build_tool=db_build_command_info.build_tool_name, command=db_build_command_info.command
-        )
+        spec_build_commad_info_list = [
+            SpecBuildCommandDict(
+                build_tool=db_build_command_info.build_tool_name,
+                command=db_build_command_info.command,
+                build_config_path=build_tools[db_build_command_info.build_tool_name]["build_config_path"],
+                root_build_config_path=build_tools[db_build_command_info.build_tool_name]["root_build_config_path"],
+                build_config_version=build_tools[db_build_command_info.build_tool_name]["build_tool_version"],
+                confidence_score=build_tools[db_build_command_info.build_tool_name]["confidence_score"],
+            )
+        ]
+    else:
+        for build_tool_name in build_tool_names:
+            spec_build_commad_info_list.append(
+                SpecBuildCommandDict(
+                    build_tool=build_tool_name,
+                    command=[],
+                    build_config_path=build_tools[build_tool_name]["build_config_path"],
+                    root_build_config_path=build_tools[build_tool_name]["root_build_config_path"],
+                    build_config_version=build_tools[build_tool_name]["build_tool_version"],
+                    confidence_score=build_tools[build_tool_name]["confidence_score"],
+                )
+            )
 
     base_build_spec_dict = BaseBuildSpecDict(
         {
@@ -382,9 +414,7 @@ def gen_generic_build_spec(
             "purl": str(purl),
             "language": target_language,
             "build_tools": build_tool_names,
-            "build_commands": (
-                [spec_build_commad_info] if spec_build_commad_info and spec_build_commad_info["command"] else []
-            ),
+            "build_commands": spec_build_commad_info_list,
         }
     )
 

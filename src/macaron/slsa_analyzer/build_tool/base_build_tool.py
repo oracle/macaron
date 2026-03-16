@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseBuildTool class to be inherited by other specific Build Tools."""
@@ -12,11 +12,11 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from macaron.config.defaults import defaults
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
@@ -91,32 +91,57 @@ def find_first_matching_file(directory: Path, pattern: str) -> Path | None:
     return None
 
 
-def file_exists(path: str, file_name: str, filters: list[str] | None = None) -> Path | None:
-    """Search recursively for the first matching file in a directory, skipping directories containing filter keywords.
+def file_exists(
+    path: str,
+    file_name: str,
+    filters: list[str] | None = None,
+    predicate: Callable[[Path, Any], bool] | None = None,
+    *predicate_args: Any,
+    **predicate_kwargs: Any,
+) -> Path | None:
+    """Search recursively for the first matching file, optionally validating it with a predicate.
 
-    To disable filtering, pass an empty list or `None` to the `filters` parameter.
+    The search performs a breadth-first traversal (closest directories first) and
+    skips directories whose names contain any of the provided filter keywords.
+
+    To disable filtering, pass an empty list or ``None`` to `filters`.
 
     Parameters
     ----------
     path : str
-        The path to search for the file.
+        Root directory to search.
     file_name : str
-        The name of the file to search or a glob pattern (e.g., "Dockerfile.*").
-    filters: list[str] | None
-        The list of keywords that should be filtered.
+        File name to search for, or a glob pattern (e.g., ``"Dockerfile.*"``).
+    filters : list[str] or None, optional
+        Directory-name keywords to skip (case-insensitive). If ``None`` or empty,
+        no directories are skipped.
+    predicate : callable or None, optional
+        Optional callable used to validate a matched file. If provided, a file is
+        accepted only if ``predicate(candidate_path, *predicate_args, **predicate_kwargs)``
+        returns ``True``.
+    *predicate_args : Any
+        Positional arguments forwarded to `predicate`.
+    **predicate_kwargs : Any
+        Keyword arguments forwarded to `predicate`.
 
     Returns
     -------
     Path | None
-        The path to the file if it exists, otherwise
+        The path to the first matching (and predicate-accepted) file, or ``None``
+        if no match is found.
     """
     if not os.path.isdir(path):
         return None
 
-    # Check for file directly at root.
     root_dir = Path(path)
+
+    def _accepted(p: Path) -> bool:
+        return True if predicate is None else bool(predicate(p, *predicate_args, **predicate_kwargs))
+
+    # Check for file directly at root.
     if target_path := find_first_matching_file(root_dir, file_name):
-        return target_path
+        if _accepted(target_path):
+            return target_path
 
     def _enqueue_subdirs(directory: Path, queue: deque[Path]) -> None:
         """Add non-symlink subdirectories to the search queue."""
@@ -128,7 +153,6 @@ def file_exists(path: str, file_name: str, filters: list[str] | None = None) -> 
     _enqueue_subdirs(root_dir, search_queue)
 
     while search_queue:
-
         current_dir = search_queue.popleft()
 
         # Skip filtered directories.
@@ -136,7 +160,8 @@ def file_exists(path: str, file_name: str, filters: list[str] | None = None) -> 
             continue
 
         if candidate_path := find_first_matching_file(current_dir, file_name):
-            return candidate_path
+            if _accepted(candidate_path):
+                return candidate_path
 
         _enqueue_subdirs(current_dir, search_queue)
 
@@ -202,23 +227,35 @@ class BaseBuildTool(ABC):
         self.wrapper_files: list[str] = []
         self.runtime_options = RuntimeOptions()
         self.path_filters: list[str] = []
+        self.build_tool_configs: list[tuple[str, float, str | None, str | None]] = []
 
     def __str__(self) -> str:
         return self.name
 
     @abstractmethod
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
+    def is_detected(
+        self, repo_path: str, groupID: str | None = None, artifactID: str | None = None
+    ) -> list[tuple[str, float, str | None, str | None]]:
+        """
+        Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
         repo_path : str
             The path to the target repo.
+        groupID : str | None
+            Optional Maven `groupId` used to refine detection (e.g., selecting the
+            correct `pom.xml` when multiple are present). If ``None``, no filtering
+            is applied.
+        artifactID : str | None
+            Optional Maven `artifactId` used to refine detection. If ``None``, no
+            filtering is applied.
 
         Returns
         -------
-        bool
-            True if this build tool is detected, else False.
+        list[tuple[str, float, str | None, str | None]]
+            Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
+            where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
 
     @abstractmethod
@@ -260,6 +297,26 @@ class BaseBuildTool(ABC):
             The DependencyAnalyzer object.
         """
         return NoneDependencyAnalyzer()
+
+    def set_build_tool_configurations(
+        self, build_tool_configs: list[tuple[str, float, str | None, str | None]]
+    ) -> None:
+        """Set the build tool configurations for the instance.
+
+        Parameters
+        ----------
+        build_tool_configs : list[tuple[str, float, str | None]]
+            A list containing configuration tuples for each build tool. Each tuple consists of:
+            - str: The path to the build tool configuration file.
+            - float: The confidence score between 0 and 1 for identifying the correct build tool configuration.
+            - str | None: An optional build tool version.
+            - str | None: An optional path to the parent configuration file.
+
+        Returns
+        -------
+        None
+        """
+        self.build_tool_configs = build_tool_configs
 
     def get_build_dirs(self, repo_path: str) -> Iterable[Path]:
         """Find directories in the repository that have their own build scripts.

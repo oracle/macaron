@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseGitService class to be inherited by a git service."""
@@ -10,6 +10,7 @@ from pydriller.git import Git
 from macaron.config.defaults import defaults
 from macaron.errors import CloneError, ConfigurationError, RepoCheckOutError
 from macaron.slsa_analyzer import git_url
+from macaron.slsa_analyzer.git_service.api_client import BaseAPIClient
 
 
 class BaseGitService:
@@ -25,6 +26,12 @@ class BaseGitService:
         """
         self.name = name
         self.hostname: str | None = None
+        self._api_client: BaseAPIClient | None = None
+
+    @property
+    def api_client(self) -> BaseAPIClient | None:
+        """Get the API client used for querying the Git service."""
+        return self._api_client
 
     @abstractmethod
     def load_defaults(self) -> None:

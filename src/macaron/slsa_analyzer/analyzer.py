@@ -1050,14 +1050,21 @@ class Analyzer:
                 continue
 
             if build_tool.match_purl_type(analyze_ctx.component.type):
+                if build_tool.name not in ["pip", "maven"]:
+                    continue
                 logger.info(
                     "Checking if the repo %s uses build tool %s",
                     analyze_ctx.component.repository.complete_name,
                     build_tool.name,
                 )
 
-                if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
+                if build_tool_configs := build_tool.is_detected(
+                    analyze_ctx.component.repository.fs_path,
+                    groupID=analyze_ctx.component.namespace,
+                    artifactID=analyze_ctx.component.name,
+                ):
                     logger.info("The repo uses %s build tool.", build_tool.name)
+                    build_tool.set_build_tool_configurations(build_tool_configs)
                     analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
 
         if not analyze_ctx.dynamic_data["build_spec"]["tools"]:

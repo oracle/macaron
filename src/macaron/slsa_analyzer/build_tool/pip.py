@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Pip class which inherits BaseBuildTool.
@@ -43,32 +43,49 @@ class Pip(BaseBuildTool):
                 if item in self.ci_deploy_kws:
                     self.ci_deploy_kws[item] = defaults.get_list("builder.pip.ci.deploy", item)
 
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
+    def is_detected(
+        self, repo_path: str, groupID: str | None = None, artifactID: str | None = None
+    ) -> list[tuple[str, float, str | None, str | None]]:
+        """
+        Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
         repo_path : str
             The path to the target repo.
+        groupID : str | None
+            Optional Maven `groupId` used to refine detection (e.g., selecting the
+            correct `pom.xml` when multiple are present). If ``None``, no filtering
+            is applied.
+        artifactID : str | None
+            Optional Maven `artifactId` used to refine detection. If ``None``, no
+            filtering is applied.
 
         Returns
         -------
-        bool
-            True if this build tool is detected, else False.
+        list[tuple[str, float, str | None, str | None]]
+            Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
+            where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+        results: list[tuple[str, float, str | None, str | None]] = (
+            []
+        )  # (config_path, confidence_score, build_tool_version)
+        confidence_score = 1.0
         for config_name in self.build_configs:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
                 if os.path.basename(config_path) == "pyproject.toml":
                     # Check the build-system section. If it doesn't exist, by default setuptools should be used.
                     if pyproject.get_build_system(config_path) is None:
-                        return True
+                        results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
                     for tool in self.build_requires + self.build_backend:
                         if pyproject.build_system_contains_tool(tool, config_path):
-                            return True
+                            results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                            break
                 else:
                     # TODO: For other build configuration files, like setup.py, we need to improve the logic.
-                    return True
-        return False
+                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2 * 100
+        return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

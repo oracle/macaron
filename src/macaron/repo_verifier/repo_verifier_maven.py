@@ -6,7 +6,7 @@
 import logging
 from urllib.parse import urlparse
 
-from macaron.parsers.pomparser import parse_pom_string
+from macaron.parsers.pomparser import extract_gav_from_pom, parse_pom_string
 from macaron.repo_verifier.repo_verifier_base import (
     RepositoryVerificationResult,
     RepositoryVerificationStatus,
@@ -81,13 +81,11 @@ class RepoVerifierMaven(RepoVerifierToolSpecific):
             return None
 
         # Find the group id in the pom (project/groupId).
-        # The closing curly brace represents the end of the XML namespace.
-        pom_group_id_elem = next((ch for ch in pom_root if ch.tag.endswith("}groupId")), None)
-        if pom_group_id_elem is None or not pom_group_id_elem.text:
-            logger.debug("Could not find groupId in pom.xml: %s", pom_file)
+        pom_group_id_elem, _, _ = extract_gav_from_pom(pom_file)
+        if pom_group_id_elem is None:
             return None
 
-        return pom_group_id_elem.text.strip()
+        return pom_group_id_elem
 
     def verify_domains_from_recognized_code_hosting_services(self) -> RepositoryVerificationResult:
         """Verify repository link by comparing the maven domain name and the account on code hosting services.

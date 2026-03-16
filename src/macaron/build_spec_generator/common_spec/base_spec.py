@@ -23,16 +23,16 @@ class SpecBuildCommandDict(TypedDict, total=False):
     build_tool_version: NotRequired[str]
 
     #: The build configuration path
-    build_tool_path: NotRequired[str]
+    build_config_path: Required[str]
+
+    #: The root build configuration path if present
+    root_build_config_path: NotRequired[str]
 
     #: The build command.
     command: Required[list[str]]
 
-    #: The pre-build commands.
-    pre_build_cmds: NotRequired[list[list[str]]]
-
-    #: The post-build commands.
-    post_build_cmds: NotRequired[list[list[str]]]
+    #: The confidence score for the analysis result that has inferred the build tool information.
+    confidence_score: Required[float]
 
 
 class BaseBuildSpecDict(TypedDict, total=False):
@@ -129,24 +129,14 @@ class BaseBuildSpec(ABC):
         """
 
     @abstractmethod
-    def get_default_build_commands(
+    def set_default_build_commands(
         self,
-        build_tool_names: list[str],
-    ) -> list[SpecBuildCommandDict]:
+        build_cmd_spec: SpecBuildCommandDict,
+    ) -> None:
         """Return the default build commands for the build tools.
 
         Parameters
         ----------
-        build_tool_names: list[str]
-            The build tools to get the default build command.
-
-        Returns
-        -------
-        list[SpecBuildCommandDict]
-            The build command and relevant information as a list[SpecBuildCommandDict].
-
-        Raises
-        ------
-        GenerateBuildSpecError
-            If there is no default build command available for the specified build tool.
+        build_cmd_spec: SpecBuildCommandDict
+            The build command and related information.
         """

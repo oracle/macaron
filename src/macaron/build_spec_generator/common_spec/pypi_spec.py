@@ -40,57 +40,34 @@ class PyPIBuildSpec(
         """
         self.data = data
 
-    def get_default_build_commands(
+    def set_default_build_commands(
         self,
-        build_tool_names: list[str],
-    ) -> list[SpecBuildCommandDict]:
+        build_cmd_spec: SpecBuildCommandDict,
+    ) -> None:
         """Return the default build commands for the build tools.
 
         Parameters
         ----------
-        build_tool_names: list[str]
-            The build tools to get the default build command.
-
-        Returns
-        -------
-        list[SpecBuildCommandDict]
-            The build command as a list[SpecBuildCommandDict].
+        build_cmd_spec: SpecBuildCommandDict
+            The build command and related information.
         """
-        default_build_cmd_list = []
-        for build_tool_name in build_tool_names:
+        match build_cmd_spec["build_tool"]:
+            case "pip":
+                build_cmd_spec["command"] = "python -m build --wheel -n".split()
+            case "poetry":
+                build_cmd_spec["command"] = "poetry build".split()
 
-            match build_tool_name:
-                case "pip":
-                    default_build_cmd_list.append(
-                        SpecBuildCommandDict(build_tool=build_tool_name, command="python -m build --wheel -n".split())
-                    )
-                case "poetry":
-                    default_build_cmd_list.append(
-                        SpecBuildCommandDict(build_tool=build_tool_name, command="poetry build".split())
-                    )
-                case "flit":
-                    # We might also want to deal with existence flit.ini, we can do so via
-                    # "python -m flit.tomlify"
-                    default_build_cmd_list.append(
-                        SpecBuildCommandDict(build_tool=build_tool_name, command="flit build".split())
-                    )
-                case "hatch":
-                    default_build_cmd_list.append(
-                        SpecBuildCommandDict(build_tool=build_tool_name, command="hatch build".split())
-                    )
-                case "conda":
-                    # TODO: update this if a build command can be used for conda.
-                    pass
-                case _:
-                    pass
-
-        if not default_build_cmd_list:
-            logger.debug(
-                "There is no default build command available for the build tools %s.",
-                build_tool_names,
-            )
-
-        return default_build_cmd_list
+            case "flit":
+                # We might also want to deal with existence flit.ini, we can do so via
+                # "python -m flit.tomlify"
+                build_cmd_spec["command"] = "flit build".split()
+            case "hatch":
+                build_cmd_spec["command"] = command = "hatch build".split()
+            case _:
+                logger.debug(
+                    "There is no default build command available for the build tools %s.",
+                    build_cmd_spec["build_tool"],
+                )
 
     def resolve_fields(self, purl: PackageURL) -> None:
         """
@@ -278,8 +255,8 @@ class PyPIBuildSpec(
         self.data["build_backends"] = list(build_backends_set)
         # We do not generate a build command for non-pure packages
         if not self.data["has_binaries"]:
-            patched_build_commands = self.get_default_build_commands(self.data["build_tools"])
-        self.data["build_commands"] = patched_build_commands
+            for build_cmd_spec in self.data["build_commands"]:
+                self.set_default_build_commands(build_cmd_spec)
         self.data["upstream_artifacts"] = upstream_artifacts
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:
