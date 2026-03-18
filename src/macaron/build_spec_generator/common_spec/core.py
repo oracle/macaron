@@ -219,7 +219,7 @@ def get_build_tools(
 def get_build_command_info(
     component_id: int,
     session: sqlalchemy.orm.Session,
-) -> GenericBuildCommandInfo | None:
+) -> list[GenericBuildCommandInfo]:
     """Return the highest confidence build command information from the database for a component.
 
     The build command is found by looking up CheckFacts for build-related checks.
@@ -233,9 +233,9 @@ def get_build_command_info(
 
     Returns
     -------
-    GenericBuildCommandInfo | None
-        The GenericBuildCommandInfo object for the highest confidence build command; or None if there was
-        an error, or no build command is found from the database.
+    list[GenericBuildCommandInfo]
+        The list of GenericBuildCommandInfo objects with the highest confidence build command as the first element;
+        or [] if there was an error, or no build command is found from the database.
     """
     try:
         lookup_build_command_info = lookup_any_build_command(component_id, session)
@@ -245,13 +245,13 @@ def get_build_command_info(
             component_id,
             lookup_build_command_error,
         )
-        return None
+        return []
     logger.debug(
         "Build command information discovered\n%s",
         format_build_command_info(lookup_build_command_info),
     )
 
-    return lookup_build_command_info[0] if lookup_build_command_info else None
+    return lookup_build_command_info or []
 
 
 def get_language_version(
@@ -364,20 +364,20 @@ def gen_generic_build_spec(
     if build_tools is not None:
         build_tool_names = list(build_tools.keys())
 
-    db_build_command_info = get_build_command_info(
+    db_build_command_info_list = get_build_command_info(
         component_id=latest_component.id,
         session=session,
     )
 
     lang_version = None
     spec_build_commad_info_list = []
-    if db_build_command_info:
+    for db_build_command_info in db_build_command_info_list:
         logger.info(
             "Attempted to find build command from the database. Result: %s",
             db_build_command_info or "Cannot find any.",
         )
         lang_version = get_language_version(db_build_command_info) if db_build_command_info else ""
-        spec_build_commad_info_list = [
+        spec_build_commad_info_list.append(
             SpecBuildCommandDict(
                 build_tool=db_build_command_info.build_tool_name,
                 command=db_build_command_info.command,
@@ -386,8 +386,10 @@ def gen_generic_build_spec(
                 build_config_version=build_tools[db_build_command_info.build_tool_name]["build_tool_version"],
                 confidence_score=build_tools[db_build_command_info.build_tool_name]["confidence_score"],
             )
-        ]
-    else:
+        )
+
+    # If no build commands were found from the analyze phase, add default commands for the identified build tools.
+    if not db_build_command_info_list:
         for build_tool_name in build_tool_names:
             spec_build_commad_info_list.append(
                 SpecBuildCommandDict(

@@ -67,19 +67,25 @@ class Hatch(BaseBuildTool):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+        results: list[tuple[str, float, str | None, str | None]] = (
+            []
+        )  # (config_path, confidence_score, build_tool_version)
+        confidence_score = 1.0
         for config_name in self.build_configs:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
                 if os.path.basename(config_path) == "pyproject.toml":
                     if pyproject.contains_build_tool("hatch", config_path):
-                        return True
+                        results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
                     # Check the build-system section.
-                    for tool in self.build_requires + self.build_backend:
-                        if pyproject.build_system_contains_tool(tool, config_path):
-                            return True
+                    else:
+                        for tool in self.build_requires + self.build_backend:
+                            if pyproject.build_system_contains_tool(tool, config_path):
+                                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                                break
                 else:
                     # For other build configuration files, the presence of the file alone is sufficient.
-                    return True
-        return False
+                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+        return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
