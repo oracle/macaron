@@ -965,13 +965,13 @@ class PyPIPackageJsonAsset:
                 logger.debug(error)
         return False
 
-    def has_pure_wheel(self) -> bool:
-        """Check whether the PURL has a pure wheel from its package json.
+    def has_non_pure_wheel(self) -> bool:
+        """Check whether the PURL has any non-pure wheel from its package json.
 
         Returns
         -------
         bool
-            Whether the PURL has a pure wheel or not.
+            Whether the PURL has any non-pure wheel or not.
         """
         if self.component_version:
             urls = json_extract(self.package_json, ["releases", self.component_version], list)
@@ -982,16 +982,13 @@ class PyPIPackageJsonAsset:
             return False
         for distribution in urls:
             file_name: str = distribution.get("filename") or ""
-            # Parse out and check none and any
-            # Catch exceptions
             try:
                 _, _, _, tags = parse_wheel_filename(file_name)
-                # Check if none and any are in the tags (i.e. the wheel is pure)
-                if all(tag.abi == "none" and tag.platform == "any" for tag in tags):
+                # A wheel is non-pure if any tag is not abi=none and platform=any
+                if any(tag.abi != "none" or tag.platform != "any" for tag in tags):
                     return True
             except InvalidWheelFilename:
                 logger.debug("Could not parse wheel name.")
-                return False
         return False
 
     @contextmanager

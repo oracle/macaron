@@ -132,7 +132,7 @@ class PyPIBuildSpec(
 
                 logger.debug("From package JSON inferred Python constraints: %s", python_version_set)
 
-                self.data["has_binaries"] = not pypi_package_json.has_pure_wheel()
+                self.data["has_binaries"] = pypi_package_json.has_non_pure_wheel()
 
                 if self.data["has_binaries"]:
                     logger.debug("Can not find a pure wheel")
