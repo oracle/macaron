@@ -44,7 +44,7 @@ class Pip(BaseBuildTool):
                     self.ci_deploy_kws[item] = defaults.get_list("builder.pip.ci.deploy", item)
 
     def is_detected(
-        self, repo_path: str, groupID: str | None = None, artifactID: str | None = None
+        self, repo_path: str, group_id: str | None = None, artifact_id: str | None = None
     ) -> list[tuple[str, float, str | None, str | None]]:
         """
         Return the list of build tools and their information used in the target repo.
@@ -53,11 +53,11 @@ class Pip(BaseBuildTool):
         ----------
         repo_path : str
             The path to the target repo.
-        groupID : str | None
+        group_id : str | None
             Optional Maven `groupId` used to refine detection (e.g., selecting the
             correct `pom.xml` when multiple are present). If ``None``, no filtering
             is applied.
-        artifactID : str | None
+        artifact_id : str | None
             Optional Maven `artifactId` used to refine detection. If ``None``, no
             filtering is applied.
 
@@ -84,7 +84,7 @@ class Pip(BaseBuildTool):
                 else:
                     # TODO: For other build configuration files, like setup.py, we need to improve the logic.
                     results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
-                confidence_score = confidence_score / 2 * 100
+                confidence_score = confidence_score / 2
         return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:

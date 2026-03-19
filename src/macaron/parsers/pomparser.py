@@ -77,7 +77,7 @@ def extract_gav_from_pom(pom_file: Path) -> tuple[str | None, str | None, str | 
     pom_root = parse_pom_string(pom_content)
 
     if pom_root is None:
-        logger.debug("Could not parse pom.xml: %s", pom_file.as_posix())
+        logger.debug("Could not parse pom.xml: %s", str(pom_file))
         return None, None, None
 
     def _find_child_text(parent, local_name: str) -> str | None:
@@ -99,11 +99,11 @@ def extract_gav_from_pom(pom_file: Path) -> tuple[str | None, str | None, str | 
             group_id = _find_child_text(parent_elem, "groupId")
 
     if group_id is None:
-        logger.debug("Could not find groupId in pom.xml (project or parent): %s", pom_file.as_posix())
+        logger.debug("Could not find groupId in pom.xml (project or parent): %s", str(pom_file))
     if artifact_id is None:
-        logger.debug("Could not find artifactId in pom.xml: %s", pom_file.as_posix())
+        logger.debug("Could not find artifactId in pom.xml: %s", str(pom_file))
     if version is None:
-        logger.debug("Could not find version in pom.xml: %s", pom_file.as_posix())
+        logger.debug("Could not find version in pom.xml: %s", str(pom_file))
 
     return group_id, artifact_id, version
 
@@ -115,9 +115,10 @@ def detect_parent_pom(pom_path: Path, repo_root: str | Path) -> str | None:
     file path using Maven semantics:
 
     * If `<project>/<parent>/<relativePath>` is present and non-empty, that path
-    (relative to the directory containing `pom.xml`) is used.
+      (relative to the directory containing `pom.xml`) is used.
     * Otherwise Maven defaults to ``../pom.xml``.
-    see https://maven.apache.org/ref/3.0/maven-model/maven.html#class_parent
+
+    See https://maven.apache.org/ref/3.0/maven-model/maven.html#class_parent.
 
     If the resolved parent POM exists on disk and is within `repo_root`, this
     returns its path relative to `repo_root`. Otherwise returns ``None``.

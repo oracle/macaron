@@ -146,12 +146,19 @@ def get_macaron_build_tools(
     for fact in build_tool_facts:
         if fact.language.lower() == target_language:
             try:
-                build_tools[MacaronBuildToolName(fact.build_tool_name).value] = {
+                tool_name = MacaronBuildToolName(fact.build_tool_name).value
+                build_tool_info = {
                     "build_config_path": fact.build_config_path,
                     "confidence_score": fact.confidence,
                     "build_tool_version": fact.build_tool_version,
                     "root_build_config_path": fact.root_build_config_path,
                 }
+                existing_build_tool_info = build_tools.get(tool_name)
+                if (
+                    existing_build_tool_info is None
+                    or build_tool_info["confidence_score"] > existing_build_tool_info["confidence_score"]
+                ):
+                    build_tools[tool_name] = build_tool_info
             except ValueError:
                 continue
     return build_tools or None

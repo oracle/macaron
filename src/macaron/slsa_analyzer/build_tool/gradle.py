@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Gradle class which inherits BaseBuildTool.
@@ -8,8 +8,15 @@ This module is used to work with repositories that use Gradle build tool.
 
 import logging
 import subprocess  # nosec B404
+from pathlib import Path
 
 from macaron.config.defaults import defaults
+from macaron.parsers.gradleparser import (
+    extract_gav_from_gradle_project,
+    extract_included_gradle_modules,
+    find_matching_gradle_module_build_configs,
+    find_nearest_modules_gradle_config,
+)
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -55,7 +62,10 @@ class Gradle(BaseBuildTool):
                 )
 
     def is_detected(
-        self, repo_path: str, groupID: str | None = None, artifactID: str | None = None
+        self,
+        repo_path: str,
+        group_id: str | None = None,
+        artifact_id: str | None = None,
     ) -> list[tuple[str, float, str | None, str | None]]:
         """
         Return the list of build tools and their information used in the target repo.
@@ -64,11 +74,11 @@ class Gradle(BaseBuildTool):
         ----------
         repo_path : str
             The path to the target repo.
-        groupID : str | None
+        group_id : str | None
             Optional Maven `groupId` used to refine detection (e.g., selecting the
             correct `pom.xml` when multiple are present). If ``None``, no filtering
             is applied.
-        artifactID : str | None
+        artifact_id : str | None
             Optional Maven `artifactId` used to refine detection. If ``None``, no
             filtering is applied.
 
@@ -78,8 +88,128 @@ class Gradle(BaseBuildTool):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+        results: list[tuple[str, float, str | None, str | None]] = []
+        confidence_score = 1.0
         gradle_config_files = self.build_configs + self.entry_conf
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in gradle_config_files)
+        seen_paths: set[Path] = set()
+
+        # Prioritize module-level build configs for multi-module artifacts.
+        if artifact_id:
+            for module_config_path in find_matching_gradle_module_build_configs(Path(repo_path), artifact_id):
+                if module_config_path in seen_paths:
+                    continue
+                if self.validate_gradle_file(
+                    module_config_path,
+                    group_id=group_id,
+                    artifact_id=artifact_id,
+                    repo_path=repo_path,
+                ):
+                    entrypoint_gradle = find_nearest_modules_gradle_config(module_config_path, repo_path)
+                    results.append(
+                        (str(module_config_path.relative_to(repo_path)), confidence_score, None, entrypoint_gradle)
+                    )
+                    seen_paths.add(module_config_path)
+                    confidence_score = confidence_score / 2
+
+        for config_name in gradle_config_files:
+            config_path = file_exists(
+                repo_path,
+                config_name,
+                filters=self.path_filters,
+                predicate=self.validate_gradle_file,
+                group_id=group_id,
+                artifact_id=artifact_id,
+            )
+            if config_path and config_path not in seen_paths:
+                entrypoint_gradle = find_nearest_modules_gradle_config(config_path, repo_path)
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, entrypoint_gradle))
+                seen_paths.add(config_path)
+                confidence_score = confidence_score / 2
+
+        return results
+
+    def validate_gradle_file(
+        self,
+        config_path: Path,
+        group_id: str | None = None,
+        artifact_id: str | None = None,
+        **kwargs: str | None,
+    ) -> bool:
+        """Validate a Gradle configuration path against expected G/A coordinates.
+
+        Parameters
+        ----------
+        config_path : Path
+            Path to a candidate Gradle configuration file.
+        group_id : str | None, optional
+            Expected group id. If ``None``, a fallback lookup is attempted from
+            ``kwargs["group_id"]``.
+        artifact_id : str | None, optional
+            Expected artifact id. If ``None``, a fallback lookup is attempted from
+            ``kwargs["artifact_id"]``.
+        kwargs : dict[str, str | None]
+            Additional keyword arguments propagated by the caller.
+
+        Returns
+        -------
+        bool
+            ``True`` if both expected values are present and match the extracted
+            Gradle group/artifact from the project; otherwise ``False``.
+        """
+        group_id = group_id or kwargs.get("group_id")
+        artifact_id = artifact_id or kwargs.get("artifact_id")
+        repo_path = kwargs.get("repo_path")
+        if group_id and artifact_id:
+            project_root = Path(repo_path) if repo_path else config_path.parent
+            ex_group_id, ex_artifact_id, _ = extract_gav_from_gradle_project(project_root)
+            if group_id != ex_group_id:
+                return False
+            return self._validate_artifact_id(project_root, artifact_id, ex_artifact_id)
+        return False
+
+    def _validate_artifact_id(
+        self,
+        project_path: Path,
+        expected_artifact_id: str,
+        extracted_artifact_id: str | None,
+    ) -> bool:
+        """Validate the artifact id against direct or multi-module Gradle metadata.
+
+        Parameters
+        ----------
+        project_path : Path
+            Path to the candidate Gradle project directory.
+        expected_artifact_id : str
+            Artifact id requested by detection.
+        extracted_artifact_id : str | None
+            Directly extracted artifact id, if present.
+
+        Returns
+        -------
+        bool
+            ``True`` when the expected artifact id matches either a direct
+            project artifact id or a module name declared in Gradle settings.
+        """
+        if extracted_artifact_id and expected_artifact_id == extracted_artifact_id:
+            return True
+
+        # Accept common multi-module naming where artifact ids prefix module names
+        # (for example, micronaut-test-junit5 for module test-junit5).
+        module_names: set[str] = {project_path.name}
+        for settings_name in ("settings.gradle", "settings.gradle.kts"):
+            settings_path = project_path.joinpath(settings_name)
+            for module in extract_included_gradle_modules(settings_path):
+                module_names.add(module.strip().strip(":").split(":")[-1])
+
+        for module_name in module_names:
+            if not module_name:
+                continue
+            if expected_artifact_id == module_name:
+                return True
+            if expected_artifact_id.endswith(f"-{module_name}"):
+                return True
+
+        return False
 
     def get_group_id(self, gradle_exec: str, project_path: str) -> str | None:
         """Get the group id of a Gradle project.
