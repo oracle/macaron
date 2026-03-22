@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Docker class which inherits BaseBuildTool.
@@ -55,4 +55,10 @@ class Docker(BaseBuildTool):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
+        results: list[tuple[str, float, str | None, str | None]] = []
+        confidence_score = 1.0
+        for config_name in self.build_configs:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2
+        return results

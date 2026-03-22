@@ -28,7 +28,14 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "build_tools": ["maven"],
             "newline": "lf",
             "language_version": ["17"],
-            "build_commands": [SpecBuildCommandDict(build_tool="maven", command=["mvn", "package"])],
+            "build_commands": [
+                SpecBuildCommandDict(
+                    build_tool="maven",
+                    command=["mvn", "package"],
+                    build_config_path="pom.xml",
+                    confidence_score=1.0,
+                )
+            ],
             "purl": "pkg:maven/com.oracle/example-artifact@1.2.3",
         }
     )

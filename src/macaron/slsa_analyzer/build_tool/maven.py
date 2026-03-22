@@ -8,6 +8,7 @@ This module is used to work with repositories that use Maven build tool.
 
 import logging
 import os
+from pathlib import Path
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
@@ -75,13 +76,13 @@ class Maven(BaseBuildTool):
             return []
 
         for config_name in self.build_configs:
+            predicate_kwargs = {"group_id": group_id, "artifact_id": artifact_id}
             config_path = file_exists(
                 repo_path,
                 config_name,
                 filters=self.path_filters,
                 predicate=self.validate_pom_file,
-                group_id=group_id,
-                artifact_id=artifact_id,
+                **predicate_kwargs,
             )
             if config_path:
                 entrypoint_pom = find_nearest_modules_pom(config_path, repo_path)
@@ -90,7 +91,7 @@ class Maven(BaseBuildTool):
 
         return results
 
-    def validate_pom_file(self, config_path=str, group_id: str | None = None, artifact_id: str | None = None) -> bool:
+    def validate_pom_file(self, config_path: Path, group_id: str | None = None, artifact_id: str | None = None) -> bool:
         """Validate a pom.xml file against an expected Maven G/A.
 
         This method is intended to be used as a lightweight filter when multiple

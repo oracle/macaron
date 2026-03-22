@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Yarn build functions."""
@@ -30,13 +30,27 @@ def test_get_build_dirs(snapshot: list, yarn_tool: Yarn, mock_repo: Path) -> Non
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package_packagelock"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "nested_package"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "no_package"), False),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package"),
+            [("package.json", 1.0, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package_packagelock"),
+            [("package.json", 1.0, None, None), ("package-lock.json", 0.5, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "nested_package"),
+            [("project/package.json", 1.0, None, None)],
+        ),
+        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "no_package"), []),
     ],
 )
-def test_yarn_build_tool(yarn_tool: Yarn, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_yarn_build_tool(
+    yarn_tool: Yarn,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[tuple[str, float, str | None, str | None]],
+) -> None:
     """Test the yarn build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)

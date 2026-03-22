@@ -88,10 +88,13 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
     # Add -Dmaven.test.skip for Maven builds.
     # TODO: Use the build tool associated with the build command once
     # https://github.com/oracle/macaron/issues/1300 is closed.
-    adapted_build_commands = [
-        cmd[:1] + ["-Dmaven.test.skip=true"] + cmd[1:] if ReproducibleCentralBuildTool.MAVEN in cmd[0] else cmd
-        for cmd in build_spec["build_commands"]
-    ]
+    adapted_build_commands: list[list[str]] = []
+    for build_command in build_spec["build_commands"]:
+        command = build_command["command"]
+        if command and ReproducibleCentralBuildTool.MAVEN.value in command[0]:
+            adapted_build_commands.append(command[:1] + ["-Dmaven.test.skip=true"] + command[1:])
+        else:
+            adapted_build_commands.append(command)
 
     template_format_values: dict[str, str] = {
         "macaron_version": importlib_metadata.version("macaron"),
@@ -104,9 +107,7 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         "newline": build_spec["newline"],
         "buildinfo": f"target/{build_spec['artifact_id']}-{build_spec['version']}.buildinfo",
         "jdk": build_spec["language_version"][0],
-        "command": compose_shell_commands(
-            [b_info["command"] for b_info in adapted_build_commands["build_commands"] if b_info["command"]]
-        ),
+        "command": compose_shell_commands([command for command in adapted_build_commands if command]),
     }
 
     return STRING_TEMPLATE.format_map(template_format_values)

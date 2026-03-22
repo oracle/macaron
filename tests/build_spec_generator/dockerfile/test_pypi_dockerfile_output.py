@@ -29,7 +29,14 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "language": "python",
             "has_binaries": False,
             "build_tools": ["pip"],
-            "build_commands": [SpecBuildCommandDict(build_tool="pip", command=["python", "-m", "build"])],
+            "build_commands": [
+                SpecBuildCommandDict(
+                    build_tool="pip",
+                    command=["python", "-m", "build"],
+                    build_config_path="pyproject.toml",
+                    confidence_score=1.0,
+                )
+            ],
             "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
             "build_backends": ["setuptools.build_meta"],
             "upstream_artifacts": {

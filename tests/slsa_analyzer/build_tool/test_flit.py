@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Flit build functions."""
@@ -28,11 +28,19 @@ def test_get_build_dirs(snapshot: list, flit_tool: Flit, mock_repo: Path) -> Non
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "flit_repos", "has_flit_pyproject"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "flit_repos", "no_flit"), False),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "flit_repos", "has_flit_pyproject"),
+            [("pyproject.toml", 1.0, None, None)],
+        ),
+        (Path(__file__).parent.joinpath("mock_repos", "flit_repos", "no_flit"), []),
     ],
 )
-def test_flit_build_tool(flit_tool: Flit, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_flit_build_tool(
+    flit_tool: Flit,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[tuple[str, float, str | None, str | None]],
+) -> None:
     """Test the Flit build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)

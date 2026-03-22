@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Yarn class which inherits BaseBuildTool.
@@ -66,7 +66,13 @@ class Yarn(BaseBuildTool):
         #       cases like .yarnrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in yarn_config_files)
+        results: list[tuple[str, float, str | None, str | None]] = []
+        confidence_score = 1.0
+        for config_name in yarn_config_files:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2
+        return results
 
     def is_deploy_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None

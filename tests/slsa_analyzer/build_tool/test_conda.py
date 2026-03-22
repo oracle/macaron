@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Conda build functions."""
@@ -28,11 +28,16 @@ def test_get_build_dirs(snapshot: list, conda_tool: Conda, mock_repo: Path) -> N
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "has_conda"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "no_conda"), False),
+        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "has_conda"), [("meta.yaml", 1.0, None, None)]),
+        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "no_conda"), []),
     ],
 )
-def test_conda_build_tool(conda_tool: Conda, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_conda_build_tool(
+    conda_tool: Conda,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[tuple[str, float, str | None, str | None]],
+) -> None:
     """Test the Conda build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)

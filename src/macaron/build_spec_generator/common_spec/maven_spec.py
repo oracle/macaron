@@ -95,7 +95,7 @@ class MavenBuildSpec(BaseBuildSpec):
 
         # Resolve and patch build commands.
         for build_cmd_spec in self.data["build_commands"]:
-            if build_cmd_spec["command"] == None:
+            if not build_cmd_spec["command"]:
                 self.set_default_build_commands(build_cmd_spec)
 
         for build_command_info in self.data["build_commands"]:

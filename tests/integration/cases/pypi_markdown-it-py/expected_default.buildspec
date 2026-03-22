@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.20.0",
+    "macaron_version": "0.22.0",
     "group_id": null,
     "artifact_id": "markdown-it-py",
     "version": "4.0.0",
@@ -22,7 +22,9 @@
             "command": [
                 "flit",
                 "build"
-            ]
+            ],
+            "build_config_path": "pyproject.toml",
+            "confidence_score": 1.0
         }
     ],
     "has_binaries": false,

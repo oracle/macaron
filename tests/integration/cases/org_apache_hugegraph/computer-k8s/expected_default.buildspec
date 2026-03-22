@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.20.0",
+    "macaron_version": "0.22.0",
     "group_id": "org.apache.hugegraph",
     "artifact_id": "computer-k8s",
     "version": "1.0.0",
@@ -26,7 +26,10 @@
                 "-Dmaven.javadoc.skip=true",
                 "clean",
                 "package"
-            ]
+            ],
+            "build_config_path": "computer-k8s/pom.xml",
+            "confidence_score": 1.0,
+            "root_build_config_path": "pom.xml"
         }
     ]
 }

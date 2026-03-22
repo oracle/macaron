@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Poetry build functions."""
@@ -29,12 +29,23 @@ def test_get_build_dirs(snapshot: list, poetry_tool: Poetry, mock_repo: Path) ->
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "poetry_repos", "has_poetry_lock"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "poetry_repos", "no_poetry"), False),
-        (Path(__file__).parent.joinpath("mock_repos", "poetry_repos", "no_poetry_lock"), True),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "poetry_repos", "has_poetry_lock"),
+            [("pyproject.toml", 1.0, None, None)],
+        ),
+        (Path(__file__).parent.joinpath("mock_repos", "poetry_repos", "no_poetry"), []),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "poetry_repos", "no_poetry_lock"),
+            [("pyproject.toml", 1.0, None, None)],
+        ),
     ],
 )
-def test_poetry_build_tool(poetry_tool: Poetry, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_poetry_build_tool(
+    poetry_tool: Poetry,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[tuple[str, float, str | None, str | None]],
+) -> None:
     """Test the Poetry build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)

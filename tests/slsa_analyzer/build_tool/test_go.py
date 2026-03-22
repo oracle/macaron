@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Go build functions."""
@@ -34,12 +34,17 @@ def test_get_build_dirs(snapshot: list, tmp_path: Path, go_tool: Go, folder: str
 @pytest.mark.parametrize(
     ("folder", "file", "expected_value"),
     [
-        ("root_go_mod", "go.mod", True),
-        ("no_go_mod", "dummyfile.txt", False),
+        ("root_go_mod", "go.mod", [("go.mod", 1.0, None, None)]),
+        ("no_go_mod", "dummyfile.txt", []),
     ],
 )
 def test_go_build_tool(
-    go_tool: Go, macaron_path: str, tmp_path: Path, folder: str, file: str, expected_value: bool
+    go_tool: Go,
+    macaron_path: str,
+    tmp_path: Path,
+    folder: str,
+    file: str,
+    expected_value: list[tuple[str, float, str | None, str | None]],
 ) -> None:
     """Test the Go build tool."""
     base_dir = Path(__file__).parent

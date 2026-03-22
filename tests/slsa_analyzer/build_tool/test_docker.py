@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Docker build functions."""
@@ -31,14 +31,31 @@ def test_get_build_dirs(snapshot: list, docker_tool: Docker, mock_repo: Path) ->
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "nested_dockerfile"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_wildcard_dockerfile"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile_wildcard"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "no_docker"), False),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile"),
+            [("Dockerfile", 1.0, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "docker_repos", "nested_dockerfile"),
+            [("project/Dockerfile", 1.0, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_wildcard_dockerfile"),
+            [("final.Dockerfile", 1.0, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "docker_repos", "root_dockerfile_wildcard"),
+            [("Dockerfile.final", 1.0, None, None)],
+        ),
+        (Path(__file__).parent.joinpath("mock_repos", "docker_repos", "no_docker"), []),
     ],
 )
-def test_docker_build_tool(docker_tool: Docker, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_docker_build_tool(
+    docker_tool: Docker,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[tuple[str, float, str | None, str | None]],
+) -> None:
     """Test the Docker build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)

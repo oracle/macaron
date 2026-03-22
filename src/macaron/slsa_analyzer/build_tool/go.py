@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Go class which inherits BaseBuildTool.
@@ -55,4 +55,10 @@ class Go(BaseBuildTool):
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
         go_config_files = self.build_configs + self.entry_conf
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in go_config_files)
+        results: list[tuple[str, float, str | None, str | None]] = []
+        confidence_score = 1.0
+        for config_name in go_config_files:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2
+        return results

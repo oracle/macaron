@@ -95,8 +95,7 @@ def file_exists(
     path: str,
     file_name: str,
     filters: list[str] | None = None,
-    predicate: Callable[[Path, Any], bool] | None = None,
-    *predicate_args: Any,
+    predicate: Callable[..., bool] | None = None,
     **predicate_kwargs: Any,
 ) -> Path | None:
     """Search recursively for the first matching file, optionally validating it with a predicate.
@@ -119,9 +118,7 @@ def file_exists(
         Optional callable used to validate a matched file. If provided, a file is
         accepted only if ``predicate(candidate_path, *predicate_args, **predicate_kwargs)``
         returns ``True``.
-    *predicate_args : Any
-        Positional arguments forwarded to `predicate`.
-    **predicate_kwargs : Any
+    predicate_kwargs : Any
         Keyword arguments forwarded to `predicate`.
 
     Returns
@@ -136,7 +133,7 @@ def file_exists(
     root_dir = Path(path)
 
     def _accepted(p: Path) -> bool:
-        return True if predicate is None else bool(predicate(p, *predicate_args, **predicate_kwargs))
+        return True if predicate is None else bool(predicate(p, **predicate_kwargs))
 
     # Check for file directly at root.
     if target_path := find_first_matching_file(root_dir, file_name):

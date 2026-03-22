@@ -62,7 +62,7 @@ class PyPIBuildSpec(
                 # "python -m flit.tomlify"
                 build_cmd_spec["command"] = "flit build".split()
             case "hatch":
-                build_cmd_spec["command"] = command = "hatch build".split()
+                build_cmd_spec["command"] = "hatch build".split()
             case _:
                 logger.debug(
                     "There is no default build command available for the build tools %s.",
@@ -92,7 +92,6 @@ class PyPIBuildSpec(
 
         upstream_artifacts: dict[str, list[str]] = {}
         pypi_package_json = pypi_registry.find_or_create_pypi_asset(purl.name, purl.version, registry_info)
-        patched_build_commands: list[SpecBuildCommandDict] = []
         build_backends_set: set[str] = set()
         parsed_build_requires: dict[str, str] = {}
         sdist_build_requires: dict[str, str] = {}
@@ -257,6 +256,8 @@ class PyPIBuildSpec(
         if not self.data["has_binaries"]:
             for build_cmd_spec in self.data["build_commands"]:
                 self.set_default_build_commands(build_cmd_spec)
+        else:
+            self.data["build_commands"] = []
         self.data["upstream_artifacts"] = upstream_artifacts
 
     def add_parsed_requirement(self, build_requirements: dict[str, str], requirement: str) -> None:

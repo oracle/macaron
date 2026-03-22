@@ -27,7 +27,14 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
             "build_tools": ["maven"],
             "newline": "lf",
             "language_version": ["17"],
-            "build_commands": [SpecBuildCommandDict(build_tool="maven", command=["mvn", "package"])],
+            "build_commands": [
+                SpecBuildCommandDict(
+                    build_tool="maven",
+                    command=["mvn", "package"],
+                    build_config_path="pom.xml",
+                    confidence_score=1.0,
+                )
+            ],
             "purl": "pkg:maven/com.oracle/example-artifact@1.2.3",
         }
     )
@@ -79,10 +86,25 @@ def test_build_tool_name_variants(base_build_spec: BaseBuildSpecDict, build_tool
 def test_compose_shell_commands_integration(base_build_spec: BaseBuildSpecDict) -> None:
     """Test that the correct compose_shell_commands function is used."""
     base_build_spec["build_commands"] = [
-        SpecBuildCommandDict(build_tool="maven", command=["mvn", "clean", "package"]),
-        SpecBuildCommandDict(build_tool="maven", command=["mvn", "deploy"]),
+        SpecBuildCommandDict(
+            build_tool="maven",
+            command=["mvn", "clean", "package"],
+            build_config_path="pom.xml",
+            confidence_score=1.0,
+        ),
+        SpecBuildCommandDict(
+            build_tool="maven",
+            command=["mvn", "deploy"],
+            build_config_path="pom.xml",
+            confidence_score=1.0,
+        ),
     ]
     content = gen_reproducible_central_build_spec(base_build_spec)
-    expected_commands = compose_shell_commands([["mvn", "clean", "package"], ["mvn", "deploy"]])
+    expected_commands = compose_shell_commands(
+        [
+            ["mvn", "-Dmaven.test.skip=true", "clean", "package"],
+            ["mvn", "-Dmaven.test.skip=true", "deploy"],
+        ]
+    )
     assert content
     assert f'command="{expected_commands}"' in content

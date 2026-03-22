@@ -80,7 +80,7 @@ def extract_gav_from_pom(pom_file: Path) -> tuple[str | None, str | None, str | 
         logger.debug("Could not parse pom.xml: %s", str(pom_file))
         return None, None, None
 
-    def _find_child_text(parent, local_name: str) -> str | None:
+    def _find_child_text(parent: Element, local_name: str) -> str | None:
         # The closing curly brace represents the end of the XML namespace.
         elem = next((ch for ch in parent if ch.tag.endswith("}" + local_name)), None)
         if elem is None or not elem.text:
@@ -147,7 +147,7 @@ def detect_parent_pom(pom_path: Path, repo_root: str | Path) -> str | None:
     if pom_root is None:
         return None
 
-    def _find_child(elem, local_name: str):
+    def _find_child(elem: Element, local_name: str) -> Element | None:
         return next((ch for ch in elem if ch.tag.endswith("}" + local_name)), None)
 
     parent_elem = _find_child(pom_root, "parent")
@@ -201,18 +201,14 @@ def pom_has_modules(pom_path: Path) -> bool:
     if pom_root is None:
         return False
 
-    def _find_child(elem, local_name: str):
+    def _find_child(elem: Element, local_name: str) -> Element | None:
         return next((ch for ch in elem if ch.tag.endswith("}" + local_name)), None)
 
     modules_elem = _find_child(pom_root, "modules")
     if modules_elem is None:
         return False
 
-    for ch in modules_elem:
-        if ch.tag.endswith("}module") and ch.text and ch.text.strip():
-            return True
-
-    return False
+    return any(ch.tag.endswith("}module") and ch.text and ch.text.strip() for ch in modules_elem)
 
 
 def find_nearest_modules_pom(

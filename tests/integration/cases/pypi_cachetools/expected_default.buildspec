@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.20.0",
+    "macaron_version": "0.22.0",
     "group_id": null,
     "artifact_id": "cachetools",
     "version": "6.2.1",
@@ -24,7 +24,9 @@
                 "build",
                 "--wheel",
                 "-n"
-            ]
+            ],
+            "build_config_path": "setup.py",
+            "confidence_score": 1.0
         }
     ],
     "has_binaries": false,

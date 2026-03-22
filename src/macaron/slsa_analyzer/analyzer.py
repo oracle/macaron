@@ -1050,8 +1050,6 @@ class Analyzer:
                 continue
 
             if build_tool.match_purl_type(analyze_ctx.component.type):
-                if build_tool.name not in ["pip", "maven", "hatch", "gradle"]:
-                    continue
                 logger.info(
                     "Checking if the repo %s uses build tool %s",
                     analyze_ctx.component.repository.complete_name,

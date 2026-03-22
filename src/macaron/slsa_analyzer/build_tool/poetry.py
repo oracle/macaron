@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Poetry class which inherits BaseBuildTool.
@@ -73,19 +73,25 @@ class Poetry(BaseBuildTool):
                 package_lock_exists = file
                 break
 
+        results: list[tuple[str, float, str | None, str | None]] = []
+        confidence_score = 1.0
         file_paths = (file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
         for config_path in file_paths:
             if config_path and os.path.basename(config_path) == "pyproject.toml":
                 if package_lock_exists:
-                    return True
-                if pyproject.contains_build_tool("poetry", config_path):
-                    return True
+                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                elif pyproject.contains_build_tool("poetry", config_path):
+                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
                 # Check the build-system section.
-                for tool in self.build_requires + self.build_backend:
-                    if pyproject.build_system_contains_tool(tool, config_path):
-                        return True
+                else:
+                    for tool in self.build_requires + self.build_backend:
+                        if pyproject.build_system_contains_tool(tool, config_path):
+                            results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                            break
 
-        return False
+                confidence_score = confidence_score / 2
+
+        return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

@@ -112,13 +112,13 @@ class Gradle(BaseBuildTool):
                     confidence_score = confidence_score / 2
 
         for config_name in gradle_config_files:
+            predicate_kwargs = {"group_id": group_id, "artifact_id": artifact_id}
             config_path = file_exists(
                 repo_path,
                 config_name,
                 filters=self.path_filters,
                 predicate=self.validate_gradle_file,
-                group_id=group_id,
-                artifact_id=artifact_id,
+                **predicate_kwargs,
             )
             if config_path and config_path not in seen_paths:
                 entrypoint_gradle = find_nearest_modules_gradle_config(config_path, repo_path)

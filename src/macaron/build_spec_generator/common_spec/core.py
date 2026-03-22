@@ -23,6 +23,7 @@ from macaron.build_spec_generator.macaron_db_extractor import (
     lookup_latest_component,
 )
 from macaron.errors import GenerateBuildSpecError, QueryMacaronDatabaseError
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -122,7 +123,7 @@ def compose_shell_commands(cmds_sequence: list[list[str]]) -> str:
 
 def get_macaron_build_tools(
     build_tool_facts: Sequence[BuildToolFacts], target_language: str
-) -> dict[str, dict[str, str | None]] | None:
+) -> dict[str, dict[str, float | str | None]] | None:
     """
     Retrieve the Macaron build tool names for supported projects from the database facts.
 
@@ -142,21 +143,26 @@ def get_macaron_build_tools(
         The corresponding Macaron build tool name, config_path, confidence score, optional build tool version,
         and optional root config path if present.
     """
-    build_tools = {}
+    build_tools: dict[str, dict[str, float | str | None]] = {}
     for fact in build_tool_facts:
         if fact.language.lower() == target_language:
             try:
                 tool_name = MacaronBuildToolName(fact.build_tool_name).value
-                build_tool_info = {
+                current_confidence: float = float(fact.confidence)
+                build_tool_info: dict[str, float | str | None] = {
                     "build_config_path": fact.build_config_path,
-                    "confidence_score": fact.confidence,
+                    "confidence_score": current_confidence,
                     "build_tool_version": fact.build_tool_version,
                     "root_build_config_path": fact.root_build_config_path,
                 }
                 existing_build_tool_info = build_tools.get(tool_name)
+                existing_confidence = (
+                    existing_build_tool_info.get("confidence_score") if existing_build_tool_info is not None else None
+                )
                 if (
                     existing_build_tool_info is None
-                    or build_tool_info["confidence_score"] > existing_build_tool_info["confidence_score"]
+                    or not isinstance(existing_confidence, float)
+                    or current_confidence > existing_confidence
                 ):
                     build_tools[tool_name] = build_tool_info
             except ValueError:
@@ -166,7 +172,7 @@ def get_macaron_build_tools(
 
 def get_build_tools(
     component_id: int, session: sqlalchemy.orm.Session, target_language: str
-) -> dict[str, dict[str, float, str | None]] | None:
+) -> dict[str, dict[str, float | str | None]] | None:
     """Retrieve the Macaron build tool names for a given component.
 
     Queries the database for build tool facts associated with the specified component ID.
@@ -295,6 +301,36 @@ def get_language_version(
     return None
 
 
+def _build_spec_build_command(
+    build_tools: dict[str, dict[str, float | str | None]],
+    build_tool_name: str,
+    command: list[str],
+) -> SpecBuildCommandDict | None:
+    """Build a single SpecBuildCommandDict entry for a given build tool."""
+    build_config_path = json_extract(build_tools, [build_tool_name, "build_config_path"], str)
+    # build_config_path is a required field.
+    if build_config_path is None:
+        return None
+
+    root_build_config_path = json_extract(build_tools, [build_tool_name, "root_build_config_path"], str)
+    build_tool_version = json_extract(build_tools, [build_tool_name, "build_tool_version"], str)
+    confidence_score = json_extract(build_tools, [build_tool_name, "confidence_score"], float)
+    if confidence_score is None:
+        return None
+
+    build_spec = SpecBuildCommandDict(
+        build_tool=build_tool_name,
+        command=command,
+        build_config_path=build_config_path,
+        confidence_score=confidence_score,
+    )
+    if root_build_config_path is not None:
+        build_spec["root_build_config_path"] = root_build_config_path
+    if build_tool_version is not None:
+        build_spec["build_tool_version"] = build_tool_version
+    return build_spec
+
+
 def gen_generic_build_spec(
     purl: PackageURL,
     session: sqlalchemy.orm.Session,
@@ -384,30 +420,24 @@ def gen_generic_build_spec(
             db_build_command_info or "Cannot find any.",
         )
         lang_version = get_language_version(db_build_command_info) if db_build_command_info else ""
-        spec_build_commad_info_list.append(
-            SpecBuildCommandDict(
-                build_tool=db_build_command_info.build_tool_name,
-                command=db_build_command_info.command,
-                build_config_path=build_tools[db_build_command_info.build_tool_name]["build_config_path"],
-                root_build_config_path=build_tools[db_build_command_info.build_tool_name]["root_build_config_path"],
-                build_config_version=build_tools[db_build_command_info.build_tool_name]["build_tool_version"],
-                confidence_score=build_tools[db_build_command_info.build_tool_name]["confidence_score"],
-            )
+        build_spec_command = _build_spec_build_command(
+            build_tools=build_tools,
+            build_tool_name=db_build_command_info.build_tool_name,
+            command=db_build_command_info.command,
         )
+        if build_spec_command is not None:
+            spec_build_commad_info_list.append(build_spec_command)
 
     # If no build commands were found from the analyze phase, add default commands for the identified build tools.
     if not db_build_command_info_list:
         for build_tool_name in build_tool_names:
-            spec_build_commad_info_list.append(
-                SpecBuildCommandDict(
-                    build_tool=build_tool_name,
-                    command=[],
-                    build_config_path=build_tools[build_tool_name]["build_config_path"],
-                    root_build_config_path=build_tools[build_tool_name]["root_build_config_path"],
-                    build_config_version=build_tools[build_tool_name]["build_tool_version"],
-                    confidence_score=build_tools[build_tool_name]["confidence_score"],
-                )
+            build_spec_command = _build_spec_build_command(
+                build_tools=build_tools,
+                build_tool_name=build_tool_name,
+                command=[],
             )
+            if build_spec_command is not None:
+                spec_build_commad_info_list.append(build_spec_command)
 
     base_build_spec_dict = BaseBuildSpecDict(
         {
