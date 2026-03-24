@@ -69,14 +69,14 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         "else python -m build --wheel -n; fi"
     )
 
-    wheel_url: str = ""
+    # Initialized empty so that the validation script can exit gracefully in the case we find no upstream wheel
     wheel_name: str = ""
-
-    wheel_urls = buildspec["upstream_artifacts"]["wheels"]
-    # We currently only look for the pure wheel, if it exists
-    if wheel_urls:
-        wheel_url = list(wheel_urls)[0]
-        wheel_name = wheel_url.rsplit("/", 1)[-1]
+    wheel_url: str = ""
+    if "wheels" in buildspec["upstream_artifacts"]:
+        wheel_urls = buildspec["upstream_artifacts"]["wheels"]
+        if wheel_urls:
+            wheel_url = wheel_urls[0]
+            wheel_name = wheel_url.rsplit("/", 1)[-1]
     else:
         logger.debug("We could not find an upstream artifact, and therefore we cannot run validation")
 

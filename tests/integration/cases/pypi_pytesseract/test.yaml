@@ -1,0 +1,45 @@
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Integration test to ensure that has_binaries is not a false positive.
+
+tags:
+- macaron-python-package
+- tutorial
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/pytesseract@0.3.8
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/pytesseract@0.3.8
+    - --output-format
+    - default-buildspec
+- name: Compare Buildspec.
+  kind: compare
+  options:
+    kind: default_build_spec
+    result: output/buildspec/pypi/pytesseract/macaron.buildspec
+    expected: expected_default.buildspec
+- name: Generate the buildspec
+  kind: gen-build-spec
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/pytesseract@0.3.8
+    - --output-format
+    - dockerfile
+- name: Compare Dockerfile
+  kind: compare
+  options:
+    kind: dockerfile_build_spec
+    result: output/buildspec/pypi/pytesseract/dockerfile.buildspec
+    expected: expected_dockerfile.buildspec
