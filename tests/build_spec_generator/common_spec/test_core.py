@@ -53,6 +53,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="python",
                     build_tool_name="pip",
+                    confidence=1.0,
                 )
             ],
             "python",
@@ -64,6 +65,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="java",
                     build_tool_name="gradle",
+                    confidence=1.0,
                 )
             ],
             "java",
@@ -75,6 +77,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="java",
                     build_tool_name="maven",
+                    confidence=1.0,
                 )
             ],
             "java",
@@ -86,6 +89,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="not_java",
                     build_tool_name="maven",
+                    confidence=1.0,
                 )
             ],
             "java",
@@ -97,6 +101,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="java",
                     build_tool_name="some_java_build_tool",
+                    confidence=1.0,
                 )
             ],
             "java",

@@ -21,11 +21,9 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
         Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_pom"),
     ],
 )
-def test_get_build_dirs(maven_tool: Maven, mock_repo: Path) -> None:
+def test_get_build_dirs(snapshot: list, maven_tool: Maven, mock_repo: Path) -> None:
     """Test discovering build directories."""
-    # Maven detection now relies on group/artifact validation, which is not
-    # provided by get_build_dirs().
-    assert not list(maven_tool.get_build_dirs(str(mock_repo)))
+    assert list(maven_tool.get_build_dirs(str(mock_repo))) == snapshot
 
 
 @pytest.mark.parametrize(

@@ -133,7 +133,11 @@ def file_exists(
     root_dir = Path(path)
 
     def _accepted(p: Path) -> bool:
-        return True if predicate is None else bool(predicate(p, **predicate_kwargs))
+        return (
+            True
+            if predicate is None or predicate_kwargs == {"group_id": None, "artifact_id": None}
+            else bool(predicate(p, **predicate_kwargs))
+        )
 
     # Check for file directly at root.
     if target_path := find_first_matching_file(root_dir, file_name):

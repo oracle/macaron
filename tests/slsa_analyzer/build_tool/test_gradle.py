@@ -21,40 +21,30 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
         Path(__file__).parent.joinpath("mock_repos", "gradle_repos", "no_gradle"),
     ],
 )
-def test_get_build_dirs(gradle_tool: Gradle, mock_repo: Path) -> None:
+def test_get_build_dirs(snapshot: list, gradle_tool: Gradle, mock_repo: Path) -> None:
     """Test discovering build directories."""
-    # Gradle detection now relies on group/artifact validation, which is not
-    # provided by get_build_dirs().
-    assert not list(gradle_tool.get_build_dirs(str(mock_repo)))
+    assert list(gradle_tool.get_build_dirs(str(mock_repo))) == snapshot
 
 
 @pytest.mark.parametrize(
-    ("mock_repo", "group_id", "artifact_id", "expected_value"),
+    ("mock_repo", "expected_value"),
     [
         (
             Path(__file__).parent.joinpath("mock_repos", "gradle_repos", "groovy_gradle"),
-            "mock_repos",
-            "project1",
             [
-                ("project1/build.gradle", 1.0, None, "settings.gradle"),
-                ("build.gradle", 50.0, None, "settings.gradle"),
-                ("settings.gradle", 2500.0, None, "settings.gradle"),
+                ("build.gradle", 1.0, None, "settings.gradle"),
+                ("settings.gradle", 0.5, None, "settings.gradle"),
             ],
         ),
         (
             Path(__file__).parent.joinpath("mock_repos", "gradle_repos", "kotlin_gradle"),
-            "mock_repos",
-            "project1",
             [
-                ("project1/build.gradle.kts", 1.0, None, "settings.gradle.kts"),
-                ("build.gradle.kts", 50.0, None, "settings.gradle.kts"),
-                ("settings.gradle.kts", 2500.0, None, "settings.gradle.kts"),
+                ("build.gradle.kts", 1.0, None, "settings.gradle.kts"),
+                ("settings.gradle.kts", 0.5, None, "settings.gradle.kts"),
             ],
         ),
         (
             Path(__file__).parent.joinpath("mock_repos", "gradle_repos", "no_gradle"),
-            "mock_repos",
-            "project1",
             [],
         ),
     ],
@@ -63,16 +53,12 @@ def test_gradle_build_tool(
     gradle_tool: Gradle,
     macaron_path: str,
     mock_repo: str,
-    group_id: str,
-    artifact_id: str,
     expected_value: list[tuple[str, float, str | None, str | None]],
 ) -> None:
     """Test the Gradle build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert gradle_tool.is_detected(ctx.component.repository.fs_path, group_id=group_id, artifact_id=artifact_id) == (
-        expected_value
-    )
+    assert gradle_tool.is_detected(ctx.component.repository.fs_path) == (expected_value)
 
 
 def test_gradle_build_tool_with_group_artifact_validation(gradle_tool: Gradle, tmp_path: Path) -> None:
@@ -106,18 +92,6 @@ def test_gradle_build_tool_with_project_group_and_multimodule_name(gradle_tool: 
     assert detected
     assert detected[0][0] == "test-junit5/build.gradle"
     assert detected[0][3] == "settings.gradle"
-
-
-def test_gradle_build_tool_with_repo_namespace_group(gradle_tool: Gradle, tmp_path: Path) -> None:
-    """Test Gradle detection when group input is a repository namespace."""
-    gradle_repo = tmp_path.joinpath("micronaut-test")
-    gradle_repo.mkdir(parents=True)
-    gradle_repo.joinpath("build.gradle").write_text("plugins { id 'java' }\n")
-    gradle_repo.joinpath("settings.gradle").write_text("rootProject.name = 'test-parent'\ninclude 'test-junit5'\n")
-    gradle_repo.joinpath("gradle.properties").write_text("projectGroup=io.micronaut.test\n")
-
-    detected = gradle_tool.is_detected(str(gradle_repo), group_id="micronaut-projects", artifact_id="micronaut-test")
-    assert detected
 
 
 @pytest.mark.parametrize(

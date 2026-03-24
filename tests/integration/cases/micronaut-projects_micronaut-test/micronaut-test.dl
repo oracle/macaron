@@ -12,7 +12,7 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_verified_1"),
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
     check_passed(component_id, "mcn_build_tool_1"),
-    build_tool_check(gradle_id, "gradle", "java"),
+    build_tool_check(gradle_id, "java", "gradle", _, _, _, _, _),
     check_facts(gradle_id, _, component_id,_,_),
     provenance_verified_check(_, build_level, _),
     build_level = 3,

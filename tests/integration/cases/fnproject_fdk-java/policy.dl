@@ -1,4 +1,4 @@
-/* Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -12,7 +12,12 @@ Policy("test_policy", component_id, "") :-
 build_tool_exists(component_id, name) :-
     build_tool_check(
         check_id,
+        _,
         name,
+        _,
+        _,
+        _,
+        _,
         _
     ),
     check_facts(check_id, _, component_id,_,_).
