@@ -15,6 +15,24 @@ from defusedxml.ElementTree import fromstring
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+def _tag_matches(tag: str, local_name: str) -> bool:
+    """Return whether an XML tag matches a local name with/without namespace."""
+    return tag == local_name or tag.endswith("}" + local_name)
+
+
+def _find_child(elem: Element, local_name: str) -> Element | None:
+    """Find a direct child element by local tag name."""
+    return next((ch for ch in elem if _tag_matches(ch.tag, local_name)), None)
+
+
+def _find_child_text(parent: Element, local_name: str) -> str | None:
+    """Find direct child text by local tag name."""
+    elem = _find_child(parent, local_name)
+    if elem is None or not elem.text:
+        return None
+    return elem.text.strip()
+
+
 def parse_pom_string(pom_string: str) -> Element | None:
     """
     Parse the passed POM string using defusedxml.
@@ -80,13 +98,6 @@ def extract_gav_from_pom(pom_file: Path) -> tuple[str | None, str | None, str | 
         logger.debug("Could not parse pom.xml: %s", str(pom_file))
         return None, None, None
 
-    def _find_child_text(parent: Element, local_name: str) -> str | None:
-        # The closing curly brace represents the end of the XML namespace.
-        elem = next((ch for ch in parent if ch.tag.endswith("}" + local_name)), None)
-        if elem is None or not elem.text:
-            return None
-        return elem.text.strip()
-
     # Direct project coordinates
     group_id = _find_child_text(pom_root, "groupId")
     artifact_id = _find_child_text(pom_root, "artifactId")
@@ -94,7 +105,7 @@ def extract_gav_from_pom(pom_file: Path) -> tuple[str | None, str | None, str | 
 
     # Fallback: groupId may be inherited from parent
     if group_id is None:
-        parent_elem = next((ch for ch in pom_root if ch.tag.endswith("}parent")), None)
+        parent_elem = _find_child(pom_root, "parent")
         if parent_elem is not None:
             group_id = _find_child_text(parent_elem, "groupId")
 
@@ -147,9 +158,6 @@ def detect_parent_pom(pom_path: Path, repo_root: str | Path) -> str | None:
     if pom_root is None:
         return None
 
-    def _find_child(elem: Element, local_name: str) -> Element | None:
-        return next((ch for ch in elem if ch.tag.endswith("}" + local_name)), None)
-
     parent_elem = _find_child(pom_root, "parent")
     if parent_elem is None:
         return None
@@ -201,14 +209,107 @@ def pom_has_modules(pom_path: Path) -> bool:
     if pom_root is None:
         return False
 
-    def _find_child(elem: Element, local_name: str) -> Element | None:
-        return next((ch for ch in elem if ch.tag.endswith("}" + local_name)), None)
-
     modules_elem = _find_child(pom_root, "modules")
     if modules_elem is None:
         return False
 
-    return any(ch.tag.endswith("}module") and ch.text and ch.text.strip() for ch in modules_elem)
+    return any(_tag_matches(ch.tag, "module") and ch.text and ch.text.strip() for ch in modules_elem)
+
+
+def extract_included_pom_modules(pom_path: Path) -> list[str]:
+    """Extract module entries from a Maven ``pom.xml``.
+
+    Parameters
+    ----------
+    pom_path : Path
+        Path to the ``pom.xml`` file to inspect.
+
+    Returns
+    -------
+    list[str]
+        Ordered list of non-empty module paths declared under
+        ``<project><modules><module>...``.
+    """
+    try:
+        pom_content = pom_path.read_text(encoding="utf-8")
+    except OSError as error:
+        logger.debug(error)
+        return []
+
+    pom_root = parse_pom_string(pom_content)
+    if pom_root is None:
+        return []
+
+    modules_elem = next((ch for ch in pom_root if _tag_matches(ch.tag, "modules")), None)
+    if modules_elem is None:
+        return []
+
+    modules: list[str] = []
+    for child in modules_elem:
+        if not _tag_matches(child.tag, "module"):
+            continue
+        if not child.text:
+            continue
+        module_path = child.text.strip()
+        if module_path:
+            modules.append(module_path)
+
+    return modules
+
+
+def find_matching_maven_module_build_configs(repo_root: Path, artifact_id: str) -> list[Path]:
+    """Find module ``pom.xml`` files likely associated with the artifact id.
+
+    Parameters
+    ----------
+    repo_root : Path
+        Root directory of the Maven repository.
+    artifact_id : str
+        Expected artifact id.
+
+    Returns
+    -------
+    list[Path]
+        Candidate module POM paths associated with the artifact id.
+    """
+
+    def _collect_from_parent_poms(parent_poms: list[Path]) -> list[Path]:
+        candidates: list[Path] = []
+        seen: set[Path] = set()
+
+        for parent_pom in parent_poms:
+            # Only aggregator poms with <modules> contribute module-path mapping.
+            for module in extract_included_pom_modules(parent_pom):
+                module_path = module.strip()
+                if not module_path:
+                    continue
+
+                module_name = Path(module_path).name
+                if artifact_id != module_name and not artifact_id.endswith(f"-{module_name}"):
+                    continue
+
+                module_pom = parent_pom.parent.joinpath(module_path, "pom.xml")
+                if module_pom.is_file() and module_pom not in seen:
+                    seen.add(module_pom)
+                    candidates.append(module_pom)
+
+        return candidates
+
+    # Most Maven multi-module repos define modules in the repository-root pom.xml.
+    # Check it first as a fast path.
+    root_pom = repo_root.joinpath("pom.xml")
+    if root_pom.is_file():
+        root_candidates = _collect_from_parent_poms([root_pom])
+        if root_candidates:
+            return root_candidates
+
+    # Some repositories have nested/independent reactor roots.
+    # If root lookup does not match, broaden the search.
+    nested_parent_poms = sorted(
+        (pom for pom in repo_root.glob("**/pom.xml") if pom != root_pom),
+        key=str,
+    )
+    return _collect_from_parent_poms(nested_parent_poms)
 
 
 def find_nearest_modules_pom(

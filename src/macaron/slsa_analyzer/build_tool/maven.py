@@ -12,7 +12,12 @@ from pathlib import Path
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.parsers.pomparser import extract_gav_from_pom, find_nearest_modules_pom
+from macaron.database.table_definitions import Component
+from macaron.parsers.pomparser import (
+    extract_gav_from_pom,
+    find_matching_maven_module_build_configs,
+    find_nearest_modules_pom,
+)
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
@@ -45,22 +50,16 @@ class Maven(BaseBuildTool):
                     self.ci_deploy_kws[item] = defaults.get_list("builder.maven.ci.deploy", item)
 
     def is_detected(
-        self, repo_path: str, group_id: str | None = None, artifact_id: str | None = None
+        self,
+        target: Component,
     ) -> list[tuple[str, float, str | None, str | None]]:
         """
         Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
-        group_id : str | None
-            Optional Maven `groupId` used to refine detection (e.g., selecting the
-            correct `pom.xml` when multiple are present). If ``None``, no filtering
-            is applied.
-        artifact_id : str | None
-            Optional Maven `artifactId` used to refine detection. If ``None``, no
-            filtering is applied.
+        target: Component
+            The target software component.
 
         Returns
         -------
@@ -68,14 +67,32 @@ class Maven(BaseBuildTool):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+        repo_path, group_id, artifact_id = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return []
+
         results: list[tuple[str, float, str | None, str | None]] = []
+        seen_paths: set[Path] = set()
         confidence_score = 1.0
+        maven_config_files = self.build_configs + self.entry_conf
 
         if os.path.isfile(os.path.join(global_config.macaron_path, "pom.xml")):
             logger.error("Please remove pom.xml file in %s.", global_config.macaron_path)
             return []
 
-        for config_name in self.build_configs:
+        if artifact_id:
+            for module_config_path in find_matching_maven_module_build_configs(Path(repo_path), artifact_id):
+                if module_config_path in seen_paths:
+                    continue
+                if self.validate_pom_file(module_config_path, group_id=group_id, artifact_id=artifact_id):
+                    entrypoint_pom = find_nearest_modules_pom(module_config_path, repo_path)
+                    results.append(
+                        (str(module_config_path.relative_to(repo_path)), confidence_score, None, entrypoint_pom)
+                    )
+                    seen_paths.add(module_config_path)
+                    confidence_score = confidence_score / 2
+
+        for config_name in maven_config_files:
             predicate_kwargs = {"group_id": group_id, "artifact_id": artifact_id}
             config_path = file_exists(
                 repo_path,
@@ -84,9 +101,10 @@ class Maven(BaseBuildTool):
                 predicate=self.validate_pom_file,
                 **predicate_kwargs,
             )
-            if config_path:
+            if config_path and config_path not in seen_paths:
                 entrypoint_pom = find_nearest_modules_pom(config_path, repo_path)
                 results.append((str(config_path.relative_to(repo_path)), confidence_score, None, entrypoint_pom))
+                seen_paths.add(config_path)
                 confidence_score = confidence_score / 2
 
         return results
@@ -100,25 +118,27 @@ class Maven(BaseBuildTool):
         ``(groupId, artifactId, version)`` from the POM at `config_path` and returns
         ``True`` only when the extracted group/artifact match the expected values.
         If either `group_id` or `artifact_id` is not provided, the method returns
-        ``False``.
+        ``True`` (no-op validation).
 
         Parameters
         ----------
-        config_path : str
+        config_path : Path
             Path to the candidate configuration file (typically a `pom.xml`).
         group_id : str or None, optional
             Expected Maven `groupId`. If ``None``, no match can be performed.
         artifact_id : str or None, optional
-            Expected Maven `artifactId`. If ``None``, no match can be performed.
+            Expected Maven `artifactId`. If ``None``, validation is skipped.
 
         Returns
         -------
         is_valid : bool
-            ``True`` if `group_id` and `artifact_id` are provided and the POM at
-            `config_path` contains matching values; otherwise ``False``.
+            ``True`` if validation inputs are missing, or when both `group_id`
+            and `artifact_id` are provided and the POM at `config_path` contains
+            matching values; otherwise ``False``.
         """
         if group_id and artifact_id:
             ex_group_id, ex_artifact_id, _ = extract_gav_from_pom(config_path)
-            if group_id == ex_group_id and artifact_id == ex_artifact_id:
-                return True
-        return False
+            if group_id != ex_group_id or artifact_id != ex_artifact_id:
+                return False
+        # If group or artifact ID is not provided, there is nothing to validate and return True.
+        return True

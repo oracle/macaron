@@ -10,6 +10,7 @@ import pytest
 from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
+from tests.conftest import MockAnalyzeContext
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -23,7 +24,8 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 )
 def test_get_build_dirs(snapshot: list, gradle_tool: Gradle, mock_repo: Path) -> None:
     """Test discovering build directories."""
-    assert list(gradle_tool.get_build_dirs(str(mock_repo))) == snapshot
+    ctx = MockAnalyzeContext(macaron_path="", output_dir="", fs_path=str(mock_repo))
+    assert list(gradle_tool.get_build_dirs(ctx.component)) == snapshot
 
 
 @pytest.mark.parametrize(
@@ -58,7 +60,7 @@ def test_gradle_build_tool(
     """Test the Gradle build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert gradle_tool.is_detected(ctx.component.repository.fs_path) == (expected_value)
+    assert gradle_tool.is_detected(ctx.component) == (expected_value)
 
 
 def test_gradle_build_tool_with_group_artifact_validation(gradle_tool: Gradle, tmp_path: Path) -> None:
@@ -68,12 +70,19 @@ def test_gradle_build_tool_with_group_artifact_validation(gradle_tool: Gradle, t
     gradle_repo.joinpath("build.gradle").write_text("group = 'com.example'")
     gradle_repo.joinpath("settings.gradle").write_text("rootProject.name = 'sample-app'\ninclude 'project1'\n")
 
-    detected = gradle_tool.is_detected(str(gradle_repo), group_id="com.example", artifact_id="sample-app")
+    ctx = MockAnalyzeContext(
+        macaron_path="",
+        output_dir="",
+        fs_path=str(gradle_repo),
+        purl="pkg:maven/com.example/sample-app@1.0.0",
+    )
+    detected = gradle_tool.is_detected(ctx.component)
     assert detected
     assert {item[0] for item in detected} == {"build.gradle", "settings.gradle"}
     assert {item[3] for item in detected} == {"settings.gradle"}
 
-    not_detected = gradle_tool.is_detected(str(gradle_repo), group_id="com.example", artifact_id="another-app")
+    ctx.component.name = "another-app"
+    not_detected = gradle_tool.is_detected(ctx.component)
     assert not not_detected
 
 
@@ -86,9 +95,13 @@ def test_gradle_build_tool_with_project_group_and_multimodule_name(gradle_tool: 
     gradle_repo.joinpath("settings.gradle").write_text("rootProject.name = 'test-parent'\ninclude 'test-junit5'\n")
     gradle_repo.joinpath("gradle.properties").write_text("projectGroup=io.micronaut.test\nprojectVersion=4.5.0\n")
 
-    detected = gradle_tool.is_detected(
-        str(gradle_repo), group_id="io.micronaut.test", artifact_id="micronaut-test-junit5"
+    ctx = MockAnalyzeContext(
+        macaron_path="",
+        output_dir="",
+        fs_path=str(gradle_repo),
+        purl="pkg:maven/io.micronaut.test/micronaut-test-junit5@1.0.0",
     )
+    detected = gradle_tool.is_detected(ctx.component)
     assert detected
     assert detected[0][0] == "test-junit5/build.gradle"
     assert detected[0][3] == "settings.gradle"

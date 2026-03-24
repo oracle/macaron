@@ -67,10 +67,27 @@
     "build_commands": {
       "type": "array",
       "items": {
-        "type": "array",
-        "items": { "type": "string" }
+        "type": "object",
+        "properties": {
+          "build_tool": { "type": "string" },
+          "build_tool_version": { "type": ["string", "null"] },
+          "build_config_path": { "type": "string" },
+          "root_build_config_path": { "type": "string" },
+          "command": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "confidence_score": { "type": "number" }
+        },
+        "required": [
+          "build_tool",
+          "build_config_path",
+          "command",
+          "confidence_score"
+        ],
+        "additionalProperties": false
       },
-      "description": "List of shell commands to build the project."
+      "description": "List of build command objects and related metadata used to build the project."
     },
     "test_commands": {
       "type": "array",

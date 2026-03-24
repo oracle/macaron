@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 from git import InvalidGitRepositoryError
@@ -95,7 +95,7 @@ class MockGit(Git):
             """Return the name of the tag."""
             return "tag_name"
 
-    repo = SimpleNamespace(tags=[MockTag()])
+    repo = Mock(tags=[MockTag()])
 
 
 class MockJFrogRegistry(JFrogMavenRegistry):

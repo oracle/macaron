@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from macaron.config.defaults import defaults
+from macaron.database.table_definitions import Component
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer, NoneDependencyAnalyzer
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence, Evidence, EvidenceWeightMap
@@ -235,22 +236,16 @@ class BaseBuildTool(ABC):
 
     @abstractmethod
     def is_detected(
-        self, repo_path: str, group_id: str | None = None, artifact_id: str | None = None
+        self,
+        target: Component,
     ) -> list[tuple[str, float, str | None, str | None]]:
         """
         Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
-        group_id : str | None
-            Optional Maven `groupId` used to refine detection (e.g., selecting the
-            correct `pom.xml` when multiple are present). If ``None``, no filtering
-            is applied.
-        artifact_id : str | None
-            Optional Maven `artifactId` used to refine detection. If ``None``, no
-            filtering is applied.
+        target: Component
+            The target software component.
 
         Returns
         -------
@@ -258,6 +253,36 @@ class BaseBuildTool(ABC):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+
+    def resolve_component_detection_target(
+        self,
+        target: Component,
+    ) -> tuple[str | None, str | None, str | None]:
+        """Resolve repo path and optional coordinates from a detection target.
+
+        Parameters
+        ----------
+        target : Component
+            Target component.
+
+        Returns
+        -------
+        tuple[str | None, str | None, str | None]
+            ``(repo_path, group_id, artifact_id)`` where group/artifact are
+            resolved when the component PURL type matches this build tool.
+        """
+        repo_path = target.repository.fs_path if target.repository else None
+        resolved_group_id = None
+        resolved_artifact_id = None
+
+        # The target component may have a repository-based PURL type like
+        # github.com; only use name/namespace as coordinates when the type
+        # matches this build tool ecosystem.
+        if target.type == self.purl_type:
+            resolved_group_id = target.namespace
+            resolved_artifact_id = target.name
+
+        return repo_path, resolved_group_id, resolved_artifact_id
 
     @abstractmethod
     def load_defaults(self) -> None:
@@ -319,27 +344,31 @@ class BaseBuildTool(ABC):
         """
         self.build_tool_configs = build_tool_configs
 
-    def get_build_dirs(self, repo_path: str) -> Iterable[Path]:
+    def get_build_dirs(self, target: Component) -> Iterable[Path]:
         """Find directories in the repository that have their own build scripts.
 
         This is especially important for applications that consist of multiple services.
 
         Parameters
         ----------
-        repo_path: str
-            The path to the target repo.
+        target: Component
+            The target software component.
 
         Yields
         ------
         Path
             The relative paths from the repo path that contain build scripts.
         """
+        repo_path, _, _ = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return
+
         config_paths: set[str] = set()
         for build_cfg in self.build_configs:
             config_paths.update(
                 path
                 for path in glob.glob(os.path.join(repo_path, "**", build_cfg), recursive=True)
-                if self.is_detected(str(Path(path).parent))
+                if self.is_detected(target)
             )
 
         list_iter = iter(sorted(config_paths, key=lambda x: (str(Path(x).parent), len(Path(x).parts))))

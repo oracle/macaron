@@ -11,6 +11,7 @@ import subprocess  # nosec B404
 from pathlib import Path
 
 from macaron.config.defaults import defaults
+from macaron.database.table_definitions import Component
 from macaron.parsers.gradleparser import (
     extract_gav_from_gradle_project,
     extract_included_gradle_modules,
@@ -63,24 +64,15 @@ class Gradle(BaseBuildTool):
 
     def is_detected(
         self,
-        repo_path: str,
-        group_id: str | None = None,
-        artifact_id: str | None = None,
+        target: Component,
     ) -> list[tuple[str, float, str | None, str | None]]:
         """
         Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
-        group_id : str | None
-            Optional Maven `groupId` used to refine detection (e.g., selecting the
-            correct `pom.xml` when multiple are present). If ``None``, no filtering
-            is applied.
-        artifact_id : str | None
-            Optional Maven `artifactId` used to refine detection. If ``None``, no
-            filtering is applied.
+        target : Component
+            The target software component.
 
         Returns
         -------
@@ -88,6 +80,10 @@ class Gradle(BaseBuildTool):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+        repo_path, group_id, artifact_id = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return []
+
         results: list[tuple[str, float, str | None, str | None]] = []
         confidence_score = 1.0
         gradle_config_files = self.build_configs + self.entry_conf
@@ -153,7 +149,8 @@ class Gradle(BaseBuildTool):
         Returns
         -------
         bool
-            ``True`` if both expected values are present and match the extracted
+            ``True`` when either validation inputs are missing (no-op validation)
+            or when both expected values are present and match the extracted
             Gradle group/artifact from the project; otherwise ``False``.
         """
         group_id = group_id or kwargs.get("group_id")
@@ -165,7 +162,9 @@ class Gradle(BaseBuildTool):
             if group_id != ex_group_id:
                 return False
             return self._validate_artifact_id(project_root, artifact_id, ex_artifact_id)
-        return False
+
+        # If group or artifact ID is not provided, there is nothing to validate and return True.
+        return True
 
     def _validate_artifact_id(
         self,
@@ -190,7 +189,7 @@ class Gradle(BaseBuildTool):
             ``True`` when the expected artifact id matches either a direct
             project artifact id or a module name declared in Gradle settings.
         """
-        if extracted_artifact_id and expected_artifact_id == extracted_artifact_id:
+        if expected_artifact_id and expected_artifact_id == extracted_artifact_id:
             return True
 
         # Accept common multi-module naming where artifact ids prefix module names

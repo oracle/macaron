@@ -85,6 +85,18 @@ def test_find_matching_gradle_module_build_configs(tmp_path: Path) -> None:
     assert find_matching_gradle_module_build_configs(repo_path, "micronaut-test-junit5") == [target_build]
 
 
+def test_find_matching_gradle_module_build_configs_nested_fallback(tmp_path: Path) -> None:
+    """Test nested settings fallback when root settings do not match."""
+    repo_path = tmp_path.joinpath("repo")
+    repo_path.joinpath("build-logic", "test-junit5").mkdir(parents=True)
+    repo_path.joinpath("settings.gradle").write_text("rootProject.name = 'repo'\n")
+    repo_path.joinpath("build-logic", "settings.gradle").write_text("include 'test-junit5'\n")
+    target_build = repo_path.joinpath("build-logic", "test-junit5", "build.gradle")
+    target_build.write_text("plugins { id 'java' }\n")
+
+    assert find_matching_gradle_module_build_configs(repo_path, "micronaut-test-junit5") == [target_build]
+
+
 def test_find_nearest_modules_gradle_config(tmp_path: Path) -> None:
     """Test finding the nearest module-defining Gradle settings file."""
     repo_path = tmp_path.joinpath("repo")

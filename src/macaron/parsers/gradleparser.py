@@ -183,25 +183,48 @@ def find_matching_gradle_module_build_configs(repo_root: Path, artifact_id: str)
         Candidate module build files (for example ``module/build.gradle``)
         associated with the artifact id.
     """
-    candidates: list[Path] = []
-    seen: set[Path] = set()
-    for settings_name in ("settings.gradle", "settings.gradle.kts"):
-        settings_path = repo_root.joinpath(settings_name)
-        for module in extract_included_gradle_modules(settings_path):
-            module_path = module.strip().strip(":")
-            if not module_path:
-                continue
-            module_name = module_path.split(":")[-1]
-            if artifact_id != module_name and not artifact_id.endswith(f"-{module_name}"):
-                continue
-            module_dir = repo_root.joinpath(*module_path.split(":"))
-            for build_name in ("build.gradle", "build.gradle.kts"):
-                config_path = module_dir.joinpath(build_name)
-                if config_path.is_file() and config_path not in seen:
-                    seen.add(config_path)
-                    candidates.append(config_path)
 
-    return candidates
+    def _collect_from_settings_paths(settings_paths: list[Path]) -> list[Path]:
+        candidates: list[Path] = []
+        seen: set[Path] = set()
+        for settings_path in settings_paths:
+            for module in extract_included_gradle_modules(settings_path):
+                module_path = module.strip().strip(":")
+                if not module_path:
+                    continue
+                module_name = module_path.split(":")[-1]
+                if artifact_id != module_name and not artifact_id.endswith(f"-{module_name}"):
+                    continue
+                module_dir = settings_path.parent.joinpath(*module_path.split(":"))
+                for build_name in ("build.gradle", "build.gradle.kts"):
+                    config_path = module_dir.joinpath(build_name)
+                    if config_path.is_file() and config_path not in seen:
+                        seen.add(config_path)
+                        candidates.append(config_path)
+        return candidates
+
+    # Most Gradle multi-module projects declare modules from repository-root
+    # settings files, so we try those first as a fast path.
+    root_settings_paths = [
+        repo_root.joinpath("settings.gradle"),
+        repo_root.joinpath("settings.gradle.kts"),
+    ]
+    root_candidates = _collect_from_settings_paths([p for p in root_settings_paths if p.is_file()])
+    if root_candidates:
+        return root_candidates
+
+    # Some repos contain independent nested Gradle roots; when root settings do
+    # not match the requested artifact, broaden to nested settings files.
+    nested_settings_paths = sorted(
+        (
+            path
+            for pattern in ("**/settings.gradle", "**/settings.gradle.kts")
+            for path in repo_root.glob(pattern)
+            if path not in root_settings_paths
+        ),
+        key=str,
+    )
+    return _collect_from_settings_paths(nested_settings_paths)
 
 
 def find_nearest_modules_gradle_config(

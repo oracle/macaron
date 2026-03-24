@@ -13,6 +13,7 @@ from cyclonedx_py import __version__ as cyclonedx_version
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.database.table_definitions import Component
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
 from macaron.dependency_analyzer.cyclonedx_python import CycloneDxPython
 from macaron.slsa_analyzer.build_tool import pyproject
@@ -43,23 +44,14 @@ class Pip(BaseBuildTool):
                 if item in self.ci_deploy_kws:
                     self.ci_deploy_kws[item] = defaults.get_list("builder.pip.ci.deploy", item)
 
-    def is_detected(
-        self, repo_path: str, group_id: str | None = None, artifact_id: str | None = None
-    ) -> list[tuple[str, float, str | None, str | None]]:
+    def is_detected(self, target: Component) -> list[tuple[str, float, str | None, str | None]]:
         """
         Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
-        group_id : str | None
-            Optional Maven `groupId` used to refine detection (e.g., selecting the
-            correct `pom.xml` when multiple are present). If ``None``, no filtering
-            is applied.
-        artifact_id : str | None
-            Optional Maven `artifactId` used to refine detection. If ``None``, no
-            filtering is applied.
+        target : Component
+            The target software component.
 
         Returns
         -------
@@ -67,6 +59,10 @@ class Pip(BaseBuildTool):
             Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
             where paths are relative to `repo_path` and `parent_pom` may be ``None``.
         """
+        repo_path, _, _ = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return []
+
         results: list[tuple[str, float, str | None, str | None]] = (
             []
         )  # (config_path, confidence_score, build_tool_version)
