@@ -1,7 +1,8 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the deps.dev repo finder."""
+
 import pytest
 from packageurl import PackageURL
 from pytest_httpserver import HTTPServer

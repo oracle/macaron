@@ -54,11 +54,9 @@ def analyze_slsa_levels_single(analyzer_single_args: argparse.Namespace) -> None
     if not (analyzer_single_args.repo_path or analyzer_single_args.package_url):
         # We don't mention --config-path as a possible option in this log message as it going to be move soon.
         # See: https://github.com/oracle/macaron/issues/417
-        logger.error(
-            """Analysis target missing. Please provide a package url (PURL) and/or repo path.
+        logger.error("""Analysis target missing. Please provide a package url (PURL) and/or repo path.
             Examples of a PURL can be seen at https://github.com/package-url/purl-spec:
-            pkg:github/micronaut-projects/micronaut-core."""
-        )
+            pkg:github/micronaut-projects/micronaut-core.""")
         sys.exit(os.EX_USAGE)
 
     # Set provenance expectation path.

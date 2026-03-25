@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # We run checks on pushing to the specified branches.
@@ -333,19 +333,3 @@ jobs:
       # https://github.com/actions/runner/issues/2394.
       artifact-name: artifact-ubuntu-latest-python-3.11
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
-
-  # Send out release notifications after the Release was published on GitHub.
-  # Uncomment the `if` to disable sending release notifications.
-  notifications:
-    if: ${{ false }}
-    needs: [release]
-    name: Send Release notifications
-    uses: ./.github/workflows/_release-notifications.yaml
-    permissions:
-      contents: read
-    with:
-      repo_name: ${{ github.event.repository.name }}
-      release_tag: ${{ needs.release.outputs.release-tag }}
-      release_url: ${{ needs.release.outputs.release-url }}
-    secrets:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

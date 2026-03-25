@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for witness provenance."""
@@ -68,21 +68,17 @@ def test_load_witness_predicate_types(
     ("payload_json", "predicate_types", "expected_result"),
     [
         pytest.param(
-            json.loads(
-                """
+            json.loads("""
             { "predicateType": "https://witness.testifysec.com/attestation-collection/v0.1" }
-            """
-            ),
+            """),
             {"https://witness.testifysec.com/attestation-collection/v0.1"},
             True,
             id="Valid predicateType",
         ),
         pytest.param(
-            json.loads(
-                """
+            json.loads("""
             { "predicateType": "https://witness.net/attestation-collection/v0.1" }
-            """
-            ),
+            """),
             {"https://witness.testifysec.com/attestation-collection/v0.1"},
             False,
             id="Invalid predicateType",
@@ -103,8 +99,7 @@ def test_is_witness_provenance_payload(
     ("payload_json", "expected_subjects"),
     [
         pytest.param(
-            json.loads(
-                """
+            json.loads("""
 {
     "subject": [
         {
@@ -121,8 +116,7 @@ def test_is_witness_provenance_payload(
         }
     ]
 }
-                """
-            ),
+                """),
             [
                 {
                     "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",
@@ -140,8 +134,7 @@ def test_is_witness_provenance_payload(
             id="Valid payload",
         ),
         pytest.param(
-            json.loads(
-                """
+            json.loads("""
 {
     "subject": [
         {
@@ -158,8 +151,7 @@ def test_is_witness_provenance_payload(
         }
     ]
 }
-            """
-            ),
+            """),
             [
                 {
                     "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",
@@ -171,8 +163,7 @@ def test_is_witness_provenance_payload(
             id="Missing sha256",
         ),
         pytest.param(
-            json.loads(
-                """
+            json.loads("""
 {
     "subject": [
         {
@@ -189,8 +180,7 @@ def test_is_witness_provenance_payload(
         }
     ]
 }
-"""
-            ),
+"""),
             [
                 {
                     "name": "https://witness.dev/attestations/product/v0.1/file:target/jackson-annotations-2.9.9.jar",

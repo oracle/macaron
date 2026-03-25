@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the ``JFrogMavenRegistry`` class."""
@@ -260,8 +260,7 @@ def test_extract_folder_names_from_folder_info_payload(
     ("args", "expected_file_names"),
     [
         pytest.param(
-            {
-                "folder_info_payload": """
+            {"folder_info_payload": """
                     {
                         "children": [
                             {
@@ -274,8 +273,7 @@ def test_extract_folder_names_from_folder_info_payload(
                             }
                         ]
                     }
-                """
-            },
+                """},
             ["child2"],
             id="Payload with both files and folders",
         ),

@@ -3,7 +3,6 @@
 
 """This module provides methods to perform generic actions on Git URLS."""
 
-
 import logging
 import os
 import re

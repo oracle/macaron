@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the PythonRepoFinderDD class to be used for finding repositories using deps.dev."""
+
 import json
 import logging
 import urllib.parse

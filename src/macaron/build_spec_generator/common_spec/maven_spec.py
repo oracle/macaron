@@ -3,7 +3,6 @@
 
 """This module includes build specification and helper classes for Maven packages."""
 
-
 import logging
 
 from packageurl import PackageURL

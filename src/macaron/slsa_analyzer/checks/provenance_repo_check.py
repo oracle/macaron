@@ -1,7 +1,8 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module adds a check that determines whether the repository URL came from provenance."""
+
 import logging
 
 from sqlalchemy import ForeignKey, String

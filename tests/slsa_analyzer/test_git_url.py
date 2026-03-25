@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the generic actions on Git repositories."""
@@ -220,12 +220,10 @@ def test_get_remote_vcs_url_with_user_defined_allowed_hostnames(tmp_path: Path) 
 
     user_config_path = os.path.join(tmp_path, "config.ini")
     with open(user_config_path, "w", encoding="utf-8") as user_config_file:
-        user_config_file.write(
-            """
+        user_config_file.write("""
             [git_service.gitlab.self_hosted]
             hostname = internal.gitlab.org
-            """
-        )
+            """)
     # We don't have to worry about modifying the ``defaults`` object causing test
     # pollution here, since we reload the ``defaults`` object before every test with the
     # ``setup_test`` fixture.

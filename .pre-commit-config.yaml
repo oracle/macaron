@@ -17,7 +17,7 @@ repos:
 
 # Commitizen enforces semantic and conventional commit messages.
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: v4.8.3
+  rev: v4.13.9
   hooks:
   - id: commitizen
     name: Check conventional commit message
@@ -25,7 +25,7 @@ repos:
 
 # Sort imports.
 - repo: https://github.com/pycqa/isort
-  rev: 6.0.1
+  rev: 8.0.1
   hooks:
   - id: isort
     name: Sort import statements
@@ -34,14 +34,14 @@ repos:
 
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
-  rev: 25.1.0
+  rev: 26.3.1
   hooks:
   - id: black
     name: Format code
-    args: [--config, pyproject.toml]
+    args: [--config, pyproject.toml, --target-version, py311]
     exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 - repo: https://github.com/asottile/blacken-docs
-  rev: 1.19.1
+  rev: 1.20.0
   hooks:
   - id: blacken-docs
     name: Format code in docstrings
@@ -50,7 +50,7 @@ repos:
 
 # Upgrade and rewrite Python idioms.
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.20.0
+  rev: v3.21.2
   hooks:
   - id: pyupgrade
     name: Upgrade code idioms
@@ -72,13 +72,13 @@ repos:
 
 # Check GitHub Actions workflow files.
 - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-  rev: v1.7.7.23
+  rev: v1.7.11.24
   hooks:
   - id: actionlint
 
 # Check shell scripts with shellcheck.
 - repo: https://github.com/shellcheck-py/shellcheck-py
-  rev: v0.10.0.1
+  rev: v0.11.0.1
   hooks:
   - id: shellcheck
     exclude: ^tests/
@@ -110,7 +110,7 @@ repos:
 
 # Check for potential security issues.
 - repo: https://github.com/PyCQA/bandit
-  rev: 1.8.6
+  rev: 1.9.4
   hooks:
   - id: bandit
     name: Check for security issues
@@ -123,7 +123,7 @@ repos:
 # Enable a whole bunch of useful helper hooks, too.
 # See https://pre-commit.com/hooks.html for more hooks.
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: check-ast
   - id: check-case-conflict
@@ -164,7 +164,7 @@ repos:
 
 # Check and prettify the configuration files.
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.15.0
+  rev: v2.16.0
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
@@ -224,7 +224,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: v2.8.0
+  rev: v2.11.4
   hooks:
   - id: golangci-lint
 
