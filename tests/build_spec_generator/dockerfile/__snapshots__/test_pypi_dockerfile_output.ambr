@@ -67,7 +67,7 @@
   EOF
   
   # Run the build
-  RUN source /deps/bin/activate &&  python -m build
+  RUN source /deps/bin/activate &&  python -m build --wheel -n
   
   # Validate script
   RUN cat <<'EOF' >/validate

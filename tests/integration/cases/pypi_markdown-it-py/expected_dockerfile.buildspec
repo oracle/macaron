@@ -64,7 +64,7 @@ RUN <<EOF
 EOF
 
 # Run the build
-RUN source /deps/bin/activate &&  pip install flit && if test -f "flit.ini"; then python -m flit.tomlify; fi && flit build
+RUN source /deps/bin/activate &&  python -m build --wheel -n
 
 # Validate script
 RUN cat <<'EOF' >/validate

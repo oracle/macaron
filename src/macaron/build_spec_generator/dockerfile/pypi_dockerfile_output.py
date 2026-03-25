@@ -46,24 +46,11 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     except InvalidVersion as error:
         logger.debug("Ran into issue converting %s to a version: %s", language_version, error)
         raise GenerateBuildSpecError("Derived interpreter version could not be parsed") from error
-    if not buildspec["build_tools"]:
-        raise GenerateBuildSpecError("Cannot generate dockerfile when build tool is unknown")
-    if not buildspec["build_commands"]:
-        raise GenerateBuildSpecError("Cannot generate dockerfile when build command is unknown")
-    backend_install_commands: str = " && ".join(build_backend_commands(buildspec))
-    build_tool_install: str = ""
-    if (
-        buildspec["build_tools"][0] != "pip"
-        and buildspec["build_tools"][0] != "conda"
-        and buildspec["build_tools"][0] != "flit"
-    ):
-        build_tool_install = f"pip install {buildspec['build_tools'][0]} && "
-    elif buildspec["build_tools"][0] == "flit":
-        build_tool_install = (
-            f"pip install {buildspec['build_tools'][0]} && if test -f \"flit.ini\"; then python -m flit.tomlify; fi && "
-        )
 
-    modern_build_command = build_tool_install + " ".join(x for x in buildspec["build_commands"][0])
+    backend_install_commands = " && ".join(build_backend_commands(buildspec))
+
+    modern_build_command = "python -m build --wheel -n"
+
     legacy_build_command = (
         'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
         "else python -m build --wheel -n; fi"
