@@ -52,8 +52,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     modern_build_command = "python -m build --wheel -n"
 
     legacy_build_command = (
-        'if test -f "setup.py"; then pip install wheel && python setup.py bdist_wheel; '
-        "else python -m build --wheel -n; fi"
+        'if test -f "setup.py"; then python setup.py bdist_wheel; else python -m build --wheel -n; fi'
     )
 
     # Initialized empty so that the validation script can exit gracefully in the case we find no upstream wheel
@@ -125,7 +124,9 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN source /deps/bin/activate &&  {modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command}
+    RUN source /deps/bin/activate && /deps/bin/pip install wheel && {modern_build_command
+                                                                     if version in SpecifierSet(">=3.6")
+                                                                     else legacy_build_command}
 
     # Validate script
     RUN cat <<'EOF' >/validate
