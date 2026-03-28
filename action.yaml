@@ -69,6 +69,9 @@ inputs:
     default: ${{ github.workspace }}
 
 outputs:
+  html_report_path:
+    description: Path to the generated HTML analysis report (if available).
+    value: ${{ steps.run-macaron-analysis.outputs.html_report_path }}
   report_dir:
     description: Directory containing HTML/JSON reports.
     value: ${{ steps.collect-reports.outputs.report_dir }}
@@ -200,6 +203,7 @@ runs:
       OUTPUT_DIR: ${{ inputs.output_dir }}
       VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
       POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
+      HTML_REPORT_PATH: ${{ steps.run-macaron-analysis.outputs.html_report_path }}
       REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
       VSA_ARTIFACT_NAME: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
       REPORTS_ARTIFACT_URL: ${{ steps.upload-macaron-reports.outputs.artifact-url }}

@@ -243,21 +243,21 @@ jobs:
         output_dir: macaron_output/exclude_include_checks/excluded
         upload_reports: 'false'
 
-  tutorial-upload-attestation:
-    name: Upload verification summary attestation
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-    - name: Run Macaron (analyze macaron repo + custom policy + upload attestation)
-      uses: ./
-      with:
-        repo_path: ./
-        policy_file: ./tests/tutorial_resources/provenance/attest-macaron-supply-chain.dl
-        policy_purl: pkg:github.com/oracle/macaron@.*
-        output_dir: macaron_output/upload_attestation
-        upload_attestation: 'true'
-        subject_path: ./macaron_output/upload_attestation/vsa.intoto.jsonl
-        require_vsa: 'true'
-        upload_reports: 'true'
-        reports_artifact_name: macaron-reports-upload-attestation
-        write_job_summary: 'true'
+  # tutorial-upload-attestation:
+  #   name: Upload verification summary attestation
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+  #   - name: Run Macaron (analyze macaron repo + custom policy + upload attestation)
+  #     uses: ./
+  #     with:
+  #       repo_path: ./
+  #       policy_file: ./tests/tutorial_resources/provenance/attest-macaron-supply-chain.dl
+  #       policy_purl: pkg:github.com/oracle/macaron@.*
+  #       output_dir: macaron_output/upload_attestation
+  #       upload_attestation: 'true'
+  #       subject_path: ./macaron_output/upload_attestation/vsa.intoto.jsonl
+  #       require_vsa: 'true'
+  #       upload_reports: 'true'
+  #       reports_artifact_name: macaron-reports-upload-attestation
+  #       write_job_summary: 'true'

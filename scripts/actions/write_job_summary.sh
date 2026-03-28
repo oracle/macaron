@@ -7,23 +7,28 @@ set -euo pipefail
 OUTPUT_DIR="${OUTPUT_DIR:-output}"
 DB_PATH="${OUTPUT_DIR}/macaron.db"
 POLICY_REPORT="${POLICY_REPORT:-${OUTPUT_DIR}/policy_report.json}"
-VSA_PATH="${OUTPUT_DIR}/vsa.intoto.jsonl"
-VSA_GENERATED="${VSA_GENERATED:-false}"
+HTML_REPORT_PATH="${HTML_REPORT_PATH:-}"
+VSA_PATH="${VSA_PATH:-${OUTPUT_DIR}/vsa.intoto.jsonl}"
 REPORTS_ARTIFACT_NAME="${REPORTS_ARTIFACT_NAME:-macaron-reports}"
-VSA_ARTIFACT_NAME="${VSA_ARTIFACT_NAME:-${REPORTS_ARTIFACT_NAME}-vsa}"
 RUN_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 REPORTS_ARTIFACT_URL="${REPORTS_ARTIFACT_URL:-${RUN_URL}}"
-VSA_ARTIFACT_URL="${VSA_ARTIFACT_URL:-${RUN_URL}}"
 
 {
-  echo "## Macaron GitHub Actions Vulnerability Results"
+  echo "## Macaron Analysis Results"
   echo
-  echo "- Database: [\`${DB_PATH}\`](${REPORTS_ARTIFACT_URL})"
-  echo "- Policy report: [\`${POLICY_REPORT}\`](${REPORTS_ARTIFACT_URL})"
-  echo "- VSA generated: \`${VSA_GENERATED}\`"
-  echo "- Download artifact: [\`${REPORTS_ARTIFACT_NAME}\`](${REPORTS_ARTIFACT_URL})"
-  if [ "${VSA_GENERATED}" = "true" ]; then
-    echo "- Download VSA: [\`${VSA_ARTIFACT_NAME}\`](${VSA_ARTIFACT_URL})"
+  echo "Download reports from this artifact link:"
+  echo "- [\`${REPORTS_ARTIFACT_NAME}\`](${REPORTS_ARTIFACT_URL})"
+  echo
+  echo "Generated files:"
+  if [ -n "${HTML_REPORT_PATH}" ]; then
+    echo "- HTML report: \`${HTML_REPORT_PATH}\`"
+  fi
+  echo "- Database: \`${DB_PATH}\`"
+  echo "- Policy report: \`${POLICY_REPORT}\`"
+  if [ -n "${VSA_PATH}" ] && [ -f "${VSA_PATH}" ]; then
+    echo "- Policy status: :white_check_mark: Policy verification succeeded."
+  else
+    echo "- Policy status: :x: Policy verification failed."
   fi
   echo
 } >> "${GITHUB_STEP_SUMMARY}"
@@ -71,11 +76,3 @@ with open(summary_path, "a", encoding="utf-8") as f:
                 f"| `{action_id}` | `{version}` | `{vuln_value}` | {caller_workflow} |\n"
             )
 PY
-
-if [ -f "${VSA_PATH}" ]; then
-  echo >> "${GITHUB_STEP_SUMMARY}"
-  echo ":white_check_mark: VSA was generated at \`${VSA_PATH}\`." >> "${GITHUB_STEP_SUMMARY}"
-else
-  echo >> "${GITHUB_STEP_SUMMARY}"
-  echo ":warning: VSA was not generated at \`${VSA_PATH}\`." >> "${GITHUB_STEP_SUMMARY}"
-fi

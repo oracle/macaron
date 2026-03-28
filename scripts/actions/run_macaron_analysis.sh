@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 set -euo pipefail
 
@@ -54,4 +54,24 @@ if [ -n "${PROVENANCE_EXPECTATION:-}" ]; then
 fi
 
 echo "Executing: $CMD"
-eval "$CMD"
+
+output_file="$(mktemp)"
+set +e
+eval "$CMD" 2>&1 | tee "$output_file"
+# Capture analyze command's exit code from the pipeline (index 0), then restore fail-fast mode.
+status=${PIPESTATUS[0]}
+set -e
+
+if [ "${status}" -ne 0 ]; then
+  rm -f "$output_file"
+  exit "${status}"
+fi
+
+if [ -n "${GITHUB_OUTPUT:-}" ]; then
+  html_report_path="$(sed -n 's/^HTML Report[[:space:]]\+//p' "$output_file" | tail -n 1)"
+  if [ -n "$html_report_path" ]; then
+    echo "html_report_path=${html_report_path}" >> "$GITHUB_OUTPUT"
+  fi
+fi
+
+rm -f "$output_file"
