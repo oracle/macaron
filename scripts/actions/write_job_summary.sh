@@ -11,17 +11,19 @@ VSA_PATH="${OUTPUT_DIR}/vsa.intoto.jsonl"
 VSA_GENERATED="${VSA_GENERATED:-false}"
 REPORTS_ARTIFACT_NAME="${REPORTS_ARTIFACT_NAME:-macaron-reports}"
 VSA_ARTIFACT_NAME="${VSA_ARTIFACT_NAME:-${REPORTS_ARTIFACT_NAME}-vsa}"
-ARTIFACTS_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts"
+RUN_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+REPORTS_ARTIFACT_URL="${REPORTS_ARTIFACT_URL:-${RUN_URL}}"
+VSA_ARTIFACT_URL="${VSA_ARTIFACT_URL:-${RUN_URL}}"
 
 {
   echo "## Macaron GitHub Actions Vulnerability Results"
   echo
-  echo "- Database: [\`${DB_PATH}\`](${ARTIFACTS_URL})"
-  echo "- Policy report: [\`${POLICY_REPORT}\`](${ARTIFACTS_URL})"
+  echo "- Database: [\`${DB_PATH}\`](${REPORTS_ARTIFACT_URL})"
+  echo "- Policy report: [\`${POLICY_REPORT}\`](${REPORTS_ARTIFACT_URL})"
   echo "- VSA generated: \`${VSA_GENERATED}\`"
-  echo "- Download artifact: [\`${REPORTS_ARTIFACT_NAME}\`](${ARTIFACTS_URL})"
+  echo "- Download artifact: [\`${REPORTS_ARTIFACT_NAME}\`](${REPORTS_ARTIFACT_URL})"
   if [ "${VSA_GENERATED}" = "true" ]; then
-    echo "- Download VSA: [\`${VSA_ARTIFACT_NAME}\`](${ARTIFACTS_URL})"
+    echo "- Download VSA: [\`${VSA_ARTIFACT_NAME}\`](${VSA_ARTIFACT_URL})"
   fi
   echo
 } >> "${GITHUB_STEP_SUMMARY}"

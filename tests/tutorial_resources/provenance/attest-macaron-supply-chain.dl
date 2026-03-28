@@ -1,0 +1,16 @@
+/* Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy(
+    "attest-macaron-supply-chain",
+    component_id,
+    "Require trusted VCS metadata, and non-hosted repository."
+) :-
+    check_passed(component_id, "mcn_version_control_system_1"),
+    is_repo(repo_id, "github.com/oracle/macaron", component_id),
+    not_self_hosted_git(repo_id, _).
+
+apply_policy_to("attest-macaron-supply-chain", component_id) :-
+    is_component(component_id, _).

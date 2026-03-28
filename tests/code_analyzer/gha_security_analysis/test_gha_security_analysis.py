@@ -21,7 +21,7 @@ RESOURCES_DIR = Path(__file__).parent.joinpath("resources")
     ],
 )
 def test_detect_github_actions_security_issues(
-    snapshot: dict, workflow_path: str, github_actions_service: GitHubActions
+    snapshot: list[dict[str, str | list[str]]], workflow_path: str, github_actions_service: GitHubActions
 ) -> None:
     """Test GH Actions workflows injection patterns."""
     callgraph = github_actions_service.build_call_graph_for_files(

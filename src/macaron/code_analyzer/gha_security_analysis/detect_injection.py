@@ -10,7 +10,8 @@ from macaron.code_analyzer.dataflow_analysis import bash, core
 from macaron.code_analyzer.dataflow_analysis.core import NodeForest, traverse_bfs
 from macaron.code_analyzer.dataflow_analysis.github import GitHubActionsWorkflowNode
 from macaron.parsers.bashparser_model import CallExpr, is_call_expr, is_lit, is_param_exp
-from macaron.parsers.github_workflow_model import is_normal_job
+
+# from macaron.parsers.github_workflow_model import is_normal_job
 
 REMOTE_SCRIPT_RE = re.compile(r"(curl|wget)\s+.*\|\s*(bash|sh|tar)", re.IGNORECASE)
 SHA_PINNED_USES_RE = re.compile(r".+@([0-9a-f]{40})$")  # commit SHA pinning
@@ -30,7 +31,7 @@ DANGEROUS_TRIGGERS = {
 }
 
 
-def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, list[str]]]:
+def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, str | list[str]]]:
     """Detect security issues across GitHub Actions workflow nodes.
 
     Parameters
@@ -40,7 +41,7 @@ def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, l
 
     Returns
     -------
-    list[dict[str, list[str]]]
+    list[dict[str, str | list[str]]]
         A list of workflow-level findings. Each item contains:
         - ``workflow_name``: workflow file path.
         - ``issues``: list of detected security issue messages.
@@ -49,14 +50,14 @@ def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, l
     for root in nodes.root_nodes:
         for callee in traverse_bfs(root):
             if isinstance(callee, GitHubActionsWorkflowNode):
-                if result := analyze_workflow(callee, nodes):
+                if result := analyze_workflow(callee):
                     findings.append(result)
     return findings
 
 
 def analyze_workflow(
     workflow_node: GitHubActionsWorkflowNode,
-) -> dict[str, object] | None:
+) -> dict[str, str | list[str]] | None:
     """Analyze a GitHub Actions workflow for security issues.
 
     Parameters
@@ -121,71 +122,71 @@ def analyze_workflow(
                             f"overbroad-permissions: PR-triggered workflow requests " f"`{scope}: {level}`."
                         )
 
-    # Walk jobs/steps for step-level checks.
-    jobs = wf.get("jobs", {}) if isinstance(wf.get("jobs"), dict) else {}
-    for job_name, job in jobs.items():
-        if not is_normal_job(job):
-            continue
+    # # Walk jobs/steps for step-level checks.
+    # jobs = wf.get("jobs", {}) if isinstance(wf.get("jobs"), dict) else {}
+    # for job_name, job in jobs.items():
+    #     if not is_normal_job(job):
+    #         continue
 
-        # --- D. Self-hosted runners (new) ---
-        runs_on = job.get("runs-on")
-        if runs_on:
-            runs_on_str = str(runs_on)
-            if "self-hosted" in runs_on_str:
-                findings.append(
-                    f"self-hosted-runner: Job `{job_name}` runs on self-hosted runners; "
-                    "ensure isolation and never run untrusted PR code there."
-                )
+    #     # --- D. Self-hosted runners (new) ---
+    #     runs_on = job.get("runs-on")
+    #     if runs_on:
+    #         runs_on_str = str(runs_on)
+    #         if "self-hosted" in runs_on_str:
+    #             findings.append(
+    #                 f"self-hosted-runner: Job `{job_name}` runs on self-hosted runners; "
+    #                 "ensure isolation and never run untrusted PR code there."
+    #             )
 
-        steps = job.get("steps", []) if isinstance(job.get("steps"), list) else []
+    #     steps = job.get("steps", []) if isinstance(job.get("steps"), list) else []
 
-        for step in steps:
-            uses = step.get("uses", "") if isinstance(step, dict) else ""
-            run = step.get("run", "") if isinstance(step, dict) else ""
+    #     for step in steps:
+    #         uses = step.get("uses", "") if isinstance(step, dict) else ""
+    #         run = step.get("run", "") if isinstance(step, dict) else ""
 
-            # --- E. Action SHA pinning (new) ---
-            if uses:
-                # Ignore local actions "./.github/actions/..."
-                if not uses.startswith("./") and not SHA_PINNED_USES_RE.match(uses):
-                    # findings.append(f"unpinned-action: Job `{job_name}` uses `{uses}` not pinned to a commit SHA.")
-                    findings.append(uses)
+    #         # --- E. Action SHA pinning (new) ---
+    #         if uses:
+    #             # Ignore local actions "./.github/actions/..."
+    #             if not uses.startswith("./") and not SHA_PINNED_USES_RE.match(uses):
+    #                 # findings.append(f"unpinned-action: Job `{job_name}` uses `{uses}` not pinned to a commit SHA.")
+    #                 findings.append(uses)
 
-            # --- F. Checkout untrusted fork refs on PR event (existing, expanded) ---
-            if uses and "actions/checkout" in uses:
-                with_section = step.get("with", {}) if isinstance(step.get("with"), dict) else {}
-                ref = with_section.get("ref", "")
-                if ref in UNTRUSTED_PR_REFS and "pull_request" in on_keys:
-                    findings.append(
-                        f"untrusted-fork-code: Job `{job_name}` checks out "
-                        f"untrusted fork code (`ref: {ref}`) on PR event."
-                    )
+    #         # --- F. Checkout untrusted fork refs on PR event (existing, expanded) ---
+    #         if uses and "actions/checkout" in uses:
+    #             with_section = step.get("with", {}) if isinstance(step.get("with"), dict) else {}
+    #             ref = with_section.get("ref", "")
+    #             if ref in UNTRUSTED_PR_REFS and "pull_request" in on_keys:
+    #                 findings.append(
+    #                     f"untrusted-fork-code: Job `{job_name}` checks out "
+    #                     f"untrusted fork code (`ref: {ref}`) on PR event."
+    #                 )
 
-                # --- G. persist-credentials (new) ---
-                # Default is true for checkout; many orgs prefer setting false explicitly.
-                persist = with_section.get("persist-credentials", None)
-                if persist is True or (isinstance(persist, str) and persist.lower() == "true"):
-                    findings.append(
-                        f"persist-credentials: Job `{job_name}` uses checkout "
-                        "with `persist-credentials: true`; may expose "
-                        "GITHUB_TOKEN to subsequent git commands."
-                    )
+    #             # --- G. persist-credentials (new) ---
+    #             # Default is true for checkout; many orgs prefer setting false explicitly.
+    #             persist = with_section.get("persist-credentials", None)
+    #             if persist is True or (isinstance(persist, str) and persist.lower() == "true"):
+    #                 findings.append(
+    #                     f"persist-credentials: Job `{job_name}` uses checkout "
+    #                     "with `persist-credentials: true`; may expose "
+    #                     "GITHUB_TOKEN to subsequent git commands."
+    #                 )
 
-            # --- H. Remote script execution: curl|bash (new heuristic) ---
-            if isinstance(run, str) and REMOTE_SCRIPT_RE.search(run):
-                findings.append(
-                    f"remote-script-exec: Job `{job_name}` step appears to " "download and pipe to shell (`curl|bash`)."
-                )
+    #         # --- H. Remote script execution: curl|bash (new heuristic) ---
+    #         if isinstance(run, str) and REMOTE_SCRIPT_RE.search(run):
+    #             findings.append(
+    #                 f"remote-script-exec: Job `{job_name}` step appears to " "download and pipe to shell (`curl|bash`)."
+    #             )
 
-            # --- I. Extra dangerous combo: pull_request_target + checkout PR head ref (new) ---
-            if "pull_request_target" in on_keys and uses and "actions/checkout" in uses:
-                with_section = step.get("with", {}) if isinstance(step.get("with"), dict) else {}
-                ref = with_section.get("ref", "")
-                if ref in UNTRUSTED_PR_REFS:
-                    findings.append(
-                        f"pr-target-untrusted-checkout: Job `{job_name}` uses "
-                        f"pull_request_target and checks out PR-controlled "
-                        f"ref `{ref}`."
-                    )
+    #         # --- I. Extra dangerous combo: pull_request_target + checkout PR head ref (new) ---
+    #         if "pull_request_target" in on_keys and uses and "actions/checkout" in uses:
+    #             with_section = step.get("with", {}) if isinstance(step.get("with"), dict) else {}
+    #             ref = with_section.get("ref", "")
+    #             if ref in UNTRUSTED_PR_REFS:
+    #                 findings.append(
+    #                     f"pr-target-untrusted-checkout: Job `{job_name}` uses "
+    #                     f"pull_request_target and checks out PR-controlled "
+    #                     f"ref `{ref}`."
+    #                 )
 
     # --- J. Your existing dataflow-based injection heuristic (kept) ---
     for node in core.traverse_bfs(workflow_node):

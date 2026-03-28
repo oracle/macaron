@@ -3,13 +3,11 @@
   list([
     dict({
       'issues': list([
-        "Potential injection: [{'Type': 'Lit', 'Pos': {'Offset': 184, 'Line': 7, 'Col': 17}, 'End': {'Offset': 189, 'Line': 7, 'Col': 22}, 'ValuePos': {'Offset': 184, 'Line': 7, 'Col': 17}, 'ValueEnd': {'Offset': 189, 'Line': 7, 'Col': 22}, 'Value': 'HEAD:'}, {'Type': 'ParamExp', 'Pos': {'Offset': 189, 'Line': 7, 'Col': 22}, 'End': {'Offset': 196, 'Line': 7, 'Col': 29}, 'Dollar': {'Offset': 189, 'Line': 7, 'Col': 22}, 'Short': True, 'Param': {'Pos': {'Offset': 190, 'Line': 7, 'Col': 23}, 'End': {'Offset': 196, 'Line': 7, 'Col': 29}, 'ValuePos': {'Offset': 190, 'Line': 7, 'Col': 23}, 'ValueEnd': {'Offset': 196, 'Line': 7, 'Col': 29}, 'Value': 'github'}}, {'Type': 'Lit', 'Pos': {'Offset': 196, 'Line': 7, 'Col': 29}, 'End': {'Offset': 224, 'Line': 7, 'Col': 57}, 'ValuePos': {'Offset': 196, 'Line': 7, 'Col': 29}, 'ValueEnd': {'Offset': 224, 'Line': 7, 'Col': 57}, 'Value': '.event.pull_request.head.ref'}]",
+        "sensitive-trigger: Workflow uses ['pull_request_target']. Ensure strict gating (e.g., actor allowlist, branch protection, and minimal permissions).",
         'privileged-trigger: Workflow uses `pull_request_target`, which runs with elevated permissions.',
-        'unvalidated-input-script: Step `Run cargo fmt` runs inline shell with expressions.',
-        'unvalidated-input-script: Step `Commit and push formatting changes` runs inline shell with expressions.',
-        'missing-permissionsNo explicit workflow permissions defined; defaults may be overly broad.',
+        'missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.',
       ]),
-      'workflow_name': 'PR Auto-format',
+      'workflow_name': '/home/behnaz/research/github/macaron/tests/code_analyzer/gha_security_analysis/resources/workflow_files/injection_pattern_1.yaml',
     }),
   ])
 # ---

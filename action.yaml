@@ -172,6 +172,7 @@ runs:
       REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
 
   - name: Upload Macaron Reports
+    id: upload-macaron-reports
     if: ${{ always() && inputs.upload_reports == 'true' }}
     uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
     with:
@@ -181,8 +182,9 @@ runs:
       retention-days: ${{ inputs.reports_retention_days }}
 
   - name: Upload VSA Artifact
+    id: upload-vsa-artifact
     if: ${{ always() && inputs.upload_reports == 'true' && steps.collect-reports.outputs.vsa_generated == 'true' }}
-    uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
     with:
       name: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
       path: ${{ inputs.output_dir }}/vsa.intoto.jsonl
@@ -200,6 +202,8 @@ runs:
       POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
       REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
       VSA_ARTIFACT_NAME: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
+      REPORTS_ARTIFACT_URL: ${{ steps.upload-macaron-reports.outputs.artifact-url }}
+      VSA_ARTIFACT_URL: ${{ steps.upload-vsa-artifact.outputs.artifact-url }}
 
   - name: Post Macaron commit comment
     if: ${{ always() && inputs.post_commit_comment == 'true' }}

@@ -224,6 +224,9 @@ load-plugins = [
     "pylint.extensions.set_membership",
     "pylint.extensions.typing",
 ]
+# Disable unsubscriptable-object because Pylint has false positives and this check
+# overlaps with mypy's checks. Enable the check when the related issue is resolved:
+# https://github.com/pylint-dev/pylint/issues/9549
 disable = [
     "fixme",
     "line-too-long",  # Replaced by Flake8 Bugbear B950 check.
@@ -242,6 +245,7 @@ disable = [
     "too-many-return-statements",
     "too-many-statements",
     "duplicate-code",
+    "unsubscriptable-object",
 ]
 
 [tool.pylint.MISCELLANEOUS]
