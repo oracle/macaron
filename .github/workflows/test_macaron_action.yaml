@@ -261,3 +261,27 @@ jobs:
   #       upload_reports: 'true'
   #       reports_artifact_name: macaron-reports-upload-attestation
   #       write_job_summary: 'true'
+
+  test-detect-vulnerable-actions:
+    name: How to detect vulnerable GitHub Actions
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+    - name: Run Macaron (analyze repo - https://github.com/oracle/coherence-js-client)
+      uses: ./
+      with:
+        repo_path: https://github.com/oracle/coherence-js-client
+        digest: 39166341bc31f75b663ff439dae36170fb3e99a9
+        output_dir: macaron_output/detect_vulnerable_github_actions
+        upload_reports: 'false'
+        write_job_summary: 'false'
+
+    - name: Run Macaron (verify policy - github_actions_vulns for repo)
+      uses: ./
+      with:
+        policy_file: check-github-actions
+        output_dir: macaron_output/detect_vulnerable_github_actions
+        upload_reports: 'true'
+        reports_artifact_name: macaron-reports-vulnerable-actions-coherence
+        write_job_summary: 'true'

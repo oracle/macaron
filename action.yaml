@@ -203,6 +203,7 @@ runs:
       OUTPUT_DIR: ${{ inputs.output_dir }}
       VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
       POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
+      POLICY_FILE: ${{ inputs.policy_file }}
       HTML_REPORT_PATH: ${{ steps.run-macaron-analysis.outputs.html_report_path }}
       REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
       VSA_ARTIFACT_NAME: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
