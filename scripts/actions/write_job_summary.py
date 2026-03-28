@@ -7,25 +7,12 @@
 
 from __future__ import annotations
 
-import json
 import os
 import re
 import sqlite3
 from pathlib import Path
 
 CHECK_RESULT_DEFAULT_COLUMNS = ["id", "check_id", "passed", "component_id"]
-EXISTING_POLICY_TABLE_COLUMNS: dict[str, dict[str, list[str]]] = {
-    "check-github-actions": {
-        "check_result": CHECK_RESULT_DEFAULT_COLUMNS,
-        "github_actions_vulnerabilities_check": [
-            "id",
-            "github_actions_id",
-            "github_actions_version",
-            "caller_workflow",
-            "vulnerability_urls",
-        ],
-    }
-}
 
 
 def _env(name: str, default: str = "") -> str:
@@ -63,6 +50,15 @@ def _resolve_policy_source(policy_input: str) -> tuple[Path | None, str]:
     return None, "unresolved"
 
 
+def _resolve_existing_policy_sql(policy_name: str) -> Path | None:
+    """Resolve SQL diagnostics query for a predefined policy name."""
+    action_path = _env("GITHUB_ACTION_PATH", "")
+    if not action_path:
+        return None
+    sql_path = Path(action_path) / "src" / "macaron" / "resources" / "policies" / "sql" / f"{policy_name}.sql"
+    return sql_path if sql_path.is_file() else None
+
+
 def _write_header(summary_path: Path, db_path: Path, policy_report: str, policy_file: str, html_report: str) -> None:
     reports_artifact_name = _env("REPORTS_ARTIFACT_NAME", "macaron-reports")
     run_url = (
@@ -90,33 +86,6 @@ def _write_header(summary_path: Path, db_path: Path, policy_report: str, policy_
     else:
         _append_line(summary_path, "- Policy status: :x: Policy verification failed.")
     _append_line(summary_path)
-
-
-def _write_vulnerability_table(summary_path: Path, db_path: Path) -> None:
-    with sqlite3.connect(db_path) as conn:
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT github_actions_id, github_actions_version, vulnerability_urls, caller_workflow
-            FROM github_actions_vulnerabilities_check
-            ORDER BY id
-            """)
-        rows = cur.fetchall()
-
-    if not rows:
-        _append_line(summary_path, ":white_check_mark: No vulnerable GitHub Actions detected.")
-        return
-
-    _append_line(summary_path, "| Action | Version | Vulnerabilities | Workflow |")
-    _append_line(summary_path, "|---|---|---|---|")
-    for action_id, version, vulnerability_urls, caller_workflow in rows:
-        vuln_value = vulnerability_urls
-        try:
-            parsed = json.loads(vulnerability_urls)
-            if isinstance(parsed, list):
-                vuln_value = ", ".join(parsed)
-        except (json.JSONDecodeError, TypeError):
-            pass
-        _append_line(summary_path, f"| `{action_id}` | `{version}` | `{vuln_value}` | {caller_workflow} |")
 
 
 def _parse_policy_checks(policy_file: Path) -> tuple[list[str], list[str]]:
@@ -167,6 +136,14 @@ def _query_selected_columns(
     return selected, cur.fetchall()
 
 
+def _query_sql(conn: sqlite3.Connection, sql_query: str) -> tuple[list[str], list[tuple]]:
+    cur = conn.cursor()
+    cur.execute(sql_query)
+    rows = cur.fetchall()
+    columns = [col[0] for col in (cur.description or [])]
+    return columns, rows
+
+
 def _write_markdown_table(summary_path: Path, columns: list[str], rows: list[tuple]) -> bool:
     if not columns or not rows:
         return False
@@ -179,12 +156,7 @@ def _write_markdown_table(summary_path: Path, columns: list[str], rows: list[tup
     return True
 
 
-def _write_policy_check_lists(summary_path: Path, check_relations: list[str], policy_check_ids: list[str]) -> None:
-    if check_relations:
-        _append_line(
-            summary_path,
-            f"- `check_*` relations in policy: {', '.join(f'`{name}`' for name in check_relations)}",
-        )
+def _write_policy_check_lists(summary_path: Path, policy_check_ids: list[str]) -> None:
 
     if policy_check_ids:
         _append_line(
@@ -199,7 +171,7 @@ def _write_custom_policy_failure_diagnostics(summary_path: Path, db_path: Path, 
 
     _append_line(summary_path)
     _append_line(summary_path, "### Policy Failure Diagnostics")
-    _write_policy_check_lists(summary_path, check_relations, policy_check_ids)
+    _write_policy_check_lists(summary_path, policy_check_ids)
     if check_relations or policy_check_ids:
         has_details = True
 
@@ -236,33 +208,24 @@ def _write_existing_policy_failure_diagnostics(
     summary_path: Path, db_path: Path, policy_name: str, policy_file: Path
 ) -> None:
     check_relations, policy_check_ids = _parse_policy_checks(policy_file)
-    table_config = EXISTING_POLICY_TABLE_COLUMNS.get(policy_name, {"check_result": CHECK_RESULT_DEFAULT_COLUMNS})
     has_details = False
 
     _append_line(summary_path)
     _append_line(summary_path, f"### Policy Failure Diagnostics ({policy_name})")
-    _write_policy_check_lists(summary_path, check_relations, policy_check_ids)
+    _write_policy_check_lists(summary_path, policy_check_ids)
     if check_relations or policy_check_ids:
         has_details = True
 
-    with sqlite3.connect(db_path) as conn:
-        for logical_table, desired_columns in table_config.items():
-            resolved = _resolve_existing_table(conn, logical_table)
-            if not resolved:
-                continue
-
-            where_clause = ""
-            params: tuple[object, ...] = ()
-            if logical_table == "check_result" and policy_check_ids:
-                placeholders = ",".join(["?"] * len(policy_check_ids))
-                where_clause = f"check_id IN ({placeholders})"
-                params = tuple(policy_check_ids)
-            cols, rows = _query_selected_columns(conn, resolved, desired_columns, where_clause, params)
-            if cols and rows:
-                _append_line(summary_path)
-                _append_line(summary_path, f"#### {logical_table}")
-                if _write_markdown_table(summary_path, cols, rows):
-                    has_details = True
+    sql_path = _resolve_existing_policy_sql(policy_name)
+    if sql_path:
+        sql_query = sql_path.read_text(encoding="utf-8")
+        with sqlite3.connect(db_path) as conn:
+            cols, rows = _query_sql(conn, sql_query)
+        if cols and rows:
+            _append_line(summary_path)
+            _append_line(summary_path, f"#### SQL Results ({sql_path.name})")
+            if _write_markdown_table(summary_path, cols, rows):
+                has_details = True
 
     if not has_details:
         _append_line(summary_path, "- Additional check-level details are unavailable for this failure.")
@@ -295,8 +258,6 @@ def main() -> None:
     if not db_path.is_file():
         _append_line(summary_path, ":warning: Macaron database was not generated.")
         return
-
-    _write_vulnerability_table(summary_path, db_path)
 
     if (not vsa_path or not vsa_path.is_file()) and resolved_policy_file and resolved_policy_file.is_file():
         if policy_mode == "predefined":
