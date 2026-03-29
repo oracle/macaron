@@ -40,11 +40,22 @@ jobs:
         upload_reports: 'false'
 
     - name: Run Macaron (verify policy - has-hosted-build)
+      id: verify_has_hosted_build
+      # This verification is expected to fail for this tutorial scenario.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/commit_finder/has-hosted-build.dl
         output_dir: macaron_output/commit_finder
         upload_reports: 'false'
+    - name: Assert expected failure (has-hosted-build)
+      if: ${{ always() }}
+      run: |
+        # Keep this workflow green only when the verify step actually fails.
+        if [ "${{ steps.verify_has_hosted_build.outcome }}" != "failure" ]; then
+          echo "Expected verify step to fail, but it did not."
+          exit 1
+        fi
 
   tutorial-detect-malicious-package:
     name: Detecting malicious packages
@@ -114,6 +125,7 @@ jobs:
         write_job_summary: 'false'
 
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
+      id: verify_github_actions_vulns_repo_tutorial
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
@@ -277,6 +289,9 @@ jobs:
         write_job_summary: 'false'
 
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
+      id: verify_github_actions_vulns_repo_test
+      # This integration target is intentionally vulnerable; failure is expected.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: check-github-actions
@@ -284,3 +299,11 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-vulnerable-actions-fail-diagnosis
         write_job_summary: 'true'
+    - name: Assert expected failure (github_actions_vulns for repo test)
+      if: ${{ always() }}
+      run: |
+        # Explicitly assert failure so regressions are visible in CI results.
+        if [ "${{ steps.verify_github_actions_vulns_repo_test.outcome }}" != "failure" ]; then
+          echo "Expected verify step to fail, but it did not."
+          exit 1
+        fi
