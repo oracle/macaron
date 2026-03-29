@@ -283,5 +283,5 @@ jobs:
         policy_file: check-github-actions
         output_dir: macaron_output/detect_vulnerable_github_actions
         upload_reports: 'true'
-        reports_artifact_name: macaron-reports-vulnerable-actions-coherence
+        reports_artifact_name: macaron-vulnerable-actions-fail-diagnosis
         write_job_summary: 'true'

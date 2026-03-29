@@ -87,9 +87,6 @@ outputs:
   vsa_generated:
     description: Whether VSA was generated.
     value: ${{ steps.collect-reports.outputs.vsa_generated }}
-  vsa_artifact_name:
-    description: Name of the uploaded VSA artifact (if generated).
-    value: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
 
 runs:
   using: composite
@@ -159,7 +156,6 @@ runs:
       echo "policy_report=${POLICY_REPORT}" >> "${GITHUB_OUTPUT}"
       echo "vsa_report=${VSA_VALUE}" >> "${GITHUB_OUTPUT}"
       echo "vsa_generated=${VSA_GENERATED}" >> "${GITHUB_OUTPUT}"
-      echo "vsa_artifact_name=${REPORTS_ARTIFACT_NAME}-vsa" >> "${GITHUB_OUTPUT}"
 
       {
         echo "reports_path<<EOF"
@@ -184,16 +180,6 @@ runs:
       if-no-files-found: warn
       retention-days: ${{ inputs.reports_retention_days }}
 
-  - name: Upload VSA Artifact
-    id: upload-vsa-artifact
-    if: ${{ always() && inputs.upload_reports == 'true' && steps.collect-reports.outputs.vsa_generated == 'true' }}
-    uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-    with:
-      name: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
-      path: ${{ inputs.output_dir }}/vsa.intoto.jsonl
-      if-no-files-found: warn
-      retention-days: ${{ inputs.reports_retention_days }}
-
   - name: Summarize Macaron Results
     if: ${{ always() && inputs.write_job_summary == 'true' }}
     run: |
@@ -205,10 +191,9 @@ runs:
       POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
       POLICY_FILE: ${{ inputs.policy_file }}
       HTML_REPORT_PATH: ${{ steps.run-macaron-analysis.outputs.html_report_path }}
+      UPLOAD_REPORTS: ${{ inputs.upload_reports }}
       REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
-      VSA_ARTIFACT_NAME: ${{ steps.collect-reports.outputs.vsa_artifact_name }}
       REPORTS_ARTIFACT_URL: ${{ steps.upload-macaron-reports.outputs.artifact-url }}
-      VSA_ARTIFACT_URL: ${{ steps.upload-vsa-artifact.outputs.artifact-url }}
 
   - name: Post Macaron commit comment
     if: ${{ always() && inputs.post_commit_comment == 'true' }}

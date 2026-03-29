@@ -59,7 +59,15 @@ def _resolve_existing_policy_sql(policy_name: str) -> Path | None:
     return sql_path if sql_path.is_file() else None
 
 
-def _write_header(summary_path: Path, db_path: Path, policy_report: str, policy_file: str, html_report: str) -> None:
+def _write_header(
+    summary_path: Path,
+    db_path: Path,
+    policy_report: str,
+    policy_file: str,
+    html_report: str,
+    policy_provided: bool,
+) -> None:
+    upload_reports = _env("UPLOAD_REPORTS", "true").lower() == "true"
     reports_artifact_name = _env("REPORTS_ARTIFACT_NAME", "macaron-reports")
     run_url = (
         f"{_env('GITHUB_SERVER_URL', 'https://github.com')}/"
@@ -71,20 +79,29 @@ def _write_header(summary_path: Path, db_path: Path, policy_report: str, policy_
 
     _append_line(summary_path, "## Macaron Analysis Results")
     _append_line(summary_path)
-    _append_line(summary_path, "Download reports from this artifact link:")
-    _append_line(summary_path, f"- [`{reports_artifact_name}`]({reports_artifact_url})")
-    _append_line(summary_path)
-    _append_line(summary_path, "Generated files:")
-    if html_report:
-        _append_line(summary_path, f"- HTML report: `{html_report}`")
-    _append_line(summary_path, f"- Database: `{db_path}`")
-    _append_line(summary_path, f"- Policy report: `{policy_report}`")
-    if policy_file:
-        _append_line(summary_path, f"- Policy file: `{policy_file}`")
-    if policy_succeeded:
-        _append_line(summary_path, "- Policy status: :white_check_mark: Policy verification succeeded.")
+    if upload_reports:
+        _append_line(summary_path, "Download reports from this artifact link:")
+        _append_line(summary_path, f"- [`{reports_artifact_name}`]({reports_artifact_url})")
+        _append_line(summary_path)
+        _append_line(summary_path, "Generated files:")
+        if html_report:
+            _append_line(summary_path, f"- HTML report: `{html_report}`")
+        _append_line(summary_path, f"- Database: `{db_path}`")
+        if policy_provided:
+            _append_line(summary_path, f"- Policy report: `{policy_report}`")
+        _append_line(summary_path)
+
+    if policy_provided:
+        _append_line(summary_path, "Policy:")
+        if policy_file:
+            _append_line(summary_path, f"- Policy file: `{policy_file}`")
+        if policy_succeeded:
+            _append_line(summary_path, "- Policy status: :white_check_mark: Policy verification succeeded.")
+        else:
+            _append_line(summary_path, "- Policy status: :x: Policy verification failed.")
     else:
-        _append_line(summary_path, "- Policy status: :x: Policy verification failed.")
+        _append_line(summary_path, "Policy:")
+        _append_line(summary_path, "- No policy was provided.")
     _append_line(summary_path)
 
 
@@ -161,7 +178,7 @@ def _write_policy_check_lists(summary_path: Path, policy_check_ids: list[str]) -
     if policy_check_ids:
         _append_line(
             summary_path,
-            f"- `mcn_*` checks referenced in policy: {', '.join(f'`{name}`' for name in policy_check_ids)}",
+            f"- Checks referenced in policy: {', '.join(f'`{name}`' for name in policy_check_ids)}",
         )
 
 
@@ -223,7 +240,7 @@ def _write_existing_policy_failure_diagnostics(
             cols, rows = _query_sql(conn, sql_query)
         if cols and rows:
             _append_line(summary_path)
-            _append_line(summary_path, f"#### SQL Results ({sql_path.name})")
+            _append_line(summary_path, f"#### Results")
             if _write_markdown_table(summary_path, cols, rows):
                 has_details = True
 
@@ -241,7 +258,7 @@ def main() -> None:
     if policy_mode == "file" and resolved_policy_file:
         policy_label = str(resolved_policy_file)
     elif policy_mode == "predefined" and resolved_policy_file:
-        policy_label = f"{policy_file_value} (predefined template: {resolved_policy_file})"
+        policy_label = f"{policy_file_value}"
     elif policy_mode == "unresolved":
         policy_label = f"{policy_file_value} (unresolved)"
     html_report = _env("HTML_REPORT_PATH", "")
@@ -253,7 +270,8 @@ def main() -> None:
         raise RuntimeError("GITHUB_STEP_SUMMARY is not set.")
     summary_path = Path(summary_output)
 
-    _write_header(summary_path, db_path, policy_report, policy_label, html_report)
+    policy_provided = bool(policy_file_value.strip())
+    _write_header(summary_path, db_path, policy_report, policy_label, html_report, policy_provided)
 
     if not db_path.is_file():
         _append_line(summary_path, ":warning: Macaron database was not generated.")

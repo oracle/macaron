@@ -3,14 +3,18 @@
 
 -- Failed check facts for check-github-actions policy template.
 SELECT
-    c.id AS component_id,
-    c.purl AS component_purl,
-    gha.*
-FROM github_actions_vulnerabilities_check AS gha
-JOIN check_facts AS cf
-    ON cf.id = gha.id
-JOIN check_result AS cr
-    ON cr.id = cf.check_result_id
-JOIN component AS c
-    ON cr.component_id = c.id
-WHERE cr.passed = 0;
+    analysis.analysis_time,
+    gha_check.vulnerability_urls as vulnerability,
+    gha_check.github_actions_id as third-party_action_name,
+    gha_check.github_actions_version as third-party_action_version,
+    gha_check.caller_workflow as vulnerable_workflow
+FROM github_actions_vulnerabilities_check as gha_check
+JOIN check_facts
+    ON check_facts.id = gha_check.id
+JOIN check_result
+    ON check_result.id = check_facts.check_result_id
+JOIN component
+    ON check_result.component_id = component.id
+JOIN analysis
+    ON analysis.id = component.analysis_id
+WHERE check_result.passed = 0;
