@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The module provides API clients for VCS services, such as GitHub."""
@@ -11,6 +11,7 @@ from enum import Enum
 from typing import NamedTuple
 
 from macaron.config.defaults import defaults
+from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.asset import AssetLocator
 from macaron.util import (
     construct_query,
@@ -387,6 +388,28 @@ class GhAPIClient(BaseAPIClient):
         response_data = send_get_http(url, self.headers)
 
         return response_data
+
+    def get_commit_sha_from_ref(self, full_name: str, ref: str) -> str | None:
+        """Resolve a Git reference (tag/branch/sha) to a 40-character commit SHA.
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the repository in the format ``owner/name``.
+        ref : str
+            The git reference to resolve (e.g. ``v5``, ``main``, ``v1.2.3``).
+
+        Returns
+        -------
+        str | None
+            The resolved commit SHA, or ``None`` if resolution fails.
+        """
+        if not full_name or not ref:
+            return None
+
+        response_data = self.get_commit_data_from_hash(full_name, ref)
+        sha = json_extract(response_data, ["sha"], str)
+        return sha if sha and len(sha) == 40 else None
 
     def search(self, target: str, query: str) -> dict:
         """Perform a search using GitHub REST API.
