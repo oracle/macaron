@@ -68,14 +68,19 @@ def _write_header(
     policy_provided: bool,
 ) -> None:
     upload_reports = _env("UPLOAD_REPORTS", "true").lower() == "true"
+    output_dir = _env("OUTPUT_DIR", "output")
     reports_artifact_name = _env("REPORTS_ARTIFACT_NAME", "macaron-reports")
     run_url = (
         f"{_env('GITHUB_SERVER_URL', 'https://github.com')}/"
         f"{_env('GITHUB_REPOSITORY')}/actions/runs/{_env('GITHUB_RUN_ID')}"
     )
     reports_artifact_url = _env("REPORTS_ARTIFACT_URL", run_url)
-    vsa_path = _env("VSA_PATH", "output/vsa.intoto.jsonl")
-    policy_succeeded = bool(vsa_path) and Path(vsa_path).is_file()
+    vsa_generated = _env("VSA_GENERATED", "").lower()
+    if vsa_generated in {"true", "false"}:
+        policy_succeeded = vsa_generated == "true"
+    else:
+        vsa_path = _env("VSA_PATH", f"{output_dir}/vsa.intoto.jsonl")
+        policy_succeeded = bool(vsa_path) and Path(vsa_path).is_file()
 
     _append_line(summary_path, "## Macaron Analysis Results")
     _append_line(summary_path)
@@ -154,8 +159,19 @@ def _query_selected_columns(
 
 
 def _query_sql(conn: sqlite3.Connection, sql_query: str) -> tuple[list[str], list[tuple]]:
+    # Python's sqlite cursor.execute() can fail when the SQL begins with line comments.
+    # Strip leading SQL line comments while preserving the query body.
+    sanitized_lines = []
+    for line in sql_query.splitlines():
+        if line.lstrip().startswith("--"):
+            continue
+        sanitized_lines.append(line)
+    sanitized_query = "\n".join(sanitized_lines).strip()
+    if not sanitized_query:
+        return [], []
+
     cur = conn.cursor()
-    cur.execute(sql_query)
+    cur.execute(sanitized_query)
     rows = cur.fetchall()
     columns = [col[0] for col in (cur.description or [])]
     return columns, rows

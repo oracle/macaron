@@ -68,7 +68,11 @@ if [ "${status}" -ne 0 ]; then
 fi
 
 if [ -n "${GITHUB_OUTPUT:-}" ]; then
-  html_report_path="$(sed -n 's/^[[:space:]]*HTML[[:space:]]\+Report[[:space:]]\+//p' "$output_file" | tail -n 1)"
+  html_report_path="$(
+    sed -n 's/^[[:space:]]*HTML[[:space:]]\+Report[[:space:]]\+//p' "$output_file" \
+      | sed 's/[[:space:]]*$//' \
+      | tail -n 1
+  )"
   if [ -n "$html_report_path" ]; then
     echo "html_report_path=${html_report_path}" >> "$GITHUB_OUTPUT"
   fi
