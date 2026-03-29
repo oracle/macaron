@@ -12,7 +12,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from macaron.errors import GitTagError
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+from macaron.slsa_analyzer.git_url import find_highest_git_tag, get_tags_via_git_remote, is_commit_hash
 
 UNPINNED_ACTION_RE = re.compile(r"^(?P<action>[^@\s]+)@(?P<version>[^\s]+)$")
 
@@ -33,7 +35,9 @@ class Recommendation:
     recommended_ref: str | None = None
 
 
-def recommend_for_unpinned_action(action_name: str, resolved_sha: str | None = None) -> Recommendation:
+def recommend_for_unpinned_action(
+    action_name: str, resolved_sha: str | None = None, resolved_tag: str | None = None
+) -> Recommendation:
     """Create a recommendation for an unpinned third-party action.
 
     Parameters
@@ -42,6 +46,8 @@ def recommend_for_unpinned_action(action_name: str, resolved_sha: str | None = N
         GitHub Action identifier in the form ``owner/repo``.
     resolved_sha : str | None, optional
         Resolved commit SHA for the action ref if available.
+    resolved_tag : str | None, optional
+        Tag corresponding to ``resolved_sha`` when available.
 
     Returns
     -------
@@ -49,7 +55,12 @@ def recommend_for_unpinned_action(action_name: str, resolved_sha: str | None = N
         Recommendation containing pinning guidance and a suggested immutable
         action reference.
     """
-    recommended_ref = f"{action_name}@{resolved_sha}" if resolved_sha else f"{action_name}@<40-char-commit-sha>"
+    if resolved_sha and resolved_tag:
+        recommended_ref = f"{action_name}@{resolved_sha} # {resolved_tag}"
+    elif resolved_sha:
+        recommended_ref = f"{action_name}@{resolved_sha}"
+    else:
+        recommended_ref = f"{action_name}@<40-char-commit-sha>"
     return Recommendation(
         message="Pin this third-party action to a full 40-character commit SHA to prevent tag drift or takeover risk.",
         recommended_ref=recommended_ref,
@@ -103,7 +114,49 @@ def resolve_action_ref_to_sha(api_client: object, action_name: str, action_versi
         return None
     if not action_name or not action_version:
         return None
+    if is_commit_hash(action_version):
+        # Normalize short SHAs by resolving them through the API.
+        return (
+            action_version
+            if len(action_version) == 40
+            else api_client.get_commit_sha_from_ref(action_name, action_version)
+        )
     return api_client.get_commit_sha_from_ref(action_name, action_version)
+
+
+def resolve_action_ref_to_tag(action_name: str, resolved_sha: str | None, action_version: str = "") -> str | None:
+    """Resolve a commit SHA to a corresponding Git tag for an action repository.
+
+    Parameters
+    ----------
+    action_name : str
+        GitHub Action identifier in the form ``owner/repo``.
+    resolved_sha : str | None, optional
+        Resolved commit SHA for the action ref.
+    action_version : str, optional
+        Original action version/ref. If this exact ref is a tag on the same
+        commit, it is preferred.
+
+    Returns
+    -------
+    str | None
+        The corresponding tag name if found; otherwise ``None``.
+    """
+    if not action_name or not resolved_sha:
+        return None
+    tags = get_tags_via_git_remote(f"https://github.com/{action_name}")
+    if not tags:
+        return None
+
+    matching_tags = [tag for tag, tag_sha in tags.items() if tag_sha == resolved_sha]
+    if not matching_tags:
+        return None
+    if action_version and action_version in matching_tags:
+        return action_version
+    try:
+        return find_highest_git_tag(set(matching_tags))
+    except GitTagError:
+        return matching_tags[0]
 
 
 def recommend_for_workflow_issue(issue: str) -> Recommendation:

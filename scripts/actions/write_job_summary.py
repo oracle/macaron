@@ -20,8 +20,6 @@ CHECK_RESULT_DEFAULT_COLUMNS = [
     "passed",
 ]
 
-MAX_TABLE_CELL_LEN = 72
-
 
 def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default)
@@ -209,8 +207,6 @@ def _format_table_cell(value: object) -> str:
         segments = [part for part in parsed.path.split("/") if part]
         label = segments[-1] if segments else parsed.netloc
         return f"[`{label}`]({text})"
-    if len(text) > MAX_TABLE_CELL_LEN:
-        text = f"{text[: MAX_TABLE_CELL_LEN - 3]}..."
     return f"`{_sanitize_for_markdown_table_code(text)}`"
 
 
@@ -232,8 +228,6 @@ def _format_list_item(value: object) -> str:
         segments = [part for part in parsed.path.split("/") if part]
         label = segments[-1] if segments else parsed.netloc
         return f"[`{label}`]({text})"
-    if len(text) > MAX_TABLE_CELL_LEN:
-        text = f"{text[: MAX_TABLE_CELL_LEN - 3]}..."
     return f"`{_sanitize_for_markdown_table_code(text)}`"
 
 
@@ -297,7 +291,7 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
         summary_path,
         "_Showing top 10 findings by priority. Expand details below for full diagnostics._",
     )
-    preferred_groups = ["third_party_action_risk", "workflow_security_issue"]
+    preferred_groups = ["workflow_security_issue", "third_party_action_risk"]
     groups_in_rows: list[str] = []
     if group_idx is not None:
         discovered_groups = [str(row[group_idx]) for row in display_rows]
@@ -318,8 +312,12 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
         _append_line(summary_path)
         _append_line(summary_path, f"#### {title}")
         _append_line(summary_path)
-        _append_line(summary_path, "| priority | type | action | version | workflow |")
-        _append_line(summary_path, "|---|---|---|---|---|")
+        if group == "workflow_security_issue":
+            _append_line(summary_path, "| priority | type | action | workflow |")
+            _append_line(summary_path, "|---|---|---|---|")
+        else:
+            _append_line(summary_path, "| priority | type | action | version | workflow |")
+            _append_line(summary_path, "|---|---|---|---|---|")
         for row in group_rows:
             priority_raw = row[col_index["finding_priority"]]
             priority = f"`{_priority_label(priority_raw)} ({priority_raw})`"
@@ -327,10 +325,13 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
             action_name = _format_table_cell(row[col_index["third_party_action_name"]])
             action_version = _format_table_cell(row[col_index["third_party_action_version"]])
             workflow = _format_table_cell(row[col_index["vulnerable_workflow"]])
-            _append_line(
-                summary_path,
-                f"| {priority} | {finding_type} | {action_name} | {action_version} | {workflow} |",
-            )
+            if group == "workflow_security_issue":
+                _append_line(summary_path, f"| {priority} | {finding_type} | {action_name} | {workflow} |")
+            else:
+                _append_line(
+                    summary_path,
+                    f"| {priority} | {finding_type} | {action_name} | {action_version} | {workflow} |",
+                )
 
     _append_line(summary_path)
     _append_line(summary_path, "<details>")
@@ -354,9 +355,8 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
             priority = row[col_index["finding_priority"]]
             finding_type = str(row[col_index["finding_type"]])
             workflow = str(row[col_index["vulnerable_workflow"]])
-            _append_line(
-                summary_path, f"{row_counter}. **`{action}@{version}`** (`{finding_type}`, priority `{priority}`)"
-            )
+            subject = f"{action}@{version}" if version else action
+            _append_line(summary_path, f"{row_counter}. **`{subject}`** (`{finding_type}`, priority `{priority}`)")
             _append_line(summary_path, f"- Workflow: `{workflow}`")
 
             pin_idx = col_index.get("is_pinned_sha")
