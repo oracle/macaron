@@ -14,6 +14,14 @@ from macaron.code_analyzer.dataflow_analysis.github import (
     GitHubActionsRunStepNode,
     GitHubActionsWorkflowNode,
 )
+from macaron.code_analyzer.gha_security_analysis.recommendation import (
+    Recommendation,
+    parse_unpinned_action_issue,
+    recommend_for_unpinned_action,
+    recommend_for_workflow_issue,
+    resolve_action_ref_to_sha,
+    resolve_action_ref_to_tag,
+)
 from macaron.parsers.bashparser_model import CallExpr, is_call_expr, is_lit, is_param_exp
 from macaron.parsers.github_workflow_model import Workflow
 
@@ -304,6 +312,53 @@ def _literal_value(value: facts.Value | None) -> str:
 def _add_finding(findings: list[PrioritizedIssue], issue: str, priority: int) -> None:
     """Append a finding with priority metadata."""
     findings.append({"issue": issue, "priority": priority})
+
+
+def get_workflow_issue_type(issue: str) -> str:
+    """Extract a normalized workflow issue subtype from issue text."""
+    prefix, _, _ = issue.partition(":")
+    normalized = prefix.strip().replace("_", "-")
+    return normalized or "workflow-security-issue"
+
+
+def get_workflow_issue_summary(finding_type: str) -> str:
+    """Return a concise summary for a workflow issue subtype."""
+    finding_summaries = {
+        "sensitive-trigger": "Workflow uses a sensitive trigger and needs strict gating.",
+        "privileged-trigger": "Privileged trigger can expose elevated token scope to untrusted input.",
+        "missing-permissions": "Workflow omits explicit permissions and may inherit broad defaults.",
+        "overbroad-permissions": "Workflow requests permissions broader than required.",
+        "untrusted-fork-code": "Workflow can execute code controlled by an untrusted fork.",
+        "persist-credentials": "Persisted checkout credentials can leak token access to later steps.",
+        "remote-script-exec": "Workflow downloads and executes remote scripts inline.",
+        "pr-target-untrusted-checkout": "pull_request_target is combined with checkout of PR-controlled refs.",
+        "potential-injection": "Untrusted GitHub context data may flow into shell execution.",
+        "self-hosted-runner": "Job uses self-hosted runners, increasing blast radius for untrusted code.",
+        "workflow-security-issue": "Workflow includes a security issue that requires hardening.",
+    }
+    return finding_summaries.get(finding_type, "Workflow security finding detected.")
+
+
+def build_workflow_issue_recommendation(issue: str) -> tuple[str, Recommendation, str]:
+    """Build normalized workflow issue recommendation metadata."""
+    finding_type = get_workflow_issue_type(issue)
+    summary = get_workflow_issue_summary(finding_type)
+    recommendation = recommend_for_workflow_issue(issue)
+    finding_message = f"Summary: {summary} Details: {issue} Recommendation: {recommendation.message}"
+    return finding_type, recommendation, finding_message
+
+
+def build_unpinned_action_recommendation(issue: str, api_client: object) -> tuple[str, str, Recommendation] | None:
+    """Build normalized recommendation metadata for an unpinned third-party action finding."""
+    parsed_issue = parse_unpinned_action_issue(issue)
+    if not parsed_issue:
+        return None
+
+    action_name, action_ref = parsed_issue
+    resolved_sha = resolve_action_ref_to_sha(api_client, action_name, action_ref)
+    resolved_tag = resolve_action_ref_to_tag(action_name, resolved_sha, action_ref)
+    recommendation = recommend_for_unpinned_action(action_name, resolved_sha, resolved_tag)
+    return action_name, action_ref, recommendation
 
 
 # def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest) -> list[dict[str, str]]:

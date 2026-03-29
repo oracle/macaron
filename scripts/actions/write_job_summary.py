@@ -275,8 +275,23 @@ def _extract_finding_summary(message: object) -> str:
     return text
 
 
-def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], rows: list[tuple]) -> bool:
-    """Write compact diagnostics for check-github-actions policy failures."""
+def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], rows: list[tuple]) -> bool:
+    """Write compact GitHub Actions vulnerability diagnostics to the job summary.
+
+    Parameters
+    ----------
+    summary_path : Path
+        Path to the GitHub job summary markdown file.
+    columns : list[str]
+        Ordered column names from the SQL diagnostics query result.
+    rows : list[tuple]
+        Row values matching ``columns`` order.
+
+    Returns
+    -------
+    bool
+        ``True`` if content was rendered; ``False`` when inputs are empty.
+    """
     if not columns or not rows:
         return False
 
@@ -284,8 +299,8 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
     required = [
         "finding_priority",
         "finding_type",
-        "third_party_action_name",
-        "third_party_action_version",
+        "action_name",
+        "action_ref",
         "vulnerable_workflow",
     ]
     if any(name not in col_index for name in required):
@@ -327,8 +342,8 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
         _append_line(summary_path, f"#### {title}")
         _append_line(summary_path)
         if group == "workflow_security_issue":
-            _append_line(summary_path, "| priority | type | summary | action | workflow |")
-            _append_line(summary_path, "|---|---|---|---|---|")
+            _append_line(summary_path, "| priority | type | summary | workflow |")
+            _append_line(summary_path, "|---|---|---|---|")
         else:
             _append_line(summary_path, "| priority | type | action | version | workflow |")
             _append_line(summary_path, "|---|---|---|---|---|")
@@ -339,13 +354,13 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
             finding_summary = _format_table_cell(
                 _extract_finding_summary(row[col_index["finding_message"]]) if "finding_message" in col_index else ""
             )
-            action_name = _format_table_cell(row[col_index["third_party_action_name"]])
-            action_version = _format_table_cell(row[col_index["third_party_action_version"]])
+            action_name = _format_table_cell(row[col_index["action_name"]])
+            action_version = _format_table_cell(row[col_index["action_ref"]])
             workflow = _format_table_cell(row[col_index["vulnerable_workflow"]])
             if group == "workflow_security_issue":
                 _append_line(
                     summary_path,
-                    f"| {priority} | {finding_type} | {finding_summary} | {action_name} | {workflow} |",
+                    f"| {priority} | {finding_type} | {finding_summary} | {workflow} |",
                 )
             else:
                 _append_line(
@@ -370,22 +385,25 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
             title = _gha_group_label(group)
         _append_line(summary_path, f"**{title}**")
         for row in group_rows:
-            action = str(row[col_index["third_party_action_name"]])
-            version = str(row[col_index["third_party_action_version"]])
+            action = str(row[col_index["action_name"]])
+            version = str(row[col_index["action_ref"]])
             priority = row[col_index["finding_priority"]]
             finding_type = str(row[col_index["finding_type"]])
             workflow = str(row[col_index["vulnerable_workflow"]])
-            subject = f"{action}@{version}" if version else action
+            if group == "workflow_security_issue":
+                subject = workflow
+            else:
+                subject = f"{action}@{version}" if version else action
             _append_line(summary_path, f"{row_counter}. **`{subject}`** (`{finding_type}`, priority `{priority}`)")
             _append_line(summary_path, f"- Workflow: `{workflow}`")
 
-            pin_idx = col_index.get("is_pinned_sha")
+            pin_idx = col_index.get("sha_pinned")
             row_group = str(row[group_idx]) if group_idx is not None else ""
             if pin_idx is not None and row_group == "third_party_action_risk" and row[pin_idx] is not None:
                 pin_state = "yes" if bool(row[pin_idx]) else "no"
                 _append_line(summary_path, f"- Pinned to full commit SHA: `{pin_state}`")
 
-            vul_idx = col_index.get("vulnerabilities")
+            vul_idx = col_index.get("vuln_urls")
             if vul_idx is not None and row[vul_idx]:
                 parsed = _parse_list_cell(str(row[vul_idx]))
                 if parsed:
@@ -475,7 +493,7 @@ def _write_existing_policy_failure_diagnostics(
             _append_line(summary_path)
             _append_line(summary_path, f"#### Results")
             if policy_name == "check-github-actions":
-                rendered = _write_compact_gha_vuln_diagnostics(summary_path, cols, rows)
+                rendered = write_compact_gha_vuln_diagnostics(summary_path, cols, rows)
             else:
                 rendered = _write_markdown_table(summary_path, cols, rows)
             if rendered:

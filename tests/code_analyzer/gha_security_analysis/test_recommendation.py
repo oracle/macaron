@@ -26,7 +26,7 @@ def test_recommend_for_unpinned_action_when_sha_not_resolved() -> None:
     """Return fallback recommendation text when action SHA cannot be resolved."""
     recommendation = recommend_for_unpinned_action("actions/checkout")
 
-    assert recommendation.recommended_ref == "cannot be found"
+    assert recommendation.recommended_ref == "Unable to resolve automatically"
     assert recommendation.message == "Pin this third-party action to a 40-character commit SHA."
 
 

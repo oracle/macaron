@@ -6,12 +6,12 @@ SELECT
     gha_check.finding_group,
     gha_check.finding_priority,
     gha_check.finding_type,
-    gha_check.github_actions_id AS third_party_action_name,
-    gha_check.github_actions_version AS third_party_action_version,
-    gha_check.vulnerability_urls AS vulnerabilities,
+    gha_check.action_name,
+    gha_check.action_ref,
+    gha_check.vuln_urls,
     gha_check.finding_message,
     gha_check.recommended_ref,
-    gha_check.is_pinned_sha,
+    gha_check.sha_pinned,
     gha_check.caller_workflow AS vulnerable_workflow,
     analysis.analysis_time
 FROM github_actions_vulnerabilities_check AS gha_check

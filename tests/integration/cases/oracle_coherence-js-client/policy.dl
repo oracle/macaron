@@ -7,15 +7,16 @@ Policy("check-github-actions-vulnerabilities", component_id, "Check GitHub Actio
     check_failed(component_id, "mcn_githubactions_vulnerabilities_1"),
     github_actions_vulnerabilities_check(
         _,
-        "[\"https://osv.dev/vulnerability/GHSA-69fq-xp46-6x23\", \"https://osv.dev/vulnerability/GHSA-9p44-j4g5-cfx5\"]",
+        "https://github.com/oracle/coherence-js-client/blob/39166341bc31f75b663ff439dae36170fb3e99a9/.github/workflows/trivy-scan.yml",
         "known-vulnerability",
+        "third_party_action_risk",
+        _,
+        _,
+        _,
         "aquasecurity/trivy-action",
         "0.32.0",
-        "https://github.com/oracle/coherence-js-client/blob/39166341bc31f75b663ff439dae36170fb3e99a9/.github/workflows/trivy-scan.yml",
         _,
-        _,
-        _,
-        _
+        "[\"https://osv.dev/vulnerability/GHSA-69fq-xp46-6x23\", \"https://osv.dev/vulnerability/GHSA-9p44-j4g5-cfx5\"]"
     ).
 
 apply_policy_to("check-github-actions-vulnerabilities", component_id) :-
