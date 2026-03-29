@@ -3,9 +3,34 @@
   list([
     dict({
       'issues': list([
-        "sensitive-trigger: Workflow uses ['pull_request_target']. Ensure strict gating (e.g., actor allowlist, branch protection, and minimal permissions).",
-        'privileged-trigger: Workflow uses `pull_request_target`, which runs with elevated permissions.',
-        'missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.',
+        dict({
+          'issue': "potential-injection: [{'Type': 'Lit', 'Pos': {'Offset': 184, 'Line': 7, 'Col': 17}, 'End': {'Offset': 189, 'Line': 7, 'Col': 22}, 'ValuePos': {'Offset': 184, 'Line': 7, 'Col': 17}, 'ValueEnd': {'Offset': 189, 'Line': 7, 'Col': 22}, 'Value': 'HEAD:'}, {'Type': 'ParamExp', 'Pos': {'Offset': 189, 'Line': 7, 'Col': 22}, 'End': {'Offset': 196, 'Line': 7, 'Col': 29}, 'Dollar': {'Offset': 189, 'Line': 7, 'Col': 22}, 'Short': True, 'Param': {'Pos': {'Offset': 190, 'Line': 7, 'Col': 23}, 'End': {'Offset': 196, 'Line': 7, 'Col': 29}, 'ValuePos': {'Offset': 190, 'Line': 7, 'Col': 23}, 'ValueEnd': {'Offset': 196, 'Line': 7, 'Col': 29}, 'Value': 'github'}}, {'Type': 'Lit', 'Pos': {'Offset': 196, 'Line': 7, 'Col': 29}, 'End': {'Offset': 224, 'Line': 7, 'Col': 57}, 'ValuePos': {'Offset': 196, 'Line': 7, 'Col': 29}, 'ValueEnd': {'Offset': 224, 'Line': 7, 'Col': 57}, 'Value': '.event.pull_request.head.ref'}]",
+          'priority': 100,
+        }),
+        dict({
+          'issue': 'privileged-trigger: Workflow uses `pull_request_target` with additional risky patterns; treat this workflow as high risk and harden immediately.',
+          'priority': 80,
+        }),
+        dict({
+          'issue': 'missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.',
+          'priority': 60,
+        }),
+        dict({
+          'issue': "sensitive-trigger: Workflow uses ['pull_request_target']. Ensure strict gating (e.g., actor allowlist, branch protection, and minimal permissions).",
+          'priority': 40,
+        }),
+        dict({
+          'issue': 'actions/checkout@v5',
+          'priority': 20,
+        }),
+        dict({
+          'issue': 'dtolnay/rust-toolchain@stable',
+          'priority': 20,
+        }),
+        dict({
+          'issue': 'poseidon/wait-for-status-checks@v0.6.0',
+          'priority': 20,
+        }),
       ]),
       'workflow_name': '/home/behnaz/research/github/macaron/tests/code_analyzer/gha_security_analysis/resources/workflow_files/injection_pattern_1.yaml',
     }),

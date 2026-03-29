@@ -38,6 +38,7 @@ PRIORITY_CRITICAL = 100
 PRIORITY_HIGH = 80
 PRIORITY_MEDIUM = 60
 PRIORITY_LOW = 40
+PRIORITY_MIN = 20
 
 
 class PrioritizedIssue(TypedDict):
@@ -214,7 +215,7 @@ def _append_action_step_findings(
         and uses_version
         and not re.fullmatch(r"[0-9a-f]{40}", uses_version)
     ):
-        _add_finding(findings, f"{uses_name}@{uses_version}", PRIORITY_HIGH)
+        _add_finding(findings, f"{uses_name}@{uses_version}", PRIORITY_MIN)
 
     if uses_name == "actions/checkout":
         ref = _literal_value(action_node.with_parameters.get("ref"))

@@ -60,9 +60,9 @@ def recommend_for_unpinned_action(
     elif resolved_sha:
         recommended_ref = f"{action_name}@{resolved_sha}"
     else:
-        recommended_ref = f"{action_name}@<40-char-commit-sha>"
+        recommended_ref = "cannot be found"
     return Recommendation(
-        message="Pin this third-party action to a full 40-character commit SHA to prevent tag drift or takeover risk.",
+        message="Pin this third-party action to a 40-character commit SHA.",
         recommended_ref=recommended_ref,
     )
 
