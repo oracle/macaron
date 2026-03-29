@@ -63,6 +63,17 @@ jobs:
         IMAGE_NAME: ghcr.io/oracle/macaron
       run: make build-docker
 
+    - name: Export test Docker image
+      run: docker save ghcr.io/oracle/macaron:test --output /tmp/macaron-test-image.tar
+
+    - name: Upload test Docker image artifact
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: macaron-test-image
+        path: /tmp/macaron-test-image.tar
+        if-no-files-found: error
+        retention-days: 1
+
     - name: Install dependencies for integration test utility
       run: make setup-integration-test-utility-for-docker
 
@@ -74,3 +85,14 @@ jobs:
     #     DOCKER_PULL: never
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     #   run: make integration-test-docker
+
+  test-macaron-action:
+    # Reuse the action test workflow against the exact Docker image built above.
+    # The image is transferred via artifact to avoid pushing to a registry.
+    needs: [build-docker]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test_macaron_action.yaml
+    with:
+      docker_image_artifact_name: macaron-test-image
+      macaron_image_tag: test

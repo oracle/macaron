@@ -7,22 +7,24 @@ set -euo pipefail
 MACARON_DIR="${RUNNER_TEMP:-/tmp}/macaron"
 mkdir -p "$MACARON_DIR"
 
+# If a test image tag is explicitly provided (for reusable workflow testing),
+# use the local run script from this checkout and preserve the provided tag.
+if [ -n "${MACARON_IMAGE_TAG:-}" ]; then
+  SCRIPT_NAME="run_macaron.sh"
+  cp "$GITHUB_ACTION_PATH/scripts/release_scripts/run_macaron.sh" "$MACARON_DIR/$SCRIPT_NAME"
+  chmod +x "$MACARON_DIR/$SCRIPT_NAME"
+  echo "MACARON=$MACARON_DIR/$SCRIPT_NAME" >> "$GITHUB_ENV"
+  echo "MACARON_IMAGE_TAG=${MACARON_IMAGE_TAG}" >> "$GITHUB_ENV"
+  exit 0
+fi
+
 ACTION_DIR="${RUNNER_TEMP:-/tmp}/macaron-action"
 rm -rf "$ACTION_DIR"
 mkdir -p "$ACTION_DIR"
 
 git clone --filter=blob:none --no-checkout https://github.com/oracle/macaron.git "$ACTION_DIR"
 
-# For self-tests in oracle/macaron (uses: ./), prefer the current workflow commit.
-# Keep existing behavior for all other usage patterns.
-if [ -z "${ACTION_REF:-}" ] \
-  && [ "${GITHUB_REPOSITORY:-}" = "oracle/macaron" ] \
-  && [ -n "${GITHUB_SHA:-}" ] \
-  && [ "${GITHUB_ACTION_PATH:-}" = "${GITHUB_WORKSPACE:-}" ]; then
-    TARGET_REF="${GITHUB_SHA}"
-else
-    TARGET_REF="${ACTION_REF:-main}"
-fi
+TARGET_REF="${ACTION_REF:-main}"
 MACARON_IMAGE_TAG=""
 cd "$ACTION_DIR"
 if [[ "$TARGET_REF" =~ ^[0-9a-f]{40}$ ]]; then
