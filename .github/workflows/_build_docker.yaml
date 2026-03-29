@@ -72,7 +72,7 @@ jobs:
         name: macaron-test-image
         path: /tmp/macaron-test-image.tar
         if-no-files-found: error
-        retention-days: 1
+        retention-days: 5
 
     - name: Install dependencies for integration test utility
       run: make setup-integration-test-utility-for-docker

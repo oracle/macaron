@@ -164,6 +164,8 @@ jobs:
 
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
       id: verify_github_actions_vulns_repo_tutorial
+      # This verification is expected to fail and surface vulnerable actions.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
@@ -171,6 +173,14 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-repo
         write_job_summary: 'true'
+    - name: Assert expected failure (github_actions_vulns for repo tutorial)
+      if: ${{ always() }}
+      run: |
+        # Ensure this tutorial case remains a failing policy verification.
+        if [ "${{ steps.verify_github_actions_vulns_repo_tutorial.outcome }}" != "failure" ]; then
+          echo "Expected verify step to fail, but it did not."
+          exit 1
+        fi
 
     - name: Run Macaron (analyze purl - log4j-core example)
       uses: ./
@@ -181,6 +191,9 @@ jobs:
         write_job_summary: 'false'
 
     - name: Run Macaron (verify policy - github_actions_vulns for purl)
+      id: verify_github_actions_vulns_purl_tutorial
+      # This verification is expected to fail and detect vulnerable actions.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
@@ -188,6 +201,14 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-purl
         write_job_summary: 'true'
+    - name: Assert expected failure (github_actions_vulns for purl tutorial)
+      if: ${{ always() }}
+      run: |
+        # Ensure this tutorial case remains a failing policy verification.
+        if [ "${{ steps.verify_github_actions_vulns_purl_tutorial.outcome }}" != "failure" ]; then
+          echo "Expected verify step to fail, but it did not."
+          exit 1
+        fi
 
   tutorial-provenance:
     name: Provenance discovery, extraction, and verification

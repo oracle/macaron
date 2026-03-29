@@ -55,9 +55,6 @@ inputs:
   write_job_summary:
     description: Write a human-friendly summary to the workflow run page.
     default: 'true'
-  post_commit_comment:
-    description: Post or update a commit comment with Macaron results.
-    default: 'false'
   upload_attestation:
     description: 'Upload the generated VSA report. default : false'
     default: false
@@ -191,96 +188,6 @@ runs:
       UPLOAD_REPORTS: ${{ inputs.upload_reports }}
       REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
       REPORTS_ARTIFACT_URL: ${{ steps.upload-macaron-reports.outputs.artifact-url }}
-
-  - name: Post Macaron commit comment
-    if: ${{ always() && inputs.post_commit_comment == 'true' }}
-    uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
-    env:
-      OUTPUT_DIR: ${{ inputs.output_dir }}
-      POLICY_REPORT: ${{ steps.collect-reports.outputs.policy_report }}
-      VSA_REPORT: ${{ steps.collect-reports.outputs.vsa_report }}
-      VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
-      REPORTS_ARTIFACT_NAME: ${{ inputs.reports_artifact_name }}
-    with:
-      script: |
-        const fs = require("fs");
-        const path = require("path");
-
-        const marker = "<!-- macaron-results -->";
-        const outputDir = process.env.OUTPUT_DIR || "output";
-        const policyReportPath = process.env.POLICY_REPORT || path.join(outputDir, "policy_report.json");
-        const vsaGenerated = process.env.VSA_GENERATED === "true";
-        const vsaReport = process.env.VSA_REPORT || "VSA Not Generated.";
-        const artifactName = process.env.REPORTS_ARTIFACT_NAME || "macaron-reports";
-
-        let parsed = {};
-        if (fs.existsSync(policyReportPath)) {
-          try {
-            parsed = JSON.parse(fs.readFileSync(policyReportPath, "utf8"));
-          } catch (err) {
-            parsed = {};
-          }
-        }
-
-        const relation = parsed.check_github_actions_vulnerabilities;
-        const lines = [];
-        lines.push(marker);
-        lines.push("## Macaron Results");
-        lines.push("");
-        lines.push(`- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`);
-        lines.push(`- Reports artifact: \`${artifactName}\``);
-        lines.push(`- VSA generated: \`${vsaGenerated}\``);
-        if (vsaGenerated) {
-          lines.push(`- VSA file: \`${vsaReport}\``);
-        }
-        lines.push("");
-
-        if (Array.isArray(relation) && relation.length > 0) {
-          lines.push("### Vulnerable GitHub Actions");
-          lines.push("");
-          lines.push("| ID | Action | Version | Vulnerabilities | Workflow |");
-          lines.push("|---|---|---|---|---|");
-          for (const row of relation) {
-            const [id, urls, actionId, version, callerWorkflow] = row;
-            lines.push(`| \`${id}\` | \`${actionId}\` | \`${version}\` | \`${urls}\` | ${callerWorkflow} |`);
-          }
-        } else {
-          lines.push(":white_check_mark: No `check_github_actions_vulnerabilities` findings in `policy_report.json`.");
-        }
-
-        const body = lines.join("\n");
-
-        const list = await github.rest.repos.listCommentsForCommit({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          commit_sha: context.sha,
-          per_page: 100,
-        });
-
-        const existing = list.data.find((comment) => {
-          return (
-            comment.user &&
-            comment.user.type === "Bot" &&
-            typeof comment.body === "string" &&
-            comment.body.includes(marker)
-          );
-        });
-
-        if (existing) {
-          await github.rest.repos.updateCommitComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            comment_id: existing.id,
-            body,
-          });
-        } else {
-          await github.rest.repos.createCommitComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            commit_sha: context.sha,
-            body,
-          });
-        }
 
   - name: Enforce VSA generation
     if: ${{ always() && inputs.policy_file != '' }}

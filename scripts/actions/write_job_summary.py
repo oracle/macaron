@@ -14,7 +14,11 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import urlsplit
 
-CHECK_RESULT_DEFAULT_COLUMNS = ["id", "check_id", "passed", "component_id"]
+CHECK_RESULT_DEFAULT_COLUMNS = [
+    "component_id",
+    "check_id",
+    "passed",
+]
 
 
 def _env(name: str, default: str = "") -> str:
