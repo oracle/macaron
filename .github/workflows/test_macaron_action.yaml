@@ -287,8 +287,8 @@ jobs:
       with:
         repo_path: https://github.com/oracle/coherence-js-client
         digest: 39166341bc31f75b663ff439dae36170fb3e99a9
-        package_url: pkg:github.com/oracle/coherence-js-client@.*
         policy_file: check-github-actions
+        policy_purl: pkg:github.com/oracle/coherence-js-client@.*
         output_dir: macaron_output/detect_vulnerable_github_actions
         upload_reports: 'true'
         reports_artifact_name: macaron-vulnerable-actions-fail-diagnosis

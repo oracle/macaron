@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 set -euo pipefail
 
@@ -13,7 +13,16 @@ mkdir -p "$ACTION_DIR"
 
 git clone --filter=blob:none --no-checkout https://github.com/oracle/macaron.git "$ACTION_DIR"
 
-TARGET_REF="${ACTION_REF:-main}"
+# For self-tests in oracle/macaron (uses: ./), prefer the current workflow commit.
+# Keep existing behavior for all other usage patterns.
+if [ -z "${ACTION_REF:-}" ] \
+  && [ "${GITHUB_REPOSITORY:-}" = "oracle/macaron" ] \
+  && [ -n "${GITHUB_SHA:-}" ] \
+  && [ "${GITHUB_ACTION_PATH:-}" = "${GITHUB_WORKSPACE:-}" ]; then
+    TARGET_REF="${GITHUB_SHA}"
+else
+    TARGET_REF="${ACTION_REF:-main}"
+fi
 MACARON_IMAGE_TAG=""
 cd "$ACTION_DIR"
 if [[ "$TARGET_REF" =~ ^[0-9a-f]{40}$ ]]; then

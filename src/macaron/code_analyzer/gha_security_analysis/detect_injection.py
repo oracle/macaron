@@ -10,8 +10,7 @@ from macaron.code_analyzer.dataflow_analysis import bash, core
 from macaron.code_analyzer.dataflow_analysis.core import NodeForest, traverse_bfs
 from macaron.code_analyzer.dataflow_analysis.github import GitHubActionsWorkflowNode
 from macaron.parsers.bashparser_model import CallExpr, is_call_expr, is_lit, is_param_exp
-
-# from macaron.parsers.github_workflow_model import is_normal_job
+from macaron.parsers.github_workflow_model import is_normal_job
 
 REMOTE_SCRIPT_RE = re.compile(r"(curl|wget)\s+.*\|\s*(bash|sh|tar)", re.IGNORECASE)
 SHA_PINNED_USES_RE = re.compile(r".+@([0-9a-f]{40})$")  # commit SHA pinning
