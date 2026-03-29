@@ -261,6 +261,20 @@ def _gha_group_label(group: str) -> str:
     return group
 
 
+def _extract_finding_summary(message: object) -> str:
+    """Extract a compact summary from a finding message."""
+    text = str(message).strip()
+    if not text:
+        return ""
+
+    # Expected format: "Summary: ... Details: ... Recommendation: ..."
+    match = re.search(r"Summary:\s*(.*?)(?:\s+Details:\s*|\s+Recommendation:\s*|$)", text, flags=re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+
+    return text
+
+
 def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], rows: list[tuple]) -> bool:
     """Write compact diagnostics for check-github-actions policy failures."""
     if not columns or not rows:
@@ -313,8 +327,8 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
         _append_line(summary_path, f"#### {title}")
         _append_line(summary_path)
         if group == "workflow_security_issue":
-            _append_line(summary_path, "| priority | type | action | workflow |")
-            _append_line(summary_path, "|---|---|---|---|")
+            _append_line(summary_path, "| priority | type | summary | action | workflow |")
+            _append_line(summary_path, "|---|---|---|---|---|")
         else:
             _append_line(summary_path, "| priority | type | action | version | workflow |")
             _append_line(summary_path, "|---|---|---|---|---|")
@@ -322,11 +336,17 @@ def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], 
             priority_raw = row[col_index["finding_priority"]]
             priority = f"`{_priority_label(priority_raw)} ({priority_raw})`"
             finding_type = _format_table_cell(row[col_index["finding_type"]])
+            finding_summary = _format_table_cell(
+                _extract_finding_summary(row[col_index["finding_message"]]) if "finding_message" in col_index else ""
+            )
             action_name = _format_table_cell(row[col_index["third_party_action_name"]])
             action_version = _format_table_cell(row[col_index["third_party_action_version"]])
             workflow = _format_table_cell(row[col_index["vulnerable_workflow"]])
             if group == "workflow_security_issue":
-                _append_line(summary_path, f"| {priority} | {finding_type} | {action_name} | {workflow} |")
+                _append_line(
+                    summary_path,
+                    f"| {priority} | {finding_type} | {finding_summary} | {action_name} | {workflow} |",
+                )
             else:
                 _append_line(
                     summary_path,
