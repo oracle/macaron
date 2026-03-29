@@ -58,9 +58,6 @@ inputs:
   post_commit_comment:
     description: Post or update a commit comment with Macaron results.
     default: 'false'
-  require_vsa:
-    description: Fail the action if VSA is not generated.
-    default: 'false'
   upload_attestation:
     description: 'Upload the generated VSA report. default : false'
     default: false
@@ -286,16 +283,17 @@ runs:
         }
 
   - name: Enforce VSA generation
-    if: ${{ always() && inputs.require_vsa == 'true' }}
+    if: ${{ always() && inputs.policy_file != '' }}
     run: |
       if [ "${VSA_GENERATED}" != "true" ]; then
-        echo "VSA was not generated at ${OUTPUT_DIR}/vsa.intoto.jsonl. Check uploaded reports."
+        echo "Policy verification failed. VSA was not generated at ${OUTPUT_DIR}/vsa.intoto.jsonl. Check uploaded reports."
         exit 1
       fi
     shell: bash
     env:
       OUTPUT_DIR: ${{ inputs.output_dir }}
       VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
+      POLICY_FILE: ${{ inputs.policy_file }}
 
   - name: Upload Attestation
     if: ${{ inputs.upload_attestation == 'true' && steps.collect-reports.outputs.vsa_generated == 'true' }}

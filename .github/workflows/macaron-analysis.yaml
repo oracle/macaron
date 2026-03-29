@@ -45,4 +45,3 @@ jobs:
         reports_artifact_name: macaron-reports
         reports_retention_days: 90
         write_job_summary: true
-        require_vsa: true

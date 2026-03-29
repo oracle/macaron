@@ -257,7 +257,6 @@ jobs:
   #       output_dir: macaron_output/upload_attestation
   #       upload_attestation: 'true'
   #       subject_path: ./macaron_output/upload_attestation/vsa.intoto.jsonl
-  #       require_vsa: 'true'
   #       upload_reports: 'true'
   #       reports_artifact_name: macaron-reports-upload-attestation
   #       write_job_summary: 'true'
