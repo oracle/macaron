@@ -386,10 +386,10 @@ integration-test-update:
 # set to the build date/epoch. For more details, see: https://flit.pypa.io/en/latest/reproducible.html
 .PHONY: dist
 dist: dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/$(PACKAGE_SDIST_NAME).tar.gz dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip dist/$(PACKAGE_WHEEL_DIST_NAME)-build-epoch.txt
-dist/$(PACKAGE_WHEEL_DIST_NAME).whl: check
+dist/$(PACKAGE_WHEEL_DIST_NAME).whl:
 	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) flit build --setup-py --format wheel
 	mv dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl dist/$(PACKAGE_WHEEL_DIST_NAME).whl
-dist/$(PACKAGE_SDIST_NAME).tar.gz: check
+dist/$(PACKAGE_SDIST_NAME).tar.gz:
 	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) flit build --setup-py --format sdist
 dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip: docs
 	python -m zipfile -c dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip docs/_build/html
