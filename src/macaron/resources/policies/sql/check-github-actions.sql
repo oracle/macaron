@@ -3,6 +3,8 @@
 
 -- Failed check facts for check-github-actions policy template.
 SELECT
+    gha_check.finding_group,
+    gha_check.finding_priority,
     gha_check.finding_type,
     gha_check.github_actions_id AS third_party_action_name,
     gha_check.github_actions_version AS third_party_action_version,

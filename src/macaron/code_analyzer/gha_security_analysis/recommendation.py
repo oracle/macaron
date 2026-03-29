@@ -9,7 +9,12 @@ GitHub Actions security analysis checks.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+
+from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
+
+UNPINNED_ACTION_RE = re.compile(r"^(?P<action>[^@\s]+)@(?P<version>[^\s]+)$")
 
 
 @dataclass(frozen=True)
@@ -49,6 +54,56 @@ def recommend_for_unpinned_action(action_name: str, resolved_sha: str | None = N
         message="Pin this third-party action to a full 40-character commit SHA to prevent tag drift or takeover risk.",
         recommended_ref=recommended_ref,
     )
+
+
+def parse_unpinned_action_issue(issue: str) -> tuple[str, str] | None:
+    """Parse an unpinned third-party action reference from issue text.
+
+    Parameters
+    ----------
+    issue : str
+        Raw issue text emitted by workflow security analysis.
+
+    Returns
+    -------
+    tuple[str, str] | None
+        Parsed ``(action_name, action_version)`` when the issue matches
+        ``owner/repo@ref`` format for a third-party action. ``None`` otherwise.
+    """
+    match = UNPINNED_ACTION_RE.fullmatch(issue.strip())
+    if not match:
+        return None
+    action = match.group("action")
+    version = match.group("version")
+    if action.startswith("./"):
+        return None
+    if "/" not in action:
+        return None
+    return action, version
+
+
+def resolve_action_ref_to_sha(api_client: object, action_name: str, action_version: str) -> str | None:
+    """Resolve an action reference to an immutable commit SHA.
+
+    Parameters
+    ----------
+    api_client : object
+        API client instance used for GitHub API calls.
+    action_name : str
+        GitHub Action identifier in the form ``owner/repo``.
+    action_version : str
+        Action ref currently used by the workflow.
+
+    Returns
+    -------
+    str | None
+        The resolved commit SHA if resolution succeeds; otherwise ``None``.
+    """
+    if not isinstance(api_client, GhAPIClient):
+        return None
+    if not action_name or not action_version:
+        return None
+    return api_client.get_commit_sha_from_ref(action_name, action_version)
 
 
 def recommend_for_workflow_issue(issue: str) -> Recommendation:

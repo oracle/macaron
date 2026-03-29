@@ -4,16 +4,20 @@
 """Detect security issues and injection risks in GitHub Actions workflows."""
 
 import re
-from typing import cast
+from typing import TypedDict, cast
 
-from macaron.code_analyzer.dataflow_analysis import bash, core
+from macaron.code_analyzer.dataflow_analysis import bash, core, facts
 from macaron.code_analyzer.dataflow_analysis.core import NodeForest, traverse_bfs
-from macaron.code_analyzer.dataflow_analysis.github import GitHubActionsWorkflowNode
+from macaron.code_analyzer.dataflow_analysis.github import (
+    GitHubActionsActionStepNode,
+    GitHubActionsNormalJobNode,
+    GitHubActionsRunStepNode,
+    GitHubActionsWorkflowNode,
+)
 from macaron.parsers.bashparser_model import CallExpr, is_call_expr, is_lit, is_param_exp
-from macaron.parsers.github_workflow_model import is_normal_job
+from macaron.parsers.github_workflow_model import Workflow
 
 REMOTE_SCRIPT_RE = re.compile(r"(curl|wget)\s+.*\|\s*(bash|sh|tar)", re.IGNORECASE)
-SHA_PINNED_USES_RE = re.compile(r".+@([0-9a-f]{40})$")  # commit SHA pinning
 
 UNTRUSTED_PR_REFS = {
     "${{ github.event.pull_request.head.ref }}",
@@ -30,7 +34,27 @@ DANGEROUS_TRIGGERS = {
 }
 
 
-def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, str | list[str]]]:
+PRIORITY_CRITICAL = 100
+PRIORITY_HIGH = 80
+PRIORITY_MEDIUM = 60
+PRIORITY_LOW = 40
+
+
+class PrioritizedIssue(TypedDict):
+    """A workflow security finding with priority metadata."""
+
+    issue: str
+    priority: int
+
+
+class WorkflowFinding(TypedDict):
+    """Workflow-level security findings."""
+
+    workflow_name: str
+    issues: list[PrioritizedIssue]
+
+
+def detect_github_actions_security_issues(nodes: NodeForest) -> list[WorkflowFinding]:
     """Detect security issues across GitHub Actions workflow nodes.
 
     Parameters
@@ -40,10 +64,10 @@ def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, s
 
     Returns
     -------
-    list[dict[str, str | list[str]]]
+    list[WorkflowFinding]
         A list of workflow-level findings. Each item contains:
         - ``workflow_name``: workflow file path.
-        - ``issues``: list of detected security issue messages.
+        - ``issues``: list of detected security issue messages with priorities.
     """
     findings = []
     for root in nodes.root_nodes:
@@ -56,7 +80,7 @@ def detect_github_actions_security_issues(nodes: NodeForest) -> list[dict[str, s
 
 def analyze_workflow(
     workflow_node: GitHubActionsWorkflowNode,
-) -> dict[str, str | list[str]] | None:
+) -> WorkflowFinding | None:
     """Analyze a GitHub Actions workflow for security issues.
 
     Parameters
@@ -78,141 +102,207 @@ def analyze_workflow(
     checkout risks, remote-script execution heuristics, self-hosted runner usage, and
     dataflow-based expression injection patterns.
     """
-    wf = workflow_node.definition
-    findings: list[str] = []
+    findings: list[PrioritizedIssue] = []
+    on_keys = _extract_on_keys(workflow_node.definition)
+    seen_jobs: set[str] = set()
 
-    on_section = wf.get("on")
-    on_keys = set()
-    if isinstance(on_section, dict):
-        on_keys = set(on_section.keys())
-    elif isinstance(on_section, list):
-        on_keys = set(on_section)
-    elif isinstance(on_section, str):
-        on_keys = {on_section}
-
-    # --- A. Triggers that often need extra hardening / gating ---
-    sensitive = sorted(on_keys.intersection(DANGEROUS_TRIGGERS))
-    if sensitive:
-        findings.append(
-            f"sensitive-trigger: Workflow uses {sensitive}. Ensure strict gating (e.g., actor allowlist, "
-            "branch protection, and minimal permissions)."
-        )
-
-    # --- B. Privileged trigger check (existing) ---
-    if "pull_request_target" in on_keys:
-        findings.append(
-            "privileged-trigger: Workflow uses `pull_request_target`, which runs with elevated permissions."
-        )
-
-    # --- C. Missing workflow permissions (existing) ---
-    if "permissions" not in wf:
-        findings.append("missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.")
-    else:
-        # --- C2. Overly broad workflow permissions (new heuristic) ---
-        perms = wf.get("permissions")
-        if isinstance(perms, str) and perms.lower() == "write-all":
-            findings.append("overbroad-permissions: Workflow uses `permissions: write-all`.")
-        if isinstance(perms, dict):
-            # Example policy: flag any write permissions on PR-triggered workflows
-            if "pull_request_target" in on_keys:
-                for scope, level in perms.items():
-                    if isinstance(level, str) and "write" in level.lower():
-                        findings.append(
-                            f"overbroad-permissions: PR-triggered workflow requests " f"`{scope}: {level}`."
-                        )
-
-    # Walk jobs/steps for step-level checks.
-    jobs = wf.get("jobs", {}) if isinstance(wf.get("jobs"), dict) else {}
-    for job_name, job in jobs.items():
-        if not is_normal_job(job):
+    for node in core.traverse_bfs(workflow_node):
+        if isinstance(node, GitHubActionsWorkflowNode):
+            _append_workflow_level_findings(findings, on_keys, node.definition)
             continue
 
-        # --- D. Self-hosted runners (new) ---
-        runs_on = job.get("runs-on")
-        if runs_on:
-            runs_on_str = str(runs_on)
-            if "self-hosted" in runs_on_str:
-                findings.append(
-                    f"self-hosted-runner: Job `{job_name}` runs on self-hosted runners; "
-                    "ensure isolation and never run untrusted PR code there."
-                )
+        if isinstance(node, GitHubActionsNormalJobNode):
+            if node.job_id in seen_jobs:
+                continue
+            seen_jobs.add(node.job_id)
+            _append_job_level_findings(findings, node)
+            continue
 
-        steps = job.get("steps", []) if isinstance(job.get("steps"), list) else []
+        if isinstance(node, GitHubActionsActionStepNode):
+            _append_action_step_findings(findings, node, on_keys)
+            continue
 
-        for step in steps:
-            uses = step.get("uses", "") if isinstance(step, dict) else ""
-            run = step.get("run", "") if isinstance(step, dict) else ""
+        if isinstance(node, GitHubActionsRunStepNode):
+            _append_run_step_findings(findings, node)
+            continue
 
-            # --- E. Action SHA pinning (new) ---
-            if uses:
-                # Ignore local actions "./.github/actions/..."
-                if not uses.startswith("./") and not SHA_PINNED_USES_RE.match(uses):
-                    # findings.append(f"unpinned-action: Job `{job_name}` uses `{uses}` not pinned to a commit SHA.")
-                    findings.append(uses)
-
-            # --- F. Checkout untrusted fork refs on PR event (existing, expanded) ---
-            if uses and "actions/checkout" in uses:
-                with_section = step.get("with", {}) if isinstance(step.get("with"), dict) else {}
-                ref = with_section.get("ref", "")
-                if ref in UNTRUSTED_PR_REFS and "pull_request" in on_keys:
-                    findings.append(
-                        f"untrusted-fork-code: Job `{job_name}` checks out "
-                        f"untrusted fork code (`ref: {ref}`) on PR event."
-                    )
-
-                # --- G. persist-credentials (new) ---
-                # Default is true for checkout; many orgs prefer setting false explicitly.
-                persist = with_section.get("persist-credentials", None)
-                if persist is True or (isinstance(persist, str) and persist.lower() == "true"):
-                    findings.append(
-                        f"persist-credentials: Job `{job_name}` uses checkout "
-                        "with `persist-credentials: true`; may expose "
-                        "GITHUB_TOKEN to subsequent git commands."
-                    )
-
-            # --- H. Remote script execution: curl|bash (new heuristic) ---
-            if isinstance(run, str) and REMOTE_SCRIPT_RE.search(run):
-                findings.append(
-                    f"remote-script-exec: Job `{job_name}` step appears to " "download and pipe to shell (`curl|bash`)."
-                )
-
-            # --- I. Extra dangerous combo: pull_request_target + checkout PR head ref (new) ---
-            if "pull_request_target" in on_keys and uses and "actions/checkout" in uses:
-                with_section = step.get("with", {}) if isinstance(step.get("with"), dict) else {}
-                ref = with_section.get("ref", "")
-                if ref in UNTRUSTED_PR_REFS:
-                    findings.append(
-                        f"pr-target-untrusted-checkout: Job `{job_name}` uses "
-                        f"pull_request_target and checks out PR-controlled "
-                        f"ref `{ref}`."
-                    )
-
-    # --- J. Your existing dataflow-based injection heuristic (kept) ---
-    for node in core.traverse_bfs(workflow_node):
         if isinstance(node, bash.BashSingleCommandNode):
-            # step_node = get_containing_github_step(node, nodes.parents)
-            if is_call_expr(node.definition.get("Cmd")):
-                call_exp = cast(CallExpr, node.definition["Cmd"])
-                for arg in call_exp.get("Args", []):
-                    expansion = False
-                    pr_head_ref = False
-                    for part in arg.get("Parts", []):
-                        if is_param_exp(part) and part.get("Param", {}).get("Value") == "github":
-                            expansion = True
-                        if is_lit(part) and part.get("Value") in {
-                            ".event.pull_request.head.ref",
-                            ".head_ref",
-                            ".event.issue.body",
-                            ".event.comment.body",
-                        }:
-                            pr_head_ref = True
-                    if expansion and pr_head_ref:
-                        findings.append(f"potential-injection: {arg.get('Parts')}")
+            _append_injection_findings(findings, node)
+
+    if "pull_request_target" in on_keys and _has_privileged_trigger_risk_combo(findings):
+        _add_finding(
+            findings,
+            (
+                "privileged-trigger: Workflow uses `pull_request_target` with additional risky patterns; "
+                "treat this workflow as high risk and harden immediately."
+            ),
+            PRIORITY_HIGH,
+        )
 
     if findings:
-        return {"workflow_name": workflow_node.context.ref.source_filepath, "issues": findings}
+        findings_sorted = sorted(findings, key=lambda finding: (-finding["priority"], finding["issue"]))
+        return {"workflow_name": workflow_node.context.ref.source_filepath, "issues": findings_sorted}
 
     return None
+
+
+def _extract_on_keys(workflow: Workflow) -> set[str]:
+    """Extract the set of event names from a workflow ``on`` section."""
+    on_section = workflow.get("on")
+    if isinstance(on_section, dict):
+        return set(on_section.keys())
+    if isinstance(on_section, list):
+        return set(on_section)
+    return {on_section}
+
+
+def _append_workflow_level_findings(findings: list[PrioritizedIssue], on_keys: set[str], workflow: Workflow) -> None:
+    """Append workflow-level hardening findings."""
+    sensitive = sorted(on_keys.intersection(DANGEROUS_TRIGGERS))
+    if sensitive:
+        _add_finding(
+            findings,
+            f"sensitive-trigger: Workflow uses {sensitive}. Ensure strict gating (e.g., actor allowlist, "
+            "branch protection, and minimal permissions).",
+            PRIORITY_LOW,
+        )
+
+    if "permissions" not in workflow:
+        _add_finding(
+            findings,
+            "missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.",
+            PRIORITY_MEDIUM,
+        )
+        return
+
+    permissions = workflow.get("permissions")
+    if isinstance(permissions, str) and permissions.lower() == "write-all":
+        _add_finding(findings, "overbroad-permissions: Workflow uses `permissions: write-all`.", PRIORITY_HIGH)
+    if isinstance(permissions, dict) and "pull_request_target" in on_keys:
+        for scope, level in permissions.items():
+            if isinstance(level, str) and "write" in level.lower():
+                _add_finding(
+                    findings,
+                    f"overbroad-permissions: PR-triggered workflow requests `{scope}: {level}`.",
+                    PRIORITY_HIGH,
+                )
+
+
+def _append_job_level_findings(findings: list[PrioritizedIssue], job_node: GitHubActionsNormalJobNode) -> None:
+    """Append findings derived from a single job node."""
+    runs_on = job_node.definition.get("runs-on")
+    if runs_on and "self-hosted" in str(runs_on):
+        _add_finding(
+            findings,
+            f"self-hosted-runner: Job `{job_node.job_id}` runs on self-hosted runners; "
+            "ensure isolation and never run untrusted PR code there.",
+            PRIORITY_MEDIUM,
+        )
+
+
+def _append_action_step_findings(
+    findings: list[PrioritizedIssue],
+    action_node: GitHubActionsActionStepNode,
+    on_keys: set[str],
+) -> None:
+    """Append findings derived from an action step node."""
+    uses_name = action_node.uses_name
+    uses_version = action_node.uses_version
+    if (
+        uses_name
+        and not uses_name.startswith("./")
+        and uses_version
+        and not re.fullmatch(r"[0-9a-f]{40}", uses_version)
+    ):
+        _add_finding(findings, f"{uses_name}@{uses_version}", PRIORITY_HIGH)
+
+    if uses_name == "actions/checkout":
+        ref = _literal_value(action_node.with_parameters.get("ref"))
+        if ref in UNTRUSTED_PR_REFS and "pull_request" in on_keys:
+            _add_finding(
+                findings,
+                f"untrusted-fork-code: A checkout step uses untrusted fork code (`ref: {ref}`) on PR event.",
+                PRIORITY_CRITICAL,
+            )
+
+        persist = _literal_value(action_node.with_parameters.get("persist-credentials"))
+        if persist.lower() == "true":
+            _add_finding(
+                findings,
+                "persist-credentials: Checkout uses `persist-credentials: true`; "
+                "this may expose GITHUB_TOKEN to subsequent git commands.",
+                PRIORITY_MEDIUM,
+            )
+
+        if "pull_request_target" in on_keys and ref in UNTRUSTED_PR_REFS:
+            _add_finding(
+                findings,
+                f"pr-target-untrusted-checkout: Workflow uses pull_request_target and checks out PR-controlled ref `{ref}`.",
+                PRIORITY_CRITICAL,
+            )
+
+
+def _append_run_step_findings(findings: list[PrioritizedIssue], run_step_node: GitHubActionsRunStepNode) -> None:
+    """Append findings derived from a run step node."""
+    run_script = run_step_node.definition.get("run", "")
+    if isinstance(run_script, str) and REMOTE_SCRIPT_RE.search(run_script):
+        _add_finding(
+            findings,
+            "remote-script-exec: A step appears to download and pipe to shell (`curl|bash`).",
+            PRIORITY_HIGH,
+        )
+
+
+def _append_injection_findings(
+    findings: list[PrioritizedIssue],
+    bash_node: bash.BashSingleCommandNode,
+) -> None:
+    """Append potential injection findings discovered from parsed bash command nodes."""
+    if not is_call_expr(bash_node.definition.get("Cmd")):
+        return
+
+    call_exp = cast(CallExpr, bash_node.definition["Cmd"])
+    for arg in call_exp.get("Args", []):
+        expansion = False
+        pr_head_ref = False
+        for part in arg.get("Parts", []):
+            if is_param_exp(part) and part.get("Param", {}).get("Value") == "github":
+                expansion = True
+            if is_lit(part) and part.get("Value") in {
+                ".event.pull_request.head.ref",
+                ".head_ref",
+                ".event.issue.body",
+                ".event.comment.body",
+            }:
+                pr_head_ref = True
+        if expansion and pr_head_ref:
+            _add_finding(findings, f"potential-injection: {arg.get('Parts')}", PRIORITY_CRITICAL)
+
+
+def _has_privileged_trigger_risk_combo(findings: list[PrioritizedIssue]) -> bool:
+    """Return whether findings contain risky patterns that amplify pull_request_target risk."""
+    risky_prefixes = (
+        "overbroad-permissions:",
+        "untrusted-fork-code:",
+        "persist-credentials:",
+        "remote-script-exec:",
+        "pr-target-untrusted-checkout:",
+        "potential-injection:",
+        "self-hosted-runner:",
+    )
+    return any(any(finding["issue"].startswith(prefix) for prefix in risky_prefixes) for finding in findings)
+
+
+def _literal_value(value: facts.Value | None) -> str:
+    """Return literal string value from a facts expression when available."""
+    if isinstance(value, facts.StringLiteral):
+        return value.literal
+    return ""
+
+
+def _add_finding(findings: list[PrioritizedIssue], issue: str, priority: int) -> None:
+    """Append a finding with priority metadata."""
+    findings.append({"issue": issue, "priority": priority})
 
 
 # def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest) -> list[dict[str, str]]:

@@ -20,6 +20,8 @@ CHECK_RESULT_DEFAULT_COLUMNS = [
     "passed",
 ]
 
+MAX_TABLE_CELL_LEN = 72
+
 
 def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default)
@@ -207,7 +209,9 @@ def _format_table_cell(value: object) -> str:
         segments = [part for part in parsed.path.split("/") if part]
         label = segments[-1] if segments else parsed.netloc
         return f"[`{label}`]({text})"
-    return f"`{text}`"
+    if len(text) > MAX_TABLE_CELL_LEN:
+        text = f"{text[: MAX_TABLE_CELL_LEN - 3]}..."
+    return f"`{_sanitize_for_markdown_table_code(text)}`"
 
 
 def _parse_list_cell(text: str) -> list[object] | None:
@@ -228,7 +232,158 @@ def _format_list_item(value: object) -> str:
         segments = [part for part in parsed.path.split("/") if part]
         label = segments[-1] if segments else parsed.netloc
         return f"[`{label}`]({text})"
-    return f"`{text}`"
+    if len(text) > MAX_TABLE_CELL_LEN:
+        text = f"{text[: MAX_TABLE_CELL_LEN - 3]}..."
+    return f"`{_sanitize_for_markdown_table_code(text)}`"
+
+
+def _sanitize_for_markdown_table_code(text: str) -> str:
+    """Sanitize inline-code content for markdown table cells."""
+    return text.replace("`", "'").replace("|", "\\|").replace("\n", " ")
+
+
+def _priority_label(priority: object) -> str:
+    """Map numeric priority to a concise severity-like label."""
+    try:
+        value = int(priority)
+    except (TypeError, ValueError):
+        return str(priority)
+
+    if value >= 90:
+        return "critical"
+    if value >= 70:
+        return "high"
+    if value >= 50:
+        return "medium"
+    return "low"
+
+
+def _gha_group_label(group: str) -> str:
+    # finding_group is the top-level section key; finding_type is rendered per-row as the subtype.
+    if group == "third_party_action_risk":
+        return "Third-party action risks"
+    if group == "workflow_security_issue":
+        return "Workflow security issues"
+    return group
+
+
+def _write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], rows: list[tuple]) -> bool:
+    """Write compact diagnostics for check-github-actions policy failures."""
+    if not columns or not rows:
+        return False
+
+    col_index = {name: idx for idx, name in enumerate(columns)}
+    required = [
+        "finding_priority",
+        "finding_type",
+        "third_party_action_name",
+        "third_party_action_version",
+        "vulnerable_workflow",
+    ]
+    if any(name not in col_index for name in required):
+        return _write_markdown_table(summary_path, columns, rows)
+
+    sorted_rows = sorted(
+        rows,
+        key=lambda row: (
+            int(row[col_index["finding_priority"]]) if str(row[col_index["finding_priority"]]).isdigit() else 0
+        ),
+        reverse=True,
+    )
+    display_rows = sorted_rows[:10]
+    group_idx = col_index.get("finding_group")
+
+    _append_line(
+        summary_path,
+        "_Showing top 10 findings by priority. Expand details below for full diagnostics._",
+    )
+    preferred_groups = ["third_party_action_risk", "workflow_security_issue"]
+    groups_in_rows: list[str] = []
+    if group_idx is not None:
+        discovered_groups = [str(row[group_idx]) for row in display_rows]
+        groups_in_rows.extend([group for group in preferred_groups if group in discovered_groups])
+        groups_in_rows.extend([group for group in discovered_groups if group not in groups_in_rows])
+    else:
+        groups_in_rows = ["all_findings"]
+
+    for group in groups_in_rows:
+        if group_idx is None:
+            group_rows = display_rows
+            title = "Findings"
+        else:
+            group_rows = [row for row in display_rows if str(row[group_idx]) == group]
+            if not group_rows:
+                continue
+            title = _gha_group_label(group)
+        _append_line(summary_path)
+        _append_line(summary_path, f"#### {title}")
+        _append_line(summary_path)
+        _append_line(summary_path, "| priority | type | action | version | workflow |")
+        _append_line(summary_path, "|---|---|---|---|---|")
+        for row in group_rows:
+            priority_raw = row[col_index["finding_priority"]]
+            priority = f"`{_priority_label(priority_raw)} ({priority_raw})`"
+            finding_type = _format_table_cell(row[col_index["finding_type"]])
+            action_name = _format_table_cell(row[col_index["third_party_action_name"]])
+            action_version = _format_table_cell(row[col_index["third_party_action_version"]])
+            workflow = _format_table_cell(row[col_index["vulnerable_workflow"]])
+            _append_line(
+                summary_path,
+                f"| {priority} | {finding_type} | {action_name} | {action_version} | {workflow} |",
+            )
+
+    _append_line(summary_path)
+    _append_line(summary_path, "<details>")
+    _append_line(summary_path, "<summary>Detailed findings</summary>")
+    _append_line(summary_path)
+    detail_groups = groups_in_rows if groups_in_rows else ["all_findings"]
+    row_counter = 1
+    for group in detail_groups:
+        if group_idx is None:
+            group_rows = sorted_rows
+            title = "Findings"
+        else:
+            group_rows = [row for row in sorted_rows if str(row[group_idx]) == group]
+            if not group_rows:
+                continue
+            title = _gha_group_label(group)
+        _append_line(summary_path, f"**{title}**")
+        for row in group_rows:
+            action = str(row[col_index["third_party_action_name"]])
+            version = str(row[col_index["third_party_action_version"]])
+            priority = row[col_index["finding_priority"]]
+            finding_type = str(row[col_index["finding_type"]])
+            workflow = str(row[col_index["vulnerable_workflow"]])
+            _append_line(
+                summary_path, f"{row_counter}. **`{action}@{version}`** (`{finding_type}`, priority `{priority}`)"
+            )
+            _append_line(summary_path, f"- Workflow: `{workflow}`")
+
+            pin_idx = col_index.get("is_pinned_sha")
+            row_group = str(row[group_idx]) if group_idx is not None else ""
+            if pin_idx is not None and row_group == "third_party_action_risk" and row[pin_idx] is not None:
+                pin_state = "yes" if bool(row[pin_idx]) else "no"
+                _append_line(summary_path, f"- Pinned to full commit SHA: `{pin_state}`")
+
+            vul_idx = col_index.get("vulnerabilities")
+            if vul_idx is not None and row[vul_idx]:
+                parsed = _parse_list_cell(str(row[vul_idx]))
+                if parsed:
+                    _append_line(summary_path, "- Vulnerabilities:")
+                    for item in parsed:
+                        _append_line(summary_path, f"  - {_format_list_item(item)}")
+
+            rec_idx = col_index.get("recommended_ref")
+            if rec_idx is not None and row[rec_idx]:
+                _append_line(summary_path, f"- Recommended ref: {_format_table_cell(row[rec_idx])}")
+
+            msg_idx = col_index.get("finding_message")
+            if msg_idx is not None and row[msg_idx]:
+                _append_line(summary_path, f"- Details: {_format_table_cell(row[msg_idx])}")
+            _append_line(summary_path)
+            row_counter += 1
+    _append_line(summary_path, "</details>")
+    return True
 
 
 def _write_policy_check_lists(summary_path: Path, policy_check_ids: list[str]) -> None:
@@ -299,7 +454,11 @@ def _write_existing_policy_failure_diagnostics(
         if cols and rows:
             _append_line(summary_path)
             _append_line(summary_path, f"#### Results")
-            if _write_markdown_table(summary_path, cols, rows):
+            if policy_name == "check-github-actions":
+                rendered = _write_compact_gha_vuln_diagnostics(summary_path, cols, rows)
+            else:
+                rendered = _write_markdown_table(summary_path, cols, rows)
+            if rendered:
                 has_details = True
 
     if not has_details:
