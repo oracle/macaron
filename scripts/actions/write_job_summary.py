@@ -7,10 +7,12 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sqlite3
 from pathlib import Path
+from urllib.parse import urlsplit
 
 CHECK_RESULT_DEFAULT_COLUMNS = ["id", "check_id", "passed", "component_id"]
 
@@ -184,9 +186,45 @@ def _write_markdown_table(summary_path: Path, columns: list[str], rows: list[tup
     _append_line(summary_path, f"| {' | '.join(columns)} |")
     _append_line(summary_path, f"|{'|'.join(['---'] * len(columns))}|")
     for row in rows:
-        values = [f"`{value}`" for value in row]
+        values = [_format_table_cell(value) for value in row]
         _append_line(summary_path, f"| {' | '.join(values)} |")
     return True
+
+
+def _format_table_cell(value: object) -> str:
+    text = str(value)
+    parsed_list = _parse_list_cell(text)
+    if parsed_list is not None:
+        items = [_format_list_item(item) for item in parsed_list]
+        return "<br>".join(f"- {item}" for item in items) if items else "`[]`"
+
+    if text.startswith(("http://", "https://")):
+        parsed = urlsplit(text)
+        segments = [part for part in parsed.path.split("/") if part]
+        label = segments[-1] if segments else parsed.netloc
+        return f"[`{label}`]({text})"
+    return f"`{text}`"
+
+
+def _parse_list_cell(text: str) -> list[object] | None:
+    stripped = text.strip()
+    if not (stripped.startswith("[") and stripped.endswith("]")):
+        return None
+    try:
+        loaded = json.loads(stripped)
+    except json.JSONDecodeError:
+        return None
+    return loaded if isinstance(loaded, list) else None
+
+
+def _format_list_item(value: object) -> str:
+    text = str(value)
+    if text.startswith(("http://", "https://")):
+        parsed = urlsplit(text)
+        segments = [part for part in parsed.path.split("/") if part]
+        label = segments[-1] if segments else parsed.netloc
+        return f"[`{label}`]({text})"
+    return f"`{text}`"
 
 
 def _write_policy_check_lists(summary_path: Path, policy_check_ids: list[str]) -> None:
