@@ -32,7 +32,7 @@
           'priority': 20,
         }),
       ]),
-      'workflow_name': '/home/behnaz/research/github/macaron/tests/code_analyzer/gha_security_analysis/resources/workflow_files/injection_pattern_1.yaml',
+      'workflow_name': 'tests/code_analyzer/gha_security_analysis/resources/workflow_files/injection_pattern_1.yaml',
     }),
   ])
 # ---

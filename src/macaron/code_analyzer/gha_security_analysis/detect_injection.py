@@ -149,7 +149,10 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
 
     if findings:
         findings_sorted = sorted(findings, key=lambda finding: (-finding["priority"], finding["issue"]))
-        return {"workflow_name": workflow_node.context.ref.source_filepath, "issues": findings_sorted}
+        return {
+            "workflow_name": os.path.relpath(workflow_node.context.ref.source_filepath, os.getcwd()),
+            "issues": findings_sorted,
+        }
 
     return None
 

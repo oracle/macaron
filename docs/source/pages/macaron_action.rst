@@ -24,16 +24,18 @@ When you use this action, you can reference it directly in your workflow. For a 
             repo_path: 'https://github.com/example/project'
             policy_file: check-github-actions
             policy_purl: 'pkg:github.com/example/project'
-            output_dir: 'macaron-output'
+            reports_retention_days: 90
 
-If you upload the results like in this `workflow <https://github.com/oracle/macaron/blob/main/.github/workflows/macaron-analysis.yaml>`_ check this :ref:`documentation <detect-vuln-gh-actions-results>` to see how to read and understand them.
+By default, the action posts a human-friendly results summary to the GitHub Actions run page (job summary). If you upload the results like in this `workflow <https://github.com/oracle/macaron/blob/main/.github/workflows/macaron-analysis.yaml>`_, check this :ref:`documentation <detect-vuln-gh-actions-results>` to see how to read and understand them.
 
 Example: policy verification only
 ----------------------------------
 
 To run only the policy verification step (when you already have an output
-database), call the action with ``policy_file`` and set ``output_dir`` to the
-directory containing ``macaron.db``:
+database), call the action with ``policy_file``. If the previous analysis step
+used the default output path, you can omit ``output_dir`` here. If you set a
+custom ``output_dir`` in the previous step, use the same value here so policy
+verification reads the matching ``macaron.db``.
 
 .. code-block:: yaml
 
@@ -41,7 +43,6 @@ directory containing ``macaron.db``:
     uses: oracle/macaron@fda4dda04aa7228fcaba162804891806cf5a1375 # v0.22.0
     with:
       policy_file: policy.dl
-      output_dir: macaron-output
 
 Inputs
 ------
@@ -101,6 +102,18 @@ options. Key inputs are listed below (see ``action.yaml`` for the full list):
    * - ``output_dir``
      - Directory where Macaron writes results (database, reports, artifacts).
      - ``output``
+   * - ``upload_reports``
+     - When ``true``, upload generated Macaron reports as a workflow artifact.
+     - ``true``
+   * - ``reports_artifact_name``
+     - Name of the uploaded reports artifact.
+     - ``macaron-reports``
+   * - ``reports_retention_days``
+     - Retention period in days for uploaded reports artifacts.
+     - ``90``
+   * - ``write_job_summary``
+     - When ``true``, write a human-friendly summary to the workflow run page.
+     - ``true``
    * - ``upload_attestation``
      - When ``true``, the action will attempt to upload a generated
        verification attestation (VSA) after policy verification. The attestation will be available
@@ -114,8 +127,9 @@ options. Key inputs are listed below (see ``action.yaml`` for the full list):
 Outputs
 -------
 
-The composite action exposes the following outputs (set by the
-``run_macaron_policy_verification.sh`` script when applicable):
+The composite action exposes the following outputs (set by the action steps,
+primarily ``Collect report paths``, with some values populated only when
+analysis/policy verification generated them):
 
 .. list-table::
    :header-rows: 1
@@ -123,6 +137,12 @@ The composite action exposes the following outputs (set by the
 
    * - Output
      - Description
+   * - ``html_report_path``
+     - Path to the generated HTML analysis report (when available).
+   * - ``report_dir``
+     - Directory containing generated HTML/JSON reports.
+   * - ``db_path``
+     - Path to the generated Macaron SQLite database (typically ``<output_dir>/macaron.db``).
    * - ``policy_report``
      - Path to the generated policy report JSON file produced by
        ``macaron verify-policy``. This file contains the policy evaluation
@@ -133,6 +153,8 @@ The composite action exposes the following outputs (set by the
        during verification, the action emits the string ``"VSA Not Generated."``
        instead of a path. The attestation will be available
        under the ``Actions/management`` tab.
+   * - ``vsa_generated``
+     - ``true`` when a VSA was generated; otherwise ``false``.
 
 Default Policies
 ----------------
@@ -172,7 +194,7 @@ How the action works
    which assembles the ``macaron analyze`` command from the inputs and runs
    it. Results are written into ``output_dir``.
 
-3. ``Run Macaron Policy Verification``: if a policy file or PURL is supplied,
+3. ``Run Macaron Policy Verification``: if ``policy_file`` is supplied,
    the corresponding script runs ``macaron verify-policy`` against the
-   analysis database and writes ``policy_report`` and ``vsa_report`` to
-   ``$GITHUB_OUTPUT`` when produced.
+   analysis database (using ``policy_purl`` when provided) and writes
+   policy-related outputs when produced.
