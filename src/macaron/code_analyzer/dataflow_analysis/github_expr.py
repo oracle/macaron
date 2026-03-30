@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Parser for GitHub Actions expression language."""
@@ -8,6 +8,7 @@ from typing import cast
 from lark import Lark, Token, Tree
 
 from macaron.code_analyzer.dataflow_analysis import facts
+from macaron.errors import CallGraphError
 
 # Parser for GitHub Actions expression language grammar.
 github_expr_parser = Lark(
@@ -67,7 +68,7 @@ github_expr_parser = Lark(
     function_call: identifier "(" _expr ("," _expr)* ")"
 
     %import common.SIGNED_NUMBER
-    %import common.WS
+    %import unicode.WS
     %import common.LETTER
     %import common.DIGIT
     %import common._STRING_INNER
@@ -111,8 +112,10 @@ def extract_value_from_expr_string(s: str, var_scope: facts.Scope | None) -> fac
         values.append(facts.StringLiteral(cur_str))
         cur_expr_end = s.find("}}", cur_expr_begin)
         cur_expr = s[cur_expr_begin + 3 : cur_expr_end]
-        parse_tree = github_expr_parser.parse(cur_expr)
-
+        try:
+            parse_tree = github_expr_parser.parse(cur_expr)
+        except Exception as e:
+            raise CallGraphError("Failed to parse github expression '" + cur_expr + "' in string '" + s + "'") from e
         node = parse_tree.children[0]
 
         var_str = extract_expr_variable_name(node)

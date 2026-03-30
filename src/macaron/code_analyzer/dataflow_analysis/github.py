@@ -363,12 +363,16 @@ class GitHubActionsWorkflowNode(core.ControlFlowGraphNode):
                     for need in needs:
                         actual_need = GitHubActionsWorkflowNode._find_job_id_case_insensitive(jobs, need)
                         if actual_need is None:
-                            raise CallGraphError("needs refers to invalid job")
+                            raise CallGraphError(
+                                "needs refers to invalid job '" + need + "', jobs are " + str(list(jobs.keys()))
+                            )
                         edges.append(actual_need)
                 elif isinstance(needs, str):
                     actual_need = GitHubActionsWorkflowNode._find_job_id_case_insensitive(jobs, needs)
                     if actual_need is None:
-                        raise CallGraphError("needs refers to invalid job")
+                        raise CallGraphError(
+                            "needs refers to invalid job '" + needs + "', jobs are " + str(list(jobs.keys()))
+                        )
                     edges.append(actual_need)
 
             dependency_graph[job_id] = edges

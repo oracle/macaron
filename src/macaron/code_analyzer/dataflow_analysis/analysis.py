@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Entry points to perform and use the dataflow analysis."""
@@ -30,19 +30,22 @@ def analyse_github_workflow_file(workflow_path: str, repo_path: str | None, dump
     core.Node
         Graph representation of workflow and analysis results.
     """
-    workflow = actionparser.parse(workflow_path)
+    try:
+        workflow = actionparser.parse(workflow_path)
 
-    analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
+        analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
 
-    core.reset_debug_sequence_number()
-    raw_workflow_node = github.RawGitHubActionsWorkflowNode.create(workflow, analysis_context, workflow_path)
-    core.increment_debug_sequence_number()
+        core.reset_debug_sequence_number()
+        raw_workflow_node = github.RawGitHubActionsWorkflowNode.create(workflow, analysis_context, workflow_path)
+        core.increment_debug_sequence_number()
 
-    raw_workflow_node.analyse()
+        raw_workflow_node.analyse()
 
-    if dump_debug:
-        with open("analysis." + workflow_path.replace("/", "_") + ".dot", "w", encoding="utf-8") as f:
-            printing.print_as_dot_graph(raw_workflow_node, f, include_properties=True, include_states=True)
+        if dump_debug:
+            with open("analysis." + workflow_path.replace("/", "_") + ".dot", "w", encoding="utf-8") as f:
+                printing.print_as_dot_graph(raw_workflow_node, f, include_properties=True, include_states=True)
+    except Exception as e:
+        raise CallGraphError("Failed to analyze github workflow '" + workflow_path + "'") from e
 
     return raw_workflow_node
 
@@ -68,17 +71,20 @@ def analyse_github_workflow(
     core.Node
         Graph representation of workflow and analysis results.
     """
-    analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
+    try:
+        analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
 
-    core.reset_debug_sequence_number()
-    raw_workflow_node = github.RawGitHubActionsWorkflowNode.create(workflow, analysis_context, workflow_source_path)
-    core.increment_debug_sequence_number()
+        core.reset_debug_sequence_number()
+        raw_workflow_node = github.RawGitHubActionsWorkflowNode.create(workflow, analysis_context, workflow_source_path)
+        core.increment_debug_sequence_number()
 
-    raw_workflow_node.analyse()
+        raw_workflow_node.analyse()
 
-    if dump_debug:
-        with open("analysis." + workflow_source_path.replace("/", "_") + ".dot", "w", encoding="utf-8") as f:
-            printing.print_as_dot_graph(raw_workflow_node, f, include_properties=True, include_states=True)
+        if dump_debug:
+            with open("analysis." + workflow_source_path.replace("/", "_") + ".dot", "w", encoding="utf-8") as f:
+                printing.print_as_dot_graph(raw_workflow_node, f, include_properties=True, include_states=True)
+    except Exception as e:
+        raise CallGraphError("Failed to analyze github workflow '" + workflow_source_path + "'") from e
 
     return raw_workflow_node
 
@@ -104,19 +110,24 @@ def analyse_bash_script(
     core.Node
         Graph representation of Bash script and analysis results.
     """
-    analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
-    bash_context = core.OwningContextRef(bash.BashScriptContext.create_in_isolation(analysis_context, source_path))
-    core.reset_debug_sequence_number()
-    bash_node = bash.RawBashScriptNode(facts.StringLiteral(bash_content), bash_context)
-    core.increment_debug_sequence_number()
+    try:
+        analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
+        bash_context = core.OwningContextRef(bash.BashScriptContext.create_in_isolation(analysis_context, source_path))
+        core.reset_debug_sequence_number()
+        bash_node = bash.RawBashScriptNode(facts.StringLiteral(bash_content), bash_context)
+        core.increment_debug_sequence_number()
 
-    bash_node.analyse()
+        bash_node.analyse()
 
-    if dump_debug:
-        with open(
-            "analysis." + source_path.replace("/", "_") + "." + str(hash(bash_content)) + ".dot", "w", encoding="utf-8"
-        ) as f:
-            printing.print_as_dot_graph(bash_node, f, include_properties=True, include_states=True)
+        if dump_debug:
+            with open(
+                "analysis." + source_path.replace("/", "_") + "." + str(hash(bash_content)) + ".dot",
+                "w",
+                encoding="utf-8",
+            ) as f:
+                printing.print_as_dot_graph(bash_node, f, include_properties=True, include_states=True)
+    except Exception as e:
+        raise CallGraphError("Failed to analyze bash script '" + source_path + "'") from e
 
     return bash_node
 

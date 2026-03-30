@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module analyzes GitHub Actions CI."""
@@ -8,13 +8,14 @@ from __future__ import annotations
 import glob
 import logging
 import os
+import traceback
 from datetime import datetime, timedelta, timezone
 
 from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow_file
 from macaron.code_analyzer.dataflow_analysis.core import Node, NodeForest
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
-from macaron.errors import GitHubActionsValueError, ParseError
+from macaron.errors import CallGraphError, GitHubActionsValueError, ParseError
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient, get_default_gh_client
 from macaron.slsa_analyzer.git_service.base_git_service import BaseGitService
@@ -593,8 +594,9 @@ class GitHubActions(BaseCIService):
             try:
                 workflow_node = analyse_github_workflow_file(workflow_path, repo_path)
 
-            except ParseError:
+            except (ParseError, CallGraphError):
                 logger.debug("Skip adding workflow at %s to the callgraph.", workflow_path)
+                logger.debug("Reason: %s", traceback.format_exc())
                 continue
             nodes.append(workflow_node)
         return NodeForest(nodes)
