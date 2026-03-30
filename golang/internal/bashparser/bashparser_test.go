@@ -32,3 +32,33 @@ func Test_parse_valid_bash_script(t *testing.T) {
 		t.Errorf("Cannot unmarshal the returned JSON content from parsing %s: %v.", json_content, err)
 	}
 }
+
+func Test_parse_raw_with_gha_expr_map(t *testing.T) {
+	input := `echo "${{ github.head_ref }}" && echo "${{ needs.prepare.outputs.fullVersion }}"`
+	json_content, parse_err := ParseRawWithGitHubExprMap(input)
+	if parse_err != nil || json_content == "" {
+		t.Fatalf("expected successful parse with mapping, got error: %v", parse_err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(json_content), &result); err != nil {
+		t.Fatalf("cannot unmarshal parser output: %v", err)
+	}
+
+	ast, astOK := result["ast"]
+	if !astOK || ast == nil {
+		t.Fatalf("expected non-empty ast field")
+	}
+
+	mapRaw, mapOK := result["gha_expr_map"]
+	if !mapOK {
+		t.Fatalf("expected gha_expr_map field")
+	}
+	ghaMap, ok := mapRaw.(map[string]any)
+	if !ok {
+		t.Fatalf("expected gha_expr_map to be an object")
+	}
+	if len(ghaMap) != 2 {
+		t.Fatalf("expected 2 mapped expressions, got %d", len(ghaMap))
+	}
+}

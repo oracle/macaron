@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module is a Python wrapper for the compiled bashparser binary.
@@ -157,6 +157,74 @@ def parse_raw(bash_content: str, macaron_path: str | None = None) -> File:
             return cast(File, json.loads(result.stdout.decode("utf-8")))
 
         raise ParseError(f"Bash script parser failed: {result.stderr.decode('utf-8')}")
+
+    except json.JSONDecodeError as error:
+        raise ParseError("Error while loading the parsed bash script.") from error
+
+
+def parse_raw_with_gha_mapping(bash_content: str, macaron_path: str | None = None) -> tuple[File, dict[str, str]]:
+    """Parse bash content and return raw AST plus GitHub expression mapping.
+
+    Parameters
+    ----------
+    bash_content : str
+        Bash script content.
+    macaron_path : str | None
+        Macaron's root path (optional).
+
+    Returns
+    -------
+    tuple[bashparser_model.File, dict[str, str]]
+        A tuple of:
+        - The parsed raw bash AST.
+        - Mapping from parser placeholder variable names to original GitHub expression bodies.
+
+    Raises
+    ------
+    ParseError
+        When parsing fails with errors or output cannot be decoded.
+    """
+    if not macaron_path:
+        macaron_path = global_config.macaron_path
+    cmd = [
+        os.path.join(macaron_path, "bin", "bashparser"),
+        "-input",
+        bash_content,
+        "-raw-gha-map",
+    ]
+
+    try:
+        result = subprocess.run(  # nosec B603
+            cmd,
+            capture_output=True,
+            check=True,
+            cwd=macaron_path,
+            timeout=defaults.getint("bashparser", "timeout", fallback=30),
+        )
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+    ) as error:
+        raise ParseError("Error while parsing bash script.") from error
+
+    try:
+        if result.returncode != 0:
+            raise ParseError(f"Bash script parser failed: {result.stderr.decode('utf-8')}")
+
+        payload = cast(dict[str, object], json.loads(result.stdout.decode("utf-8")))
+        ast_data = payload.get("ast")
+        gha_map = payload.get("gha_expr_map")
+        if not isinstance(ast_data, dict):
+            raise ParseError("Error while loading the parsed bash script.")
+        if not isinstance(gha_map, dict):
+            raise ParseError("Error while loading the parsed bash script.")
+        gha_map_clean: dict[str, str] = {}
+        for key, value in gha_map.items():
+            if isinstance(key, str) and isinstance(value, str):
+                gha_map_clean[key] = value
+
+        return cast(File, ast_data), gha_map_clean
 
     except json.JSONDecodeError as error:
         raise ParseError("Error while loading the parsed bash script.") from error

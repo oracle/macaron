@@ -84,6 +84,33 @@ def test_build_workflow_issue_recommendation_formats_potential_injection_details
     assert "Details: Job: retag Step: Retag Command: `git push origin/${github.head_ref}`" in finding_message
 
 
+def test_build_workflow_issue_recommendation_includes_expanded_refs() -> None:
+    """Render expanded GitHub refs in potential-injection details when present."""
+    issue = (
+        "potential-injection: "
+        '{"step_line": 62, "script_line": 6, "job": "retag", "step": "Retag", '
+        '"command": "git push origin/${github.head_ref}", "expanded_refs": ["github.head_ref"]}'
+    )
+
+    _, _, finding_message = build_workflow_issue_recommendation(issue)
+
+    assert "Expanded refs: `github.head_ref`" in finding_message
+
+
+def test_build_workflow_issue_recommendation_includes_refs_from_compound_expression() -> None:
+    """Render extracted github refs when original expression contains operators."""
+    issue = (
+        "potential-injection: "
+        '{"step_line": 62, "script_line": 6, "job": "retag", "step": "Retag", '
+        '"command": "git push origin/${github.head_ref}", '
+        '"expanded_refs": ["github.head_ref", "github.ref_name"]}'
+    )
+
+    _, _, finding_message = build_workflow_issue_recommendation(issue)
+
+    assert "Expanded refs: `github.head_ref, github.ref_name`" in finding_message
+
+
 def test_build_workflow_issue_recommendation_formats_remote_script_exec_details() -> None:
     """Format concise user-facing details for remote-script-exec findings."""
     issue = (

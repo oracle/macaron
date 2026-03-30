@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -13,7 +13,7 @@ import pytest
 
 from macaron import MACARON_PATH
 from macaron.errors import ParseError
-from macaron.parsers.bashparser import parse, parse_file
+from macaron.parsers.bashparser import parse, parse_file, parse_raw_with_gha_mapping
 
 
 @pytest.mark.parametrize(
@@ -46,3 +46,13 @@ def test_bashparser_parse_invalid() -> None:
     # Parse the bash script file.
     with pytest.raises(ParseError):
         parse_file(file_path=file_path, macaron_path=MACARON_PATH)
+
+
+def test_bashparser_parse_raw_with_gha_mapping() -> None:
+    """Test parsing raw bash script with GitHub expression mapping."""
+    bash_content = 'echo "${{ github.head_ref }}"\n'
+    parsed_ast, gha_map = parse_raw_with_gha_mapping(bash_content, MACARON_PATH)
+
+    assert "Stmts" in parsed_ast
+    assert gha_map
+    assert "github.head_ref" in gha_map.values()

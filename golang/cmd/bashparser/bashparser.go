@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 package main
@@ -30,13 +30,18 @@ func main() {
 	input := flag.String("input", "", "The bash script content to be parsed. Input is prioritized over file option.")
 	out_path := flag.String("output", "", "The output file path to store the JSON content.")
 	raw := flag.Bool("raw", false, "Return raw parse-tree")
+	rawGHAMap := flag.Bool("raw-gha-map", false, "Return raw parse-tree with GitHub expression mapping")
 	flag.Parse()
 
 	var json_content string
 	var parse_err error
 	if len(*input) > 0 {
 		// Read the bash script from command line argument.
-		json_content, parse_err = bashparser.Parse(*input, *raw)
+		if *rawGHAMap {
+			json_content, parse_err = bashparser.ParseRawWithGitHubExprMap(*input)
+		} else {
+			json_content, parse_err = bashparser.Parse(*input, *raw)
+		}
 	} else if len(*file_path) <= 0 {
 		fmt.Fprintln(os.Stderr, "Missing bash script input or file path.")
 		flag.PrintDefaults()
@@ -48,7 +53,11 @@ func main() {
 			fmt.Fprintln(os.Stderr, read_err.Error())
 			os.Exit(1)
 		}
-		json_content, parse_err = bashparser.Parse(string(data), *raw)
+		if *rawGHAMap {
+			json_content, parse_err = bashparser.ParseRawWithGitHubExprMap(string(data))
+		} else {
+			json_content, parse_err = bashparser.Parse(string(data), *raw)
+		}
 	}
 
 	if parse_err != nil {

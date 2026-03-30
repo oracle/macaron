@@ -249,10 +249,14 @@ def _append_run_step_findings(
     findings: list[PrioritizedIssue], run_step_node: GitHubActionsRunStepNode, nodes: NodeForest
 ) -> None:
     """Append findings derived from a run step node."""
+    # Traversing a run-step subgraph can reach semantically identical command nodes through
+    # multiple CFG/AST paths (for example nested/compound command structures). Track emitted
+    # injection findings by stable metadata to avoid duplicate reports for the same command line.
+    seen_injection_keys: set[tuple[int | None, str, str, str]] = set()
     for node in core.traverse_bfs(run_step_node):
         # Command-level injection checks rely on parsed call argument parts from single-command nodes.
         if isinstance(node, bash.BashSingleCommandNode):
-            _append_injection_findings(findings, node, nodes)
+            _append_injection_findings(findings, node, nodes, seen_injection_keys)
             continue
 
         # Remote script execution risk is structural: downloader output piped into an executor.
@@ -346,7 +350,10 @@ def _is_executor_invocation(words: list[str]) -> bool:
 
 
 def _append_injection_findings(
-    findings: list[PrioritizedIssue], bash_node: bash.BashSingleCommandNode, nodes: NodeForest
+    findings: list[PrioritizedIssue],
+    bash_node: bash.BashSingleCommandNode,
+    nodes: NodeForest,
+    seen_injection_keys: set[tuple[int | None, str, str, str]] | None = None,
 ) -> None:
     """Append potential injection findings discovered from parsed bash command nodes."""
     if not is_call_expr(bash_node.definition.get("Cmd")):
@@ -354,34 +361,183 @@ def _append_injection_findings(
 
     call_exp = cast(CallExpr, bash_node.definition["Cmd"])
     for arg in call_exp.get("Args", []):
-        expansion = False
-        pr_head_ref = False
-        for part in arg.get("Parts", []):
-            if is_param_exp(part) and part.get("Param", {}).get("Value") == "github":
-                expansion = True
-            if is_lit(part) and part.get("Value") in {
-                ".event.pull_request.head.ref",
-                ".head_ref",
-                ".event.issue.body",
-                ".event.comment.body",
-            }:
-                pr_head_ref = True
-        if expansion and pr_head_ref:
+        parts = arg.get("Parts")
+        step_node = get_containing_github_step(bash_node, nodes.parents)
+        script_line = _extract_script_line_from_parts(parts)
+        expanded_refs = _extract_expanded_github_refs(bash_node, step_node, script_line, parts)
+        if _arg_has_attacker_controlled_github_ref(parts) or _has_attacker_controlled_expanded_ref(expanded_refs):
             job_node = get_containing_github_job(bash_node, nodes.parents)
-            step_node = get_containing_github_step(bash_node, nodes.parents)
-            script_line = _extract_script_line_from_parts(arg.get("Parts"))
             workflow_line = _map_script_line_to_workflow_line(step_node, script_line)
             if workflow_line is None:
                 workflow_line = _extract_run_step_line(step_node)
+            job_name = job_node.job_id if job_node else ""
+            step_name = _extract_step_name(step_node)
+            command_text = _extract_command_text(step_node, script_line)
+            dedupe_key = (workflow_line, job_name, step_name, command_text)
+            if seen_injection_keys is not None:
+                # Prevent duplicate findings when the same risky command is visited via
+                # different traversal paths in the run-step subgraph.
+                if dedupe_key in seen_injection_keys:
+                    continue
+                seen_injection_keys.add(dedupe_key)
             issue_payload = {
                 "step_line": workflow_line,
                 "script_line": script_line,
-                "job": job_node.job_id if job_node else "",
-                "step": _extract_step_name(step_node),
-                "command": _extract_command_text(step_node, script_line),
+                "job": job_name,
+                "step": step_name,
+                "command": command_text,
+                "expanded_refs": expanded_refs,
                 "parts": arg.get("Parts"),
             }
             _add_finding(findings, f"potential-injection: {json.dumps(issue_payload)}", PRIORITY_CRITICAL)
+
+
+def _arg_has_attacker_controlled_github_ref(parts: object) -> bool:
+    """Return whether argument parts contain attacker-controlled GitHub context expansion.
+
+    Parameters
+    ----------
+    parts : object
+        Parsed argument ``Parts`` payload from the Bash call expression.
+
+    Returns
+    -------
+    bool
+        ``True`` when an attacker-controlled GitHub context reference is detected.
+    """
+    if not isinstance(parts, list):
+        return False
+
+    expansion = False
+    pr_head_ref = False
+    for part in parts:
+        if is_param_exp(part) and part.get("Param", {}).get("Value") == "github":
+            expansion = True
+        if is_lit(part) and part.get("Value") in {
+            ".event.pull_request.head.ref",
+            ".head_ref",
+            ".event.issue.body",
+            ".event.comment.body",
+        }:
+            pr_head_ref = True
+    if expansion and pr_head_ref:
+        return True
+    return False
+
+
+def _has_attacker_controlled_expanded_ref(refs: list[str]) -> bool:
+    """Return whether extracted refs include attacker-controlled GitHub context values.
+
+    Parameters
+    ----------
+    refs : list[str]
+        Extracted GitHub expression references.
+
+    Returns
+    -------
+    bool
+        ``True`` if a known attacker-controlled ref is present.
+    """
+    attacker_controlled = {
+        "github.event.pull_request.head.ref",
+        "github.head_ref",
+        "github.event.issue.body",
+        "github.event.comment.body",
+    }
+    return any(ref in attacker_controlled for ref in refs)
+
+
+def _extract_expanded_github_refs(
+    bash_node: bash.BashSingleCommandNode,
+    step_node: GitHubActionsRunStepNode | None,
+    script_line: int | None,
+    parts: object,
+) -> list[str]:
+    """Extract normalized expanded GitHub refs from parser mapping or fallback line scanning.
+
+    Parameters
+    ----------
+    bash_node : bash.BashSingleCommandNode
+        The Bash command node used to resolve parser placeholder mappings.
+    step_node : GitHubActionsRunStepNode | None
+        The containing run step node, used for fallback extraction from raw run script text.
+    script_line : int | None
+        1-based line number within the inlined run script for line-targeted fallback extraction.
+    parts : object
+        Parsed argument ``Parts`` payload from the Bash call expression.
+
+    Returns
+    -------
+    list[str]
+        Ordered list of normalized GitHub expression references.
+    """
+    refs: list[str] = []
+    placeholder_map = dict(bash_node.context.ref.gha_expr_map_items)
+    if isinstance(parts, list):
+        for part in parts:
+            if not is_param_exp(part):
+                continue
+            placeholder = part.get("Param", {}).get("Value")
+            if isinstance(placeholder, str):
+                mapped = placeholder_map.get(placeholder)
+                if mapped:
+                    refs.extend(_extract_github_refs_from_expression(mapped))
+    if refs:
+        return _deduplicate_preserve_order(refs)
+
+    if step_node is None:
+        return []
+    run_script = step_node.definition["run"]
+    script_lines = run_script.splitlines()
+    if script_line is not None and 1 <= script_line <= len(script_lines):
+        line_text = script_lines[script_line - 1]
+    else:
+        line_text = run_script
+
+    matches = re.findall(r"\$\{\{\s*(.*?)\s*\}\}", line_text)
+    normalized: list[str] = []
+    for expr in matches:
+        normalized.extend(_extract_github_refs_from_expression(expr))
+    return _deduplicate_preserve_order(normalized)
+
+
+def _extract_github_refs_from_expression(expression: str) -> list[str]:
+    """Extract github-context reference paths from a GitHub Actions expression body.
+
+    Parameters
+    ----------
+    expression : str
+        Expression text inside ``${{ ... }}``.
+
+    Returns
+    -------
+    list[str]
+        Matched GitHub reference paths (for example ``github.head_ref``).
+    """
+    return re.findall(r"github(?:\.[A-Za-z0-9_-]+)+", expression)
+
+
+def _deduplicate_preserve_order(values: list[str]) -> list[str]:
+    """Deduplicate string values while preserving insertion order.
+
+    Parameters
+    ----------
+    values : list[str]
+        Input values that may contain duplicates.
+
+    Returns
+    -------
+    list[str]
+        Values in original order with duplicates removed.
+    """
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result
 
 
 def _extract_step_name(step_node: GitHubActionsRunStepNode | None) -> str:
@@ -650,7 +806,13 @@ def _format_issue_details(finding_type: str, issue: str) -> str:
     step_name = str(payload.get("step") or "unknown")
     command_text = str(payload.get("command") or "unknown")
     command_text = command_text.replace("`", "'")
-    return f"Job: {job_name} Step: {step_name} Command: `{command_text}`"
+    refs = payload.get("expanded_refs")
+    refs_display = ""
+    if isinstance(refs, list):
+        refs_clean = [str(ref) for ref in refs if str(ref)]
+        if refs_clean:
+            refs_display = f" Expanded refs: `{', '.join(refs_clean)}`"
+    return f"Job: {job_name} Step: {step_name} Command: `{command_text}`{refs_display}"
 
 
 def _parse_issue_payload(issue: str) -> object | None:

@@ -75,6 +75,8 @@ class BashScriptContext(core.Context):
     stdout_loc: facts.LocationSpecifier
     #: Filepath for Bash script file.
     source_filepath: str
+    #: Mapping of parser placeholder vars to original GitHub expression bodies.
+    gha_expr_map_items: tuple[tuple[str, str], ...] = ()
 
     @staticmethod
     def create_from_run_step(
@@ -106,6 +108,7 @@ class BashScriptContext(core.Context):
             stdout_scope=context.ref.job_context.ref.workflow_context.ref.console.get_non_owned(),
             stdout_loc=facts.Console(),
             source_filepath=source_filepath,
+            gha_expr_map_items=(),
         )
 
     @staticmethod
@@ -136,6 +139,7 @@ class BashScriptContext(core.Context):
             stdout_scope=context.ref.stdout_scope.get_non_owned(),
             stdout_loc=facts.Console(),
             source_filepath=source_filepath,
+            gha_expr_map_items=(),
         )
 
     @staticmethod
@@ -164,6 +168,7 @@ class BashScriptContext(core.Context):
             stdout_scope=core.OwningContextRef(facts.Scope("stdout")),
             stdout_loc=facts.Console(),
             source_filepath=source_filepath,
+            gha_expr_map_items=(),
         )
 
     def with_stdin(
@@ -180,6 +185,7 @@ class BashScriptContext(core.Context):
             self.stdout_scope,
             self.stdout_loc,
             self.source_filepath,
+            self.gha_expr_map_items,
         )
 
     def with_stdout(
@@ -196,6 +202,33 @@ class BashScriptContext(core.Context):
             stdout_scope,
             stdout_loc,
             self.source_filepath,
+            self.gha_expr_map_items,
+        )
+
+    def with_gha_expr_map(self, gha_expr_map: dict[str, str]) -> BashScriptContext:
+        """Return a modified bash script context with GitHub-expression placeholder mappings.
+
+        Parameters
+        ----------
+        gha_expr_map : dict[str, str]
+            Mapping from parser placeholder variable names to original GitHub expression bodies.
+
+        Returns
+        -------
+        BashScriptContext
+            A context copy with updated GitHub-expression mapping metadata.
+        """
+        return BashScriptContext(
+            self.outer_context,
+            self.filesystem,
+            self.env,
+            self.func_decls,
+            self.stdin_scope,
+            self.stdin_loc,
+            self.stdout_scope,
+            self.stdout_loc,
+            self.source_filepath,
+            tuple(sorted(gha_expr_map.items())),
         )
 
     def get_containing_github_context(self) -> github.GitHubActionsStepContext | None:
@@ -261,10 +294,16 @@ class RawBashScriptNode(core.InterpretationNode):
 
             def build_bash_script() -> core.Node:
                 try:
-                    parsed_bash = bashparser.parse_raw(script_str, MACARON_PATH)
-                    return BashScriptNode.create(parsed_bash, self.context.get_non_owned())
+                    parsed_bash, gha_expr_map = bashparser.parse_raw_with_gha_mapping(script_str, MACARON_PATH)
+                    context_with_map = self.context.ref.with_gha_expr_map(gha_expr_map)
+                    return BashScriptNode.create(parsed_bash, core.NonOwningContextRef(context_with_map))
                 except ParseError:
-                    return core.NoOpStatementNode()
+                    try:
+                        # Backward-compatible fallback when parser mapping mode is unavailable.
+                        parsed_bash = bashparser.parse_raw(script_str, MACARON_PATH)
+                        return BashScriptNode.create(parsed_bash, self.context.get_non_owned())
+                    except ParseError:
+                        return core.NoOpStatementNode()
 
             return {"default": build_bash_script}
 
