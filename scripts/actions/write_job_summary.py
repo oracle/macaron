@@ -325,7 +325,7 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
     preferred_groups = ["workflow_security_issue", "third_party_action_risk"]
     groups_in_rows: list[str] = []
     if group_idx is not None:
-        discovered_groups = [str(row[group_idx]) for row in display_rows]
+        discovered_groups = [str(row[group_idx]) for row in sorted_rows]
         groups_in_rows.extend([group for group in preferred_groups if group in discovered_groups])
         groups_in_rows.extend([group for group in discovered_groups if group not in groups_in_rows])
     else:
@@ -336,7 +336,7 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
             group_rows = display_rows
             title = "Findings"
         else:
-            group_rows = [row for row in display_rows if str(row[group_idx]) == group]
+            group_rows = [row for row in sorted_rows if str(row[group_idx]) == group][:10]
             if not group_rows:
                 continue
             title = _gha_group_label(group)

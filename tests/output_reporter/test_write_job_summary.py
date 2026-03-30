@@ -57,3 +57,48 @@ def test_workflow_security_table_includes_summary_column(tmp_path: Path) -> None
     assert rendered is True
     assert "| priority | type | summary | workflow |" in output
     assert "Workflow downloads and executes remote scripts inline." in output
+
+
+def test_compact_summary_keeps_all_groups_in_detailed_section(tmp_path: Path) -> None:
+    """Render detailed section with both finding groups even when top priorities are workflow-only."""
+    module = _load_write_job_summary_module()
+    summary_path = Path(tmp_path, "summary.md")
+    columns = [
+        "finding_group",
+        "finding_priority",
+        "finding_type",
+        "action_name",
+        "action_ref",
+        "vulnerable_workflow",
+        "finding_message",
+    ]
+    rows = [
+        (
+            "workflow_security_issue",
+            100,
+            "potential-injection",
+            "",
+            "",
+            "https://github.com/org/repo/.github/workflows/ci.yml",
+            "Summary: Injection risk. Details: ... Recommendation: ...",
+        ),
+        (
+            "third_party_action_risk",
+            20,
+            "unpinned-third-party-action",
+            "actions/checkout",
+            "v4",
+            "https://github.com/org/repo/.github/workflows/ci.yml",
+            "Summary: Unpinned action. Recommendation: ...",
+        ),
+    ]
+
+    rendered = module.write_compact_gha_vuln_diagnostics(summary_path, columns, rows)
+    output = summary_path.read_text(encoding="utf-8")
+
+    assert rendered is True
+    assert "#### Workflow security issues" in output
+    assert "#### Third-party action risks" in output
+    assert "**Workflow security issues**" in output
+    assert "**Third-party action risks**" in output
+    assert "`actions/checkout@v4`" in output

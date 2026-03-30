@@ -3,7 +3,7 @@
 
 """Detect security issues and injection risks in GitHub Actions workflows."""
 
-import ast
+import json
 import os
 import re
 from typing import TypedDict, cast
@@ -301,7 +301,7 @@ def _append_injection_findings(
                 "command": _extract_command_text(step_node, script_line),
                 "parts": arg.get("Parts"),
             }
-            _add_finding(findings, f"potential-injection: {issue_payload}", PRIORITY_CRITICAL)
+            _add_finding(findings, f"potential-injection: {json.dumps(issue_payload)}", PRIORITY_CRITICAL)
 
 
 def _extract_step_name(step_node: GitHubActionsRunStepNode | None) -> str:
@@ -581,9 +581,8 @@ def _parse_issue_payload(issue: str) -> object | None:
         return None
 
     try:
-        parsed: object = ast.literal_eval(payload)
-        return parsed
-    except (SyntaxError, ValueError):
+        return cast(object, json.loads(payload))
+    except json.JSONDecodeError:
         return None
 
 
@@ -651,7 +650,7 @@ def extract_workflow_issue_line(issue: str) -> int | None:
             if isinstance(line, int) and line > 0:
                 return line
 
-    match = re.search(r"'Line':\s*(\d+)", payload)
+    match = re.search(r"""["']Line["']:\s*(\d+)""", payload)
     if not match:
         return None
     line = int(match.group(1))

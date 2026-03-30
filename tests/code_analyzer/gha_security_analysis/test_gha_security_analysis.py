@@ -62,8 +62,8 @@ def test_extract_workflow_issue_line_from_structured_payload() -> None:
     """Extract workflow line from structured potential-injection payload."""
     issue = (
         "potential-injection: "
-        "{'step_line': 62, 'script_line': 6, 'job': 'retag', 'step': 'Retag', 'command': "
-        "'git push origin/${github.head_ref}', 'parts': []}"
+        '{"step_line": 62, "script_line": 6, "job": "retag", "step": "Retag", '
+        '"command": "git push origin/${github.head_ref}", "parts": []}'
     )
 
     assert extract_workflow_issue_line(issue) == 62
@@ -73,8 +73,8 @@ def test_build_workflow_issue_recommendation_formats_potential_injection_details
     """Format concise user-facing details for potential-injection findings."""
     issue = (
         "potential-injection: "
-        "{'step_line': 62, 'script_line': 6, 'job': 'retag', 'step': 'Retag', 'command': "
-        "'git push origin/${github.head_ref}', 'parts': []}"
+        '{"step_line": 62, "script_line": 6, "job": "retag", "step": "Retag", '
+        '"command": "git push origin/${github.head_ref}", "parts": []}'
     )
 
     finding_type, _, finding_message = build_workflow_issue_recommendation(issue)
