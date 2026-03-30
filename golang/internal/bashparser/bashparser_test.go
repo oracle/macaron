@@ -6,6 +6,7 @@ package bashparser
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -60,5 +61,22 @@ func Test_parse_raw_with_gha_expr_map(t *testing.T) {
 	}
 	if len(ghaMap) != 2 {
 		t.Fatalf("expected 2 mapped expressions, got %d", len(ghaMap))
+	}
+}
+
+func Test_preprocess_github_actions_expr_with_map_replaces_with_single_dollar_var(t *testing.T) {
+	input := `echo "${{ github.head_ref }}"`
+	processed, ghaMap, err := preprocessGitHubActionsExprWithMap(input)
+	if err != nil {
+		t.Fatalf("unexpected preprocess error: %v", err)
+	}
+	if strings.Contains(processed, "$$MACARON_GHA_") {
+		t.Fatalf("expected single-dollar placeholder, got %q", processed)
+	}
+	if !strings.Contains(processed, "$MACARON_GHA_0001") {
+		t.Fatalf("expected placeholder var in processed script, got %q", processed)
+	}
+	if ghaMap["MACARON_GHA_0001"] != "github.head_ref" {
+		t.Fatalf("unexpected gha mapping: %#v", ghaMap)
 	}
 }

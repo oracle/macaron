@@ -456,7 +456,7 @@ def _extract_expanded_github_refs(
     script_line: int | None,
     parts: object,
 ) -> list[str]:
-    """Extract normalized expanded GitHub refs from parser mapping or fallback line scanning.
+    """Extract normalized expanded GitHub refs from mapping with a line-text fallback.
 
     Parameters
     ----------
@@ -490,6 +490,9 @@ def _extract_expanded_github_refs(
 
     if step_node is None:
         return []
+    # Fallback: some complex shell constructs (for example command substitution in compound
+    # test/boolean commands) may not expose mapped placeholders on the current arg parts.
+    # In those cases, recover refs directly from the original run-script line text.
     run_script = step_node.definition["run"]
     script_lines = run_script.splitlines()
     if script_line is not None and 1 <= script_line <= len(script_lines):
@@ -498,10 +501,10 @@ def _extract_expanded_github_refs(
         line_text = run_script
 
     matches = re.findall(r"\$\{\{\s*(.*?)\s*\}\}", line_text)
-    normalized: list[str] = []
+    fallback_refs: list[str] = []
     for expr in matches:
-        normalized.extend(_extract_github_refs_from_expression(expr))
-    return _deduplicate_preserve_order(normalized)
+        fallback_refs.extend(_extract_github_refs_from_expression(expr))
+    return _deduplicate_preserve_order(fallback_refs)
 
 
 def _extract_github_refs_from_expression(expression: str) -> list[str]:

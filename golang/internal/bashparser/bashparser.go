@@ -62,7 +62,7 @@ func preprocessGitHubActionsExprWithMap(data string) (string, map[string]string,
 		key := fmt.Sprintf("MACARON_GHA_%04d", index)
 		expr := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(match, "${{"), "}}"))
 		ghaMap[key] = expr
-		return "$$" + key
+		return "$" + key
 	})
 
 	return processed, ghaMap, nil

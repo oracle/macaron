@@ -298,12 +298,7 @@ class RawBashScriptNode(core.InterpretationNode):
                     context_with_map = self.context.ref.with_gha_expr_map(gha_expr_map)
                     return BashScriptNode.create(parsed_bash, core.NonOwningContextRef(context_with_map))
                 except ParseError:
-                    try:
-                        # Backward-compatible fallback when parser mapping mode is unavailable.
-                        parsed_bash = bashparser.parse_raw(script_str, MACARON_PATH)
-                        return BashScriptNode.create(parsed_bash, self.context.get_non_owned())
-                    except ParseError:
-                        return core.NoOpStatementNode()
+                    return core.NoOpStatementNode()
 
             return {"default": build_bash_script}
 
