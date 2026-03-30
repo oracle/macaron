@@ -408,3 +408,44 @@ jobs:
           echo "Expected verify step to fail, but it did not."
           exit 1
         fi
+
+  test-detect-potential-injection:
+    name: How to detect vulnerable GitHub Actions
+    runs-on: ubuntu-latest
+    env:
+      MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
+      DOCKER_PULL: never
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: Download test Docker image artifact
+      if: ${{ inputs.docker_image_artifact_name != '' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.docker_image_artifact_name }}
+        path: /tmp
+    - name: Load test Docker image
+      if: ${{ inputs.docker_image_artifact_name != '' }}
+      run: docker load --input /tmp/macaron-test-image.tar
+
+    - name: Run Macaron (analyze github_actions_vulns for https://github.com/oracle/coherence-js-client)
+      id: verify_github_actions_vulns_repo_test
+      # This integration target is intentionally vulnerable; failure is expected.
+      continue-on-error: true
+      uses: ./
+      with:
+        repo_path: https://github.com/oracle/graalpython
+        digest: f5f7e67823a699213ab06c86440da94ead672467
+        policy_file: check-github-actions
+        policy_purl: pkg:github.com/oracle/graalpython@.*
+        output_dir: macaron_output/detect_vulnerable_github_actions
+        upload_reports: 'false'
+        reports_artifact_name: macaron-injection-actions-fail-diagnosis
+        write_job_summary: 'true'
+    - name: Assert expected failure (github_actions_vulns for repo test)
+      if: ${{ always() }}
+      run: |
+        # Explicitly assert failure so regressions are visible in CI results.
+        if [ "${{ steps.verify_github_actions_vulns_repo_test.outcome }}" != "failure" ]; then
+          echo "Expected verify step to fail, but it did not."
+          exit 1
+        fi

@@ -3,10 +3,13 @@
 
 """Detect security issues and injection risks in GitHub Actions workflows."""
 
+import ast
+import os
 import re
 from typing import TypedDict, cast
 
 from macaron.code_analyzer.dataflow_analysis import bash, core, facts
+from macaron.code_analyzer.dataflow_analysis.analysis import get_containing_github_job, get_containing_github_step
 from macaron.code_analyzer.dataflow_analysis.core import NodeForest, traverse_bfs
 from macaron.code_analyzer.dataflow_analysis.github import (
     GitHubActionsActionStepNode,
@@ -82,27 +85,27 @@ def detect_github_actions_security_issues(nodes: NodeForest) -> list[WorkflowFin
     for root in nodes.root_nodes:
         for callee in traverse_bfs(root):
             if isinstance(callee, GitHubActionsWorkflowNode):
-                if result := analyze_workflow(callee):
+                if result := analyze_workflow(callee, nodes=nodes):
                     findings.append(result)
     return findings
 
 
-def analyze_workflow(
-    workflow_node: GitHubActionsWorkflowNode,
-) -> WorkflowFinding | None:
+def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest) -> WorkflowFinding | None:
     """Analyze a GitHub Actions workflow for security issues.
 
     Parameters
     ----------
     workflow_node : GitHubActionsWorkflowNode
         The workflow node to analyze.
+    nodes : NodeForest
+        The full node forest used to resolve parent relationships while analyzing findings.
 
     Returns
     -------
-    dict[str, object] | None
+    WorkflowFinding | None
         A finding dictionary with:
         - ``workflow_name``: source filepath of the workflow.
-        - ``issues``: list of issue messages.
+        - ``issues``: list of issue messages with associated priorities.
         Returns ``None`` when no issues are detected.
 
     Notes
@@ -136,7 +139,7 @@ def analyze_workflow(
             continue
 
         if isinstance(node, bash.BashSingleCommandNode):
-            _append_injection_findings(findings, node)
+            _append_injection_findings(findings, node, nodes)
 
     if "pull_request_target" in on_keys and _has_privileged_trigger_risk_combo(findings):
         _add_finding(
@@ -263,8 +266,7 @@ def _append_run_step_findings(findings: list[PrioritizedIssue], run_step_node: G
 
 
 def _append_injection_findings(
-    findings: list[PrioritizedIssue],
-    bash_node: bash.BashSingleCommandNode,
+    findings: list[PrioritizedIssue], bash_node: bash.BashSingleCommandNode, nodes: NodeForest
 ) -> None:
     """Append potential injection findings discovered from parsed bash command nodes."""
     if not is_call_expr(bash_node.definition.get("Cmd")):
@@ -285,7 +287,213 @@ def _append_injection_findings(
             }:
                 pr_head_ref = True
         if expansion and pr_head_ref:
-            _add_finding(findings, f"potential-injection: {arg.get('Parts')}", PRIORITY_CRITICAL)
+            job_node = get_containing_github_job(bash_node, nodes.parents)
+            step_node = get_containing_github_step(bash_node, nodes.parents)
+            script_line = _extract_script_line_from_parts(arg.get("Parts"))
+            workflow_line = _map_script_line_to_workflow_line(step_node, script_line)
+            if workflow_line is None:
+                workflow_line = _extract_run_step_line(step_node)
+            issue_payload = {
+                "step_line": workflow_line,
+                "script_line": script_line,
+                "job": job_node.job_id if job_node else "",
+                "step": _extract_step_name(step_node),
+                "command": _extract_command_text(step_node, script_line),
+                "parts": arg.get("Parts"),
+            }
+            _add_finding(findings, f"potential-injection: {issue_payload}", PRIORITY_CRITICAL)
+
+
+def _extract_step_name(step_node: GitHubActionsRunStepNode | None) -> str:
+    """Extract a display name for a workflow run step."""
+    if step_node is None:
+        return ""
+    step_name = step_node.definition.get("name")
+    if isinstance(step_name, str):
+        return step_name
+    step_id = step_node.definition.get("id")
+    if isinstance(step_id, str):
+        return step_id
+    return ""
+
+
+def _extract_command_text(step_node: GitHubActionsRunStepNode | None, script_line: int | None) -> str:
+    """Extract a compact command snippet from the run script for display in diagnostics."""
+    if step_node is None:
+        return ""
+
+    run_script = step_node.definition["run"]
+    script_lines = run_script.splitlines()
+    if script_line and 1 <= script_line <= len(script_lines):
+        return script_lines[script_line - 1].strip()
+
+    for line in script_lines:
+        if line.strip():
+            return line.strip()
+    return ""
+
+
+def _extract_run_step_line(step_node: GitHubActionsRunStepNode | None) -> int | None:
+    """Extract a 1-based workflow line number for a run step when metadata is available."""
+    if step_node is None:
+        return None
+
+    definition = step_node.definition
+    line_container = getattr(definition, "lc", None)
+    if line_container is None:
+        return _infer_run_step_line_from_source(step_node)
+
+    line = getattr(line_container, "line", None)
+    if isinstance(line, int) and line >= 0:
+        # ruamel stores line numbers as 0-based.
+        return line + 1
+
+    return _infer_run_step_line_from_source(step_node)
+
+
+def _extract_script_line_from_parts(parts: object) -> int | None:
+    """Extract the 1-based script line number from parsed shell argument parts."""
+    if not isinstance(parts, list):
+        return None
+
+    for part in parts:
+        if not isinstance(part, dict):
+            continue
+        pos = part.get("Pos")
+        if not isinstance(pos, dict):
+            continue
+        line = pos.get("Line")
+        if isinstance(line, int) and line > 0:
+            return line
+
+    return None
+
+
+def _map_script_line_to_workflow_line(
+    step_node: GitHubActionsRunStepNode | None, script_line: int | None
+) -> int | None:
+    """Map a line number inside a run script to the corresponding workflow source line."""
+    if step_node is None or script_line is None or script_line < 1:
+        return None
+
+    workflow_path = step_node.context.ref.job_context.ref.workflow_context.ref.source_filepath
+    run_script = step_node.definition.get("run")
+    if not workflow_path or not isinstance(run_script, str) or not os.path.isfile(workflow_path):
+        return None
+
+    try:
+        with open(workflow_path, encoding="utf-8") as workflow_file:
+            workflow_lines = workflow_file.readlines()
+    except OSError:
+        return None
+
+    for block_start, block_lines in _iter_run_blocks(workflow_lines):
+        if _normalize_multiline_text("\n".join(block_lines)) != _normalize_multiline_text(run_script):
+            continue
+        if script_line > len(block_lines):
+            return None
+        return block_start + script_line - 1
+
+    return None
+
+
+def _iter_run_blocks(workflow_lines: list[str]) -> list[tuple[int, list[str]]]:
+    """Collect run-step script blocks as (1-based start line, content lines)."""
+    run_key_re = re.compile(r"^(\s*)(?:-\s*)?run\s*:\s*(.*)$")
+    blocks: list[tuple[int, list[str]]] = []
+    i = 0
+    while i < len(workflow_lines):
+        line = workflow_lines[i]
+        match = run_key_re.match(line)
+        if not match:
+            i += 1
+            continue
+
+        indent = len(match.group(1))
+        run_value = match.group(2).rstrip("\n")
+
+        if run_value.strip().startswith(("|", ">")):
+            block_start = i + 2
+            block_buffer: list[str] = []
+            j = i + 1
+            min_indent: int | None = None
+            while j < len(workflow_lines):
+                candidate = workflow_lines[j]
+                if candidate.strip():
+                    candidate_indent = len(candidate) - len(candidate.lstrip(" "))
+                    if candidate_indent <= indent:
+                        break
+                    if min_indent is None or candidate_indent < min_indent:
+                        min_indent = candidate_indent
+                block_buffer.append(candidate.rstrip("\n"))
+                j += 1
+
+            if min_indent is None:
+                blocks.append((block_start, []))
+            else:
+                dedented = [b[min_indent:] if len(b) >= min_indent else b for b in block_buffer]
+                blocks.append((block_start, dedented))
+            i = j
+            continue
+
+        inline_value = run_value.strip().strip("\"'")
+        blocks.append((i + 1, [inline_value]))
+        i += 1
+
+    return blocks
+
+
+def _normalize_multiline_text(text: str) -> str:
+    """Normalize text for robust matching between YAML-extracted and parsed run scripts."""
+    return "\n".join(line.rstrip() for line in text.strip("\n").splitlines())
+
+
+def _infer_run_step_line_from_source(step_node: GitHubActionsRunStepNode) -> int | None:
+    """Infer a run step line by matching its script against the workflow source file."""
+    workflow_path = step_node.context.ref.job_context.ref.workflow_context.ref.source_filepath
+    if not workflow_path or not os.path.isfile(workflow_path):
+        return None
+
+    run_script = step_node.definition["run"]
+    first_script_line = ""
+    for line in run_script.splitlines():
+        stripped = line.strip()
+        if stripped:
+            first_script_line = stripped
+            break
+    if not first_script_line:
+        return None
+
+    try:
+        with open(workflow_path, encoding="utf-8") as workflow_file:
+            workflow_lines = workflow_file.readlines()
+    except OSError:
+        return None
+
+    run_key_re = re.compile(r"^\s*(?:-\s*)?run\s*:\s*(.*)$")
+    for index, line in enumerate(workflow_lines):
+        match = run_key_re.match(line)
+        if not match:
+            continue
+
+        run_value = match.group(1).strip()
+        if run_value and not run_value.startswith("|") and not run_value.startswith(">"):
+            inline_value = run_value.strip("\"'")
+            if first_script_line in inline_value or inline_value in first_script_line:
+                return index + 1
+            continue
+
+        run_indent = len(line) - len(line.lstrip(" "))
+        for nested_line in workflow_lines[index + 1 :]:
+            if not nested_line.strip():
+                continue
+            nested_indent = len(nested_line) - len(nested_line.lstrip(" "))
+            if nested_indent <= run_indent:
+                break
+            if first_script_line in nested_line.strip():
+                return index + 1
+
+    return None
 
 
 def _has_privileged_trigger_risk_combo(findings: list[PrioritizedIssue]) -> bool:
@@ -332,7 +540,7 @@ def get_workflow_issue_summary(finding_type: str) -> str:
         "persist-credentials": "Persisted checkout credentials can leak token access to later steps.",
         "remote-script-exec": "Workflow downloads and executes remote scripts inline.",
         "pr-target-untrusted-checkout": "pull_request_target is combined with checkout of PR-controlled refs.",
-        "potential-injection": "Untrusted GitHub context data may flow into shell execution.",
+        "potential-injection": "Unsafe expansion of attacker-controllable GitHub context can enable command injection.",
         "self-hosted-runner": "Job uses self-hosted runners, increasing blast radius for untrusted code.",
         "workflow-security-issue": "Workflow includes a security issue that requires hardening.",
     }
@@ -344,8 +552,39 @@ def build_workflow_issue_recommendation(issue: str) -> tuple[str, Recommendation
     finding_type = get_workflow_issue_type(issue)
     summary = get_workflow_issue_summary(finding_type)
     recommendation = recommend_for_workflow_issue(issue)
-    finding_message = f"Summary: {summary} Details: {issue} Recommendation: {recommendation.message}"
+    details = _format_issue_details(finding_type, issue)
+    finding_message = f"Summary: {summary} Details: {details} Recommendation: {recommendation.message}"
     return finding_type, recommendation, finding_message
+
+
+def _format_issue_details(finding_type: str, issue: str) -> str:
+    """Format human-readable issue details for job summaries."""
+    if finding_type != "potential-injection":
+        return issue
+
+    payload = _parse_issue_payload(issue)
+    if not isinstance(payload, dict):
+        return issue
+
+    job_name = str(payload.get("job") or "unknown")
+    step_name = str(payload.get("step") or "unknown")
+    command_text = str(payload.get("command") or "unknown")
+    command_text = command_text.replace("`", "'")
+    return f"Job: {job_name} Step: {step_name} Command: `{command_text}`"
+
+
+def _parse_issue_payload(issue: str) -> object | None:
+    """Parse the serialized issue payload after the finding type prefix."""
+    _, _, payload = issue.partition(":")
+    payload = payload.strip()
+    if not payload:
+        return None
+
+    try:
+        parsed: object = ast.literal_eval(payload)
+        return parsed
+    except (SyntaxError, ValueError):
+        return None
 
 
 def build_unpinned_action_recommendation(issue: str, api_client: object) -> tuple[str, str, Recommendation] | None:
@@ -359,6 +598,64 @@ def build_unpinned_action_recommendation(issue: str, api_client: object) -> tupl
     resolved_tag = resolve_action_ref_to_tag(action_name, resolved_sha, action_ref)
     recommendation = recommend_for_unpinned_action(action_name, resolved_sha, resolved_tag)
     return action_name, action_ref, recommendation
+
+
+def extract_workflow_issue_line(issue: str) -> int | None:
+    """Extract a 1-based workflow source line number from an issue payload.
+
+    Parameters
+    ----------
+    issue : str
+        Serialized workflow issue string produced by the detector.
+
+    Returns
+    -------
+    int | None
+        The 1-based line number when available; otherwise ``None``.
+    """
+    if not issue.startswith("potential-injection:"):
+        return None
+
+    _, _, payload = issue.partition(":")
+    if not payload.strip():
+        return None
+
+    parsed_payload = _parse_issue_payload(issue)
+    if isinstance(parsed_payload, dict):
+        step_line = parsed_payload.get("step_line")
+        if isinstance(step_line, int) and step_line > 0:
+            return step_line
+
+    step_line_match = re.search(r"\[step-line=(\d+)\]", payload)
+    if step_line_match:
+        step_line = int(step_line_match.group(1))
+        if step_line > 0:
+            return step_line
+
+    parts: object | None
+    if isinstance(parsed_payload, list):
+        parts = parsed_payload
+    elif isinstance(parsed_payload, dict):
+        parts = parsed_payload.get("parts")
+    else:
+        parts = None
+
+    if isinstance(parts, list):
+        for part in parts:
+            if not isinstance(part, dict):
+                continue
+            pos = part.get("Pos")
+            if not isinstance(pos, dict):
+                continue
+            line = pos.get("Line")
+            if isinstance(line, int) and line > 0:
+                return line
+
+    match = re.search(r"'Line':\s*(\d+)", payload)
+    if not match:
+        return None
+    line = int(match.group(1))
+    return line if line > 0 else None
 
 
 # def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest) -> list[dict[str, str]]:

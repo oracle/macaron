@@ -41,14 +41,16 @@ def _resolve_policy_source(policy_input: str) -> tuple[Path | None, str]:
 
     action_path = _env("GITHUB_ACTION_PATH", "")
     if action_path:
-        template_path = (
-            Path(action_path)
-            / "src"
-            / "macaron"
-            / "resources"
-            / "policies"
-            / "datalog"
-            / (f"{policy_input}.dl.template")
+        template_path = Path(
+            os.path.join(
+                action_path,
+                "src",
+                "macaron",
+                "resources",
+                "policies",
+                "datalog",
+                f"{policy_input}.dl.template",
+            )
         )
         if template_path.is_file():
             return template_path, "predefined"
@@ -61,7 +63,7 @@ def _resolve_existing_policy_sql(policy_name: str) -> Path | None:
     action_path = _env("GITHUB_ACTION_PATH", "")
     if not action_path:
         return None
-    sql_path = Path(action_path) / "src" / "macaron" / "resources" / "policies" / "sql" / f"{policy_name}.sql"
+    sql_path = Path(os.path.join(action_path, "src", "macaron", "resources", "policies", "sql", f"{policy_name}.sql"))
     return sql_path if sql_path.is_file() else None
 
 
@@ -505,8 +507,8 @@ def _write_existing_policy_failure_diagnostics(
 
 def main() -> None:
     output_dir = Path(_env("OUTPUT_DIR", "output"))
-    db_path = Path(_env("DB_PATH", str(output_dir / "macaron.db")))
-    policy_report = _env("POLICY_REPORT", str(output_dir / "policy_report.json"))
+    db_path = Path(_env("DB_PATH", os.path.join(str(output_dir), "macaron.db")))
+    policy_report = _env("POLICY_REPORT", os.path.join(str(output_dir), "policy_report.json"))
     policy_file_value = _env("POLICY_FILE", "")
     resolved_policy_file, policy_mode = _resolve_policy_source(policy_file_value)
     policy_label = ""
@@ -517,7 +519,7 @@ def main() -> None:
     elif policy_mode == "unresolved":
         policy_label = f"{policy_file_value} (unresolved)"
     html_report = _env("HTML_REPORT_PATH", "")
-    vsa_path_value = _env("VSA_PATH", str(output_dir / "vsa.intoto.jsonl"))
+    vsa_path_value = _env("VSA_PATH", os.path.join(str(output_dir), "vsa.intoto.jsonl"))
     vsa_path = Path(vsa_path_value) if vsa_path_value else None
 
     summary_output = _env("GITHUB_STEP_SUMMARY")
