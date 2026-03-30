@@ -35,13 +35,9 @@ jobs:
     # Note: adjust the policy_purl to refer to your repository URL.
     - name: Run Macaron action
       id: run_macaron
-      continue-on-error: true
       uses: ./
       with:
         repo_path: ./
         policy_file: check-github-actions
         policy_purl: pkg:github.com/oracle/macaron@.*
-        upload_reports: true
-        reports_artifact_name: macaron-reports
         reports_retention_days: 90
-        write_job_summary: true

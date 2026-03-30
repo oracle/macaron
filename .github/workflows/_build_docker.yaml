@@ -83,13 +83,13 @@ jobs:
       run: make setup-integration-test-utility-for-docker
 
     # Run the integration tests against the built Docker image.
-    # - name: Test the Docker image
-    #   env:
-    #     # This environment variable will be picked up by run_macaron.sh.
-    #     MACARON_IMAGE_TAG: test
-    #     DOCKER_PULL: never
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   run: make integration-test-docker
+    - name: Test the Docker image
+      env:
+        # This environment variable will be picked up by run_macaron.sh.
+        MACARON_IMAGE_TAG: test
+        DOCKER_PULL: never
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make integration-test-docker
 
   test-macaron-action:
     # Reuse the action test workflow against the exact Docker image built above.

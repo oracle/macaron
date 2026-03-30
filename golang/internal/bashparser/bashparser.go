@@ -41,6 +41,15 @@ func preprocessGitHubActionsExpr(data string) (string, error) {
 }
 
 func preprocessGitHubActionsExprWithMap(data string) (string, map[string]string, error) {
+	// Replace GitHub Actions expressions with unique bash-safe placeholders and return
+	// a mapping from placeholder variable names to the original expression body.
+	//
+	// Example:
+	//   input:  echo "${{ github.head_ref }}"
+	//   output: echo "$MACARON_GHA_0001", {"MACARON_GHA_0001": "github.head_ref"}
+	//
+	// This preserves expression identity for downstream analysis while keeping the
+	// transformed script parseable by the bash parser.
 	re, reg_error := regexp.Compile(`\$\{\{.*?\}\}`)
 	if reg_error != nil {
 		return "", nil, reg_error
