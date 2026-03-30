@@ -5,7 +5,7 @@
 
 from typing import cast
 
-from lark import Lark, Token, Tree
+from lark import Lark, Token, Tree, UnexpectedInput
 
 from macaron.code_analyzer.dataflow_analysis import facts
 from macaron.errors import CallGraphError
@@ -114,7 +114,7 @@ def extract_value_from_expr_string(s: str, var_scope: facts.Scope | None) -> fac
         cur_expr = s[cur_expr_begin + 3 : cur_expr_end]
         try:
             parse_tree = github_expr_parser.parse(cur_expr)
-        except Exception as e:
+        except UnexpectedInput as e:
             raise CallGraphError("Failed to parse github expression '" + cur_expr + "' in string '" + s + "'") from e
         node = parse_tree.children[0]
 
