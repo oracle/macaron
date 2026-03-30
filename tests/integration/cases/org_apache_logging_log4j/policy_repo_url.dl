@@ -4,7 +4,7 @@
 #include "prelude.dl"
 
 Policy("test_policy", component_id, "") :-
-    check_failed(component_id, "mcn_githubactions_vulnerabilities_1").
+    check_passed(component_id, "mcn_githubactions_vulnerabilities_1").
 
 apply_policy_to("test_policy", component_id) :-
     is_repo_url(component_id, "https://github.com/apache/logging-log4j2").

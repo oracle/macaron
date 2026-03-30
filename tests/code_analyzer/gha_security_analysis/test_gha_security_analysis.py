@@ -9,7 +9,9 @@ from pathlib import Path
 import pytest
 
 from macaron.code_analyzer.gha_security_analysis.detect_injection import (
+    PrioritizedIssue,
     WorkflowFinding,
+    _add_finding,
     build_workflow_issue_recommendation,
     detect_github_actions_security_issues,
     extract_workflow_issue_line,
@@ -135,3 +137,20 @@ def test_extract_workflow_issue_line_from_remote_script_exec_payload() -> None:
     )
 
     assert extract_workflow_issue_line(issue) == 24
+
+
+def test_extract_workflow_issue_line_from_unpinned_action_marker() -> None:
+    """Extract workflow line from unpinned action issue marker."""
+    issue = "unpinned-third-party-action: [step-line=62] actions/checkout@v4.2.2"
+
+    assert extract_workflow_issue_line(issue) == 62
+
+
+def test_add_finding_deduplicates_and_preserves_highest_priority() -> None:
+    """Keep one finding entry per issue and retain the highest priority."""
+    findings: list[PrioritizedIssue] = []
+    _add_finding(findings, "remote-script-exec: {}", 80)
+    _add_finding(findings, "remote-script-exec: {}", 60)
+    _add_finding(findings, "remote-script-exec: {}", 100)
+
+    assert findings == [{"issue": "remote-script-exec: {}", "priority": 100}]

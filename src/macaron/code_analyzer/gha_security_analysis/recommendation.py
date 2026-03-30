@@ -16,7 +16,9 @@ from macaron.errors import GitTagError
 from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 from macaron.slsa_analyzer.git_url import find_highest_git_tag, get_tags_via_git_remote, is_commit_hash
 
-UNPINNED_ACTION_RE = re.compile(r"^(?P<action>[^@\s]+)@(?P<version>[^\s]+)$")
+UNPINNED_ACTION_RE = re.compile(
+    r"^(?:unpinned-third-party-action:\s*)?(?:\[step-line=(?P<line>\d+)\]\s*)?(?P<action>[^@\s]+)@(?P<version>[^\s]+)$"
+)
 
 
 @dataclass(frozen=True)

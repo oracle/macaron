@@ -6,6 +6,7 @@
 import pytest
 
 from macaron.code_analyzer.gha_security_analysis.recommendation import (
+    parse_unpinned_action_issue,
     recommend_for_unpinned_action,
     resolve_action_ref_to_tag,
 )
@@ -52,3 +53,17 @@ def test_resolve_action_ref_to_tag_none_when_no_match(monkeypatch: pytest.Monkey
     tag = resolve_action_ref_to_tag("actions/checkout", "cccccccccccccccccccccccccccccccccccccccc", "v4")
 
     assert tag is None
+
+
+def test_parse_unpinned_action_issue_with_step_line_prefix() -> None:
+    """Parse unpinned action issues that include finding type and step-line marker."""
+    parsed = parse_unpinned_action_issue("unpinned-third-party-action: [step-line=62] actions/checkout@v4.2.2")
+
+    assert parsed == ("actions/checkout", "v4.2.2")
+
+
+def test_parse_unpinned_action_issue_plain_format() -> None:
+    """Parse legacy unpinned action issues without metadata prefix."""
+    parsed = parse_unpinned_action_issue("actions/setup-python@v5.6.0")
+
+    assert parsed == ("actions/setup-python", "v5.6.0")

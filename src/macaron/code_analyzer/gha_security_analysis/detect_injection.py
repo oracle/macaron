@@ -36,14 +36,6 @@ UNTRUSTED_PR_REFS = {
     "${{ github.event.pull_request.head.repo.full_name }}",
 }
 
-DANGEROUS_TRIGGERS = {
-    "pull_request_target",  # elevated token context
-    "workflow_run",  # can chain privileged workflows
-    "repository_dispatch",  # external event injection risk if misused
-    "issue_comment",  # often used to trigger runs; needs strict gating
-}
-
-
 PRIORITY_CRITICAL = 100
 PRIORITY_HIGH = 80
 PRIORITY_MEDIUM = 60
@@ -116,6 +108,8 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
     findings: list[PrioritizedIssue] = []
     on_keys = _extract_on_keys(workflow_node.definition)
     seen_jobs: set[str] = set()
+    workflow_permissions_defined = "permissions" in workflow_node.definition
+    has_job_without_permissions = False
 
     for node in core.traverse_bfs(workflow_node):
         if isinstance(node, GitHubActionsWorkflowNode):
@@ -126,6 +120,8 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
             if node.job_id in seen_jobs:
                 continue
             seen_jobs.add(node.job_id)
+            if "permissions" not in node.definition:
+                has_job_without_permissions = True
             _append_job_level_findings(findings, node)
             continue
 
@@ -136,6 +132,16 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
         if isinstance(node, GitHubActionsRunStepNode):
             _append_run_step_findings(findings, node, nodes)
             continue
+
+    if not workflow_permissions_defined and has_job_without_permissions:
+        _add_finding(
+            findings,
+            (
+                "missing-permissions: No explicit workflow permissions defined, and one or more jobs also omit "
+                "permissions; defaults may be overly broad."
+            ),
+            PRIORITY_MEDIUM,
+        )
 
     if "pull_request_target" in on_keys and _has_privileged_trigger_risk_combo(findings):
         _add_finding(
@@ -169,24 +175,10 @@ def _extract_on_keys(workflow: Workflow) -> set[str]:
 
 def _append_workflow_level_findings(findings: list[PrioritizedIssue], on_keys: set[str], workflow: Workflow) -> None:
     """Append workflow-level hardening findings."""
-    sensitive = sorted(on_keys.intersection(DANGEROUS_TRIGGERS))
-    if sensitive:
-        _add_finding(
-            findings,
-            f"sensitive-trigger: Workflow uses {sensitive}. Ensure strict gating (e.g., actor allowlist, "
-            "branch protection, and minimal permissions).",
-            PRIORITY_LOW,
-        )
-
     if "permissions" not in workflow:
-        _add_finding(
-            findings,
-            "missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.",
-            PRIORITY_MEDIUM,
-        )
         return
 
-    permissions = workflow.get("permissions")
+    permissions = workflow["permissions"]
     if isinstance(permissions, str) and permissions.lower() == "write-all":
         _add_finding(findings, "overbroad-permissions: Workflow uses `permissions: write-all`.", PRIORITY_HIGH)
     if isinstance(permissions, dict) and "pull_request_target" in on_keys:
@@ -220,7 +212,13 @@ def _append_action_step_findings(
     uses_name = action_node.uses_name
     uses_version = action_node.uses_version
     if uses_name and not uses_name.startswith("./") and uses_version and not is_commit_hash(uses_version):
-        _add_finding(findings, f"{uses_name}@{uses_version}", PRIORITY_MIN)
+        step_line = _extract_action_step_line(action_node)
+        line_marker = f"[step-line={step_line}] " if step_line else ""
+        _add_finding(
+            findings,
+            f"unpinned-third-party-action: {line_marker}{uses_name}@{uses_version}",
+            PRIORITY_MIN,
+        )
 
     if uses_name == "actions/checkout":
         ref = _literal_value(action_node.with_parameters.get("ref"))
@@ -229,15 +227,6 @@ def _append_action_step_findings(
                 findings,
                 f"untrusted-fork-code: A checkout step uses untrusted fork code (`ref: {ref}`) on PR event.",
                 PRIORITY_CRITICAL,
-            )
-
-        persist = _literal_value(action_node.with_parameters.get("persist-credentials"))
-        if persist.lower() == "true":
-            _add_finding(
-                findings,
-                "persist-credentials: Checkout uses `persist-credentials: true`; "
-                "this may expose GITHUB_TOKEN to subsequent git commands.",
-                PRIORITY_MEDIUM,
             )
 
         if "pull_request_target" in on_keys and ref in UNTRUSTED_PR_REFS:
@@ -593,6 +582,70 @@ def _extract_run_step_line(step_node: GitHubActionsRunStepNode | None) -> int | 
     return _infer_run_step_line_from_source(step_node)
 
 
+def _extract_action_step_line(step_node: GitHubActionsActionStepNode | None) -> int | None:
+    """Extract a 1-based workflow line number for an action step when metadata is available."""
+    if step_node is None:
+        return None
+
+    definition = step_node.definition
+    line_container = getattr(definition, "lc", None)
+    if line_container is None:
+        return _infer_action_step_line_from_source(step_node)
+
+    line = getattr(line_container, "line", None)
+    if isinstance(line, int) and line >= 0:
+        # ruamel stores line numbers as 0-based.
+        return line + 1
+
+    return _infer_action_step_line_from_source(step_node)
+
+
+def _infer_action_step_line_from_source(step_node: GitHubActionsActionStepNode) -> int | None:
+    """Infer an action-step line by matching the ``uses`` value in the workflow source."""
+    workflow_path = step_node.context.ref.job_context.ref.workflow_context.ref.source_filepath
+    if not workflow_path or not os.path.isfile(workflow_path):
+        return None
+
+    uses_name = step_node.uses_name
+    uses_version = step_node.uses_version
+    if not uses_name or not uses_version:
+        return None
+
+    target_uses = f"{uses_name}@{uses_version}"
+    step_name = step_node.definition.get("name")
+    step_id = step_node.definition.get("id")
+    step_identifier = step_name if isinstance(step_name, str) else step_id if isinstance(step_id, str) else None
+
+    try:
+        with open(workflow_path, encoding="utf-8") as workflow_file:
+            workflow_lines = workflow_file.readlines()
+    except OSError:
+        return None
+
+    uses_key_re = re.compile(r"^\s*(?:-\s*)?uses\s*:\s*(.*)$")
+    candidate_lines: list[int] = []
+    for index, line in enumerate(workflow_lines):
+        match = uses_key_re.match(line)
+        if not match:
+            continue
+        uses_value = match.group(1).strip().strip("\"'")
+        if uses_value == target_uses:
+            candidate_lines.append(index + 1)
+
+    if not candidate_lines:
+        return None
+    if len(candidate_lines) == 1 or not step_identifier:
+        return candidate_lines[0]
+
+    for candidate_line in candidate_lines:
+        for lookback_index in range(max(0, candidate_line - 8 - 1), candidate_line - 1):
+            lookback_line = workflow_lines[lookback_index].strip()
+            if lookback_line in {f"name: {step_identifier}", f"id: {step_identifier}"}:
+                return candidate_line
+
+    return candidate_lines[0]
+
+
 def _extract_script_line_from_parts(parts: object) -> int | None:
     """Extract the 1-based script line number from parsed shell argument parts."""
     if not isinstance(parts, list):
@@ -743,7 +796,6 @@ def _has_privileged_trigger_risk_combo(findings: list[PrioritizedIssue]) -> bool
     risky_prefixes = (
         "overbroad-permissions:",
         "untrusted-fork-code:",
-        "persist-credentials:",
         "remote-script-exec:",
         "pr-target-untrusted-checkout:",
         "potential-injection:",
@@ -760,7 +812,21 @@ def _literal_value(value: facts.Value | None) -> str:
 
 
 def _add_finding(findings: list[PrioritizedIssue], issue: str, priority: int) -> None:
-    """Append a finding with priority metadata."""
+    """Append a finding once and keep the highest priority for duplicate issues.
+
+    Parameters
+    ----------
+    findings : list[PrioritizedIssue]
+        Mutable finding list for the current workflow.
+    issue : str
+        Normalized finding identifier/message.
+    priority : int
+        Finding priority score.
+    """
+    for existing in findings:
+        if existing["issue"] == issue:
+            existing["priority"] = max(existing["priority"], priority)
+            return
     findings.append({"issue": issue, "priority": priority})
 
 
@@ -774,12 +840,10 @@ def get_workflow_issue_type(issue: str) -> str:
 def get_workflow_issue_summary(finding_type: str) -> str:
     """Return a concise summary for a workflow issue subtype."""
     finding_summaries = {
-        "sensitive-trigger": "Workflow uses a sensitive trigger and needs strict gating.",
         "privileged-trigger": "Privileged trigger can expose elevated token scope to untrusted input.",
         "missing-permissions": "Workflow omits explicit permissions and may inherit broad defaults.",
         "overbroad-permissions": "Workflow requests permissions broader than required.",
         "untrusted-fork-code": "Workflow can execute code controlled by an untrusted fork.",
-        "persist-credentials": "Persisted checkout credentials can leak token access to later steps.",
         "remote-script-exec": "Workflow downloads and executes remote scripts inline.",
         "pr-target-untrusted-checkout": "pull_request_target is combined with checkout of PR-controlled refs.",
         "potential-injection": "Unsafe expansion of attacker-controllable GitHub context can enable command injection.",
@@ -860,6 +924,12 @@ def extract_workflow_issue_line(issue: str) -> int | None:
     int | None
         The 1-based line number when available; otherwise ``None``.
     """
+    step_line_match = re.search(r"\[step-line=(\d+)\]", issue)
+    if step_line_match:
+        step_line = int(step_line_match.group(1))
+        if step_line > 0:
+            return step_line
+
     if not issue.startswith("potential-injection:") and not issue.startswith("remote-script-exec:"):
         return None
 
@@ -869,15 +939,9 @@ def extract_workflow_issue_line(issue: str) -> int | None:
 
     parsed_payload = _parse_issue_payload(issue)
     if isinstance(parsed_payload, dict):
-        step_line = parsed_payload.get("step_line")
-        if isinstance(step_line, int) and step_line > 0:
-            return step_line
-
-    step_line_match = re.search(r"\[step-line=(\d+)\]", payload)
-    if step_line_match:
-        step_line = int(step_line_match.group(1))
-        if step_line > 0:
-            return step_line
+        payload_step_line = parsed_payload.get("step_line")
+        if isinstance(payload_step_line, int) and payload_step_line > 0:
+            return payload_step_line
 
     parts: object | None
     if isinstance(parsed_payload, list):

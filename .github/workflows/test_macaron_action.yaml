@@ -164,8 +164,6 @@ jobs:
 
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
       id: verify_github_actions_vulns_repo_tutorial
-      # This verification is expected to fail and surface vulnerable actions.
-      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
@@ -173,14 +171,6 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-repo
         write_job_summary: 'true'
-    - name: Assert expected failure (github_actions_vulns for repo tutorial)
-      if: ${{ always() }}
-      run: |
-        # Ensure this tutorial case remains a failing policy verification.
-        if [ "${{ steps.verify_github_actions_vulns_repo_tutorial.outcome }}" != "failure" ]; then
-          echo "Expected verify step to fail, but it did not."
-          exit 1
-        fi
 
     - name: Run Macaron (analyze purl - log4j-core example)
       uses: ./
@@ -192,8 +182,6 @@ jobs:
 
     - name: Run Macaron (verify policy - github_actions_vulns for purl)
       id: verify_github_actions_vulns_purl_tutorial
-      # This verification is expected to fail and detect vulnerable actions.
-      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
@@ -201,14 +189,6 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-purl
         write_job_summary: 'true'
-    - name: Assert expected failure (github_actions_vulns for purl tutorial)
-      if: ${{ always() }}
-      run: |
-        # Ensure this tutorial case remains a failing policy verification.
-        if [ "${{ steps.verify_github_actions_vulns_purl_tutorial.outcome }}" != "failure" ]; then
-          echo "Expected verify step to fail, but it did not."
-          exit 1
-        fi
 
   tutorial-provenance:
     name: Provenance discovery, extraction, and verification
@@ -349,24 +329,6 @@ jobs:
         defaults_path: ./tests/tutorial_resources/exclude_include_checks/defaults_exclude_witness.ini
         output_dir: macaron_output/exclude_include_checks/excluded
         upload_reports: 'false'
-
-  # tutorial-upload-attestation:
-  #   name: Upload verification summary attestation
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-  #   - name: Run Macaron (analyze macaron repo + custom policy + upload attestation)
-  #     uses: ./
-  #     with:
-  #       repo_path: ./
-  #       policy_file: ./tests/tutorial_resources/provenance/attest-macaron-supply-chain.dl
-  #       policy_purl: pkg:github.com/oracle/macaron@.*
-  #       output_dir: macaron_output/upload_attestation
-  #       upload_attestation: 'true'
-  #       subject_path: ./macaron_output/upload_attestation/vsa.intoto.jsonl
-  #       upload_reports: 'true'
-  #       reports_artifact_name: macaron-reports-upload-attestation
-  #       write_job_summary: 'true'
 
   test-detect-vulnerable-actions:
     name: How to detect vulnerable GitHub Actions

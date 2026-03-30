@@ -12,23 +12,15 @@
           'priority': 80,
         }),
         dict({
-          'issue': 'missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.',
-          'priority': 60,
-        }),
-        dict({
-          'issue': "sensitive-trigger: Workflow uses ['pull_request_target']. Ensure strict gating (e.g., actor allowlist, branch protection, and minimal permissions).",
-          'priority': 40,
-        }),
-        dict({
-          'issue': 'actions/checkout@v5',
+          'issue': 'unpinned-third-party-action: [step-line=28] actions/checkout@v5',
           'priority': 20,
         }),
         dict({
-          'issue': 'dtolnay/rust-toolchain@stable',
+          'issue': 'unpinned-third-party-action: [step-line=37] poseidon/wait-for-status-checks@v0.6.0',
           'priority': 20,
         }),
         dict({
-          'issue': 'poseidon/wait-for-status-checks@v0.6.0',
+          'issue': 'unpinned-third-party-action: [step-line=48] dtolnay/rust-toolchain@stable',
           'priority': 20,
         }),
       ]),

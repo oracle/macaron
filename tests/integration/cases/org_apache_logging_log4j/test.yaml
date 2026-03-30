@@ -27,7 +27,7 @@ steps:
     command_args:
     - -rp
     - https://github.com/apache/logging-log4j2
-    - d
+    - -d
     - 028e9fad03ae7bcbf2e49ab8d32d8cfb900f3587
 - name: Run macaron verify-policy to verify passed/failed checks
   kind: verify
