@@ -27,8 +27,7 @@ from macaron.code_analyzer.gha_security_analysis.recommendation import (
 )
 from macaron.parsers.bashparser_model import CallExpr, is_call_expr, is_lit, is_param_exp
 from macaron.parsers.github_workflow_model import Workflow
-
-REMOTE_SCRIPT_RE = re.compile(r"(curl|wget)\s+.*\|\s*(bash|sh|tar)", re.IGNORECASE)
+from macaron.slsa_analyzer.git_url import is_commit_hash
 
 UNTRUSTED_PR_REFS = {
     "${{ github.event.pull_request.head.ref }}",
@@ -135,11 +134,8 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
             continue
 
         if isinstance(node, GitHubActionsRunStepNode):
-            _append_run_step_findings(findings, node)
+            _append_run_step_findings(findings, node, nodes)
             continue
-
-        if isinstance(node, bash.BashSingleCommandNode):
-            _append_injection_findings(findings, node, nodes)
 
     if "pull_request_target" in on_keys and _has_privileged_trigger_risk_combo(findings):
         _add_finding(
@@ -220,12 +216,7 @@ def _append_action_step_findings(
     """Append findings derived from an action step node."""
     uses_name = action_node.uses_name
     uses_version = action_node.uses_version
-    if (
-        uses_name
-        and not uses_name.startswith("./")
-        and uses_version
-        and not re.fullmatch(r"[0-9a-f]{40}", uses_version)
-    ):
+    if uses_name and not uses_name.startswith("./") and uses_version and not is_commit_hash(uses_version):
         _add_finding(findings, f"{uses_name}@{uses_version}", PRIORITY_MIN)
 
     if uses_name == "actions/checkout":
@@ -254,15 +245,104 @@ def _append_action_step_findings(
             )
 
 
-def _append_run_step_findings(findings: list[PrioritizedIssue], run_step_node: GitHubActionsRunStepNode) -> None:
+def _append_run_step_findings(
+    findings: list[PrioritizedIssue], run_step_node: GitHubActionsRunStepNode, nodes: NodeForest
+) -> None:
     """Append findings derived from a run step node."""
-    run_script = run_step_node.definition.get("run", "")
-    if isinstance(run_script, str) and REMOTE_SCRIPT_RE.search(run_script):
-        _add_finding(
-            findings,
-            "remote-script-exec: A step appears to download and pipe to shell (`curl|bash`).",
-            PRIORITY_HIGH,
-        )
+    for node in core.traverse_bfs(run_step_node):
+        # Command-level injection checks rely on parsed call argument parts from single-command nodes.
+        if isinstance(node, bash.BashSingleCommandNode):
+            _append_injection_findings(findings, node, nodes)
+            continue
+
+        # Remote script execution risk is structural: downloader output piped into an executor.
+        if isinstance(node, bash.BashPipeNode):
+            _append_remote_script_exec_findings(findings, node, run_step_node, nodes)
+
+
+def _append_remote_script_exec_findings(
+    findings: list[PrioritizedIssue],
+    pipe_node: bash.BashPipeNode,
+    run_step_node: GitHubActionsRunStepNode,
+    nodes: NodeForest,
+) -> None:
+    """Append remote-script-exec findings discovered from parsed bash pipe nodes."""
+    if not _is_remote_script_exec_pipe(pipe_node):
+        return
+
+    # Map the pipe's script-relative line to workflow source line so summary links jump to YAML.
+    script_line = pipe_node.definition["Pos"]["Line"]
+    workflow_line = _map_script_line_to_workflow_line(run_step_node, script_line)
+    if workflow_line is None:
+        workflow_line = _extract_run_step_line(run_step_node)
+    job_node = get_containing_github_job(pipe_node, nodes.parents)
+    issue_payload = {
+        "step_line": workflow_line,
+        "script_line": script_line,
+        "job": job_node.job_id if job_node else "",
+        "step": _extract_step_name(run_step_node),
+        "command": _extract_command_text(run_step_node, script_line),
+    }
+    _add_finding(
+        findings,
+        f"remote-script-exec: {json.dumps(issue_payload)}",
+        PRIORITY_HIGH,
+    )
+
+
+def _is_remote_script_exec_pipe(pipe_node: bash.BashPipeNode) -> bool:
+    """Return whether a pipe node matches downloader-to-executor behavior."""
+    lhs_words = _extract_statement_words(pipe_node.lhs)
+    rhs_words = _extract_statement_words(pipe_node.rhs)
+    if not lhs_words or not rhs_words:
+        return False
+
+    downloader_cmd = lhs_words[0]
+    if downloader_cmd not in {"curl", "wget"}:
+        return False
+
+    return _is_executor_invocation(rhs_words)
+
+
+def _extract_statement_words(statement_node: bash.BashStatementNode) -> list[str]:
+    """Extract normalized literal command words from a Bash statement when available."""
+    cmd = statement_node.definition.get("Cmd")
+    if not is_call_expr(cmd):
+        return []
+    return _extract_call_words(cmd)
+
+
+def _extract_call_words(call_expr: CallExpr) -> list[str]:
+    """Extract literal word values from a call expression."""
+    args = call_expr["Args"]
+    words: list[str] = []
+    for arg in args:
+        parts = arg["Parts"]
+        word = "".join(part.get("Value", "") for part in parts if is_lit(part)).strip()
+        if not word:
+            return []
+        words.append(word)
+    if not words:
+        return []
+
+    normalized = [os.path.basename(word).lower() if idx == 0 else word for idx, word in enumerate(words)]
+    return normalized
+
+
+def _is_executor_invocation(words: list[str]) -> bool:
+    """Return whether extracted words represent shell/archive execution."""
+    if not words:
+        return False
+    direct_executors = {"bash", "sh", "tar"}
+    wrapper_cmds = {"sudo", "env", "command"}
+
+    command = words[0]
+    if command in direct_executors:
+        return True
+    if command in wrapper_cmds and len(words) > 1:
+        wrapped = os.path.basename(words[1]).lower()
+        return wrapped in direct_executors
+    return False
 
 
 def _append_injection_findings(
@@ -559,7 +639,7 @@ def build_workflow_issue_recommendation(issue: str) -> tuple[str, Recommendation
 
 def _format_issue_details(finding_type: str, issue: str) -> str:
     """Format human-readable issue details for job summaries."""
-    if finding_type != "potential-injection":
+    if finding_type not in {"potential-injection", "remote-script-exec"}:
         return issue
 
     payload = _parse_issue_payload(issue)
@@ -612,7 +692,7 @@ def extract_workflow_issue_line(issue: str) -> int | None:
     int | None
         The 1-based line number when available; otherwise ``None``.
     """
-    if not issue.startswith("potential-injection:"):
+    if not issue.startswith("potential-injection:") and not issue.startswith("remote-script-exec:"):
         return None
 
     _, _, payload = issue.partition(":")
@@ -655,79 +735,3 @@ def extract_workflow_issue_line(issue: str) -> int | None:
         return None
     line = int(match.group(1))
     return line if line > 0 else None
-
-
-# def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest) -> list[dict[str, str]]:
-#     """
-#     Analyze a GitHub Actions workflow for common security misconfigurations.
-
-#     Issues Detected:
-#     - Privileged triggers such as pull_request_target
-#     - Execution of untrusted code from forked PRs
-#     - Inline shell scripts or unvalidated input usage
-#     - Missing permissions or authorization checks
-#     """
-#     wf = workflow_node.definition
-#     findings = []
-
-#     for node in core.traverse_bfs(workflow_node):
-#         if isinstance(node, bash.BashSingleCommandNode):
-#             # The step in GitHub Actions job that triggers the path in the callgraph.
-#             step_node = get_containing_github_step(node, nodes.parents)
-#             if is_call_expr(node.definition["Cmd"]):
-#                 call_exp = cast(CallExpr, node.definition["Cmd"])
-#                 for arg in call_exp["Args"]:
-#                     expansion = False
-#                     pr_head_ref = False
-#                     for part in arg["Parts"]:
-#                         if is_param_exp(part) and part["Param"]["Value"] == "github":
-#                             expansion = True
-#                         if is_lit(part) and part["Value"] == ".event.pull_request.head.ref":
-#                             pr_head_ref = True
-#                     if expansion and pr_head_ref:
-#                         findings.append(
-#                             f"Potential injection: {arg['Parts']}"
-#                         )
-
-#     # --- 1. Privileged trigger check ---
-#     if isinstance(wf.get("on"), dict) and "pull_request_target" in wf["on"]:
-#         findings.append(
-#             "privileged-trigger: Workflow uses `pull_request_target`, which runs with elevated permissions."
-#         )
-
-#     # --- 2. Untrusted code execution ---
-#     if isinstance(wf.get("on"), dict) and "pull_request" in wf["on"]:
-#         for job_name, job in wf["jobs"].items():
-#             if is_normal_job(job) and "steps" in job:
-#                 for step in job["steps"]:
-#                     uses = step.get("uses", "")
-#                     if "actions/checkout" in uses:
-#                         ref = step.get("with", {}).get("ref", "")
-#                         if ref in ["${{ github.event.pull_request.head.ref }}", "${{ github.head_ref }}"]:
-#                             findings.append(
-#                                 f"untrusted-fork-code Job `{job_name}` checks out untrusted fork code on PR event."
-#                             )
-
-#     # --- 3. Inline shell or unvalidated inputs ---
-#     # for job_name, job in wf["jobs"].items():
-#     #     if is_normal_job(job) and "steps" in job:
-#     #         for step in job["steps"]:
-#     #             script = get_run_step(step)
-#     #             if script and ("${{ github" in script or "${{ inputs" in script):
-#     #                 findings.append(
-#     #                     f"unvalidated-input-script: Step `{step.get('name', job_name)}` runs inline shell with expressions."
-#     #                 )
-#     #             elif script and re.search(r"(curl|wget|bash\s+-c)", script):
-#     #                 findings.append(
-#     #                     f"inline-shell-risk Step `{step.get('name', job_name)}` runs shell commands directly."
-#     #                 )
-
-#     # --- 4. Authorization check ---
-#     if "permissions" not in wf:
-#         findings.append("missing-permissions: No explicit workflow permissions defined; defaults may be overly broad.")
-
-#     if findings:
-#         result: dict[str, list[str]] = {"workflow_name": wf.get("name"), "issues": findings}
-#         return result
-
-#     return None

@@ -82,3 +82,29 @@ def test_build_workflow_issue_recommendation_formats_potential_injection_details
     assert finding_type == "potential-injection"
     assert "Unsafe expansion of attacker-controllable GitHub context can enable command injection." in finding_message
     assert "Details: Job: retag Step: Retag Command: `git push origin/${github.head_ref}`" in finding_message
+
+
+def test_build_workflow_issue_recommendation_formats_remote_script_exec_details() -> None:
+    """Format concise user-facing details for remote-script-exec findings."""
+    issue = (
+        "remote-script-exec: "
+        '{"step_line": 24, "script_line": 3, "job": "build", "step": "Setup", '
+        '"command": "curl -fsSL https://x | bash"}'
+    )
+
+    finding_type, _, finding_message = build_workflow_issue_recommendation(issue)
+
+    assert finding_type == "remote-script-exec"
+    assert "Workflow downloads and executes remote scripts inline." in finding_message
+    assert "Details: Job: build Step: Setup Command: `curl -fsSL https://x | bash`" in finding_message
+
+
+def test_extract_workflow_issue_line_from_remote_script_exec_payload() -> None:
+    """Extract workflow line from structured remote-script-exec payload."""
+    issue = (
+        "remote-script-exec: "
+        '{"step_line": 24, "script_line": 3, "job": "build", "step": "Setup", '
+        '"command": "curl -fsSL https://x | bash"}'
+    )
+
+    assert extract_workflow_issue_line(issue) == 24
