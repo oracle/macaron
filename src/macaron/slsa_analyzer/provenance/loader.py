@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loaders for SLSA provenances."""
@@ -9,7 +9,6 @@ import gzip
 import json
 import logging
 import zlib
-from urllib.parse import urlparse
 
 from cryptography import x509
 from cryptography.x509 import DuplicateExtension, UnsupportedGeneralNameType
@@ -19,7 +18,7 @@ from macaron.json_tools import JsonType, json_extract
 from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, validate_intoto_payload
 from macaron.slsa_analyzer.provenance.intoto.errors import LoadIntotoAttestationError, ValidateInTotoPayloadError
 from macaron.slsa_analyzer.specs.pypi_certificate_predicate import PyPICertificatePredicate
-from macaron.util import send_get_http_raw
+from macaron.util import send_get_http_raw, url_is_safe
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -43,13 +42,8 @@ def _try_read_url_link_file(file_content: bytes) -> str | None:
 
 
 def _download_url_file_content(url: str, url_link_hostname_allowlist: list[str]) -> bytes:
-    hostname = urlparse(url).hostname
-    if hostname is None or hostname == "":
+    if not url_is_safe(url, allow_list=url_link_hostname_allowlist):
         raise LoadIntotoAttestationError("Cannot resolve URL link file: invalid URL")
-    if hostname not in url_link_hostname_allowlist:
-        raise LoadIntotoAttestationError(
-            "Cannot resolve URL link file: target hostname '" + hostname + "' is not in allowed hostnames."
-        )
 
     # TODO download size limit?
     timeout = defaults.getint("downloads", "timeout", fallback=120)

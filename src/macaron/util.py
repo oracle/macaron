@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module includes utilities functions for Macaron."""
@@ -19,6 +19,66 @@ from requests.models import Response
 from macaron.config.defaults import defaults
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def url_is_safe(url: str, allow_list: list[str] | None = None, allow_login: bool = False) -> bool:
+    r"""Validate that a URL has an acceptable host and login component.
+
+    Parameters
+    ----------
+    url : str
+        URL string to validate.
+    allow_list : list[str] | None
+        Allowed hostnames. When provided, the parsed hostname must be in this list.
+        If ``None``, any non-empty hostname is accepted.
+    allow_login : bool, default=False
+        Whether username/password URL components are permitted.
+
+    Returns
+    -------
+    bool
+        ``True`` when the URL passes safety checks, otherwise ``False``.
+
+    Examples
+    --------
+    >>> url_is_safe("https://example.com")
+    True
+    >>> url_is_safe("https://example.com", allow_list=["example.com"])
+    True
+    >>> url_is_safe("https://example.com", allow_list=["oracle.com"])
+    False
+    >>> url_is_safe("https://user:test@example.com")
+    False
+    >>> url_is_safe("https://user:test@example.com", allow_login=True)
+    True
+    >>> url_is_safe("not-a-url")
+    False
+    >>> url_is_safe("127.0.0.1:6666\\@allowlist.com", ["allowlist.com"])
+    False
+    >>> url_is_safe("https://attacker.com:6666\\@allowlist.com", ["allowlist.com"])
+    False
+    >>> url_is_safe("https://username:attacker.com\\@allowlist.com", ["allowlist.com"])
+    False
+    >>> url_is_safe("https://username:test@allowlist.com", ["allowlist.com"], allow_login = True)
+    True
+    """
+    try:
+        parsed_url = urllib.parse.urlparse(url)
+    except ValueError:
+        return False
+    if not allow_login:
+        if parsed_url.username or parsed_url.password:
+            logger.debug("Potential attempt to redirect to an invalid URL: hostname %s", parsed_url.hostname)
+            return False
+
+    hostname = parsed_url.hostname
+    if hostname is None or hostname == "":
+        return False
+    if allow_list and (hostname not in allow_list):
+        logger.debug("URL %s is not in allowed hostnames.", url)
+        return False
+
+    return True
 
 
 def send_get_http(url: str, headers: dict) -> dict:
