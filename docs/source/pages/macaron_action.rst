@@ -19,11 +19,11 @@ When you use this action, you can reference it directly in your workflow. For a 
       steps:
         - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         - name: Run Macaron Security Analysis Action
-          uses: oracle/macaron@fda4dda04aa7228fcaba162804891806cf5a1375 # v0.22.0
+          uses: oracle/macaron@b31acfe389133a5587d9639063ec70cb84e7bc47 # v0.23.0
           with:
             repo_path: 'https://github.com/example/project'
             policy_file: check-github-actions
-            policy_purl: 'pkg:github.com/example/project'
+            policy_purl: 'pkg:github.com/example/project@.*'
             reports_retention_days: 90
 
 By default, the action posts a human-friendly results summary to the GitHub Actions run page (job summary). If you upload the results like in this `workflow <https://github.com/oracle/macaron/blob/main/.github/workflows/macaron-analysis.yaml>`_, check this :ref:`documentation <detect-vuln-gh-actions-results>` to see how to read and understand them.
