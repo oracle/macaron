@@ -15,6 +15,34 @@ from defusedxml.ElementTree import fromstring
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+def _read_pom_text(pom_path: Path) -> str | None:
+    """Read a POM file with a tolerant decoding strategy.
+
+    Maven projects in the wild may contain POM files encoded as legacy
+    single-byte encodings instead of UTF-8. For parser robustness we try
+    UTF-8 first and then fall back to Latin-1.
+
+    References
+    ----------
+    * Python codec behavior for Latin-1 mapping bytes 0x00..0xFF directly:
+      https://docs.python.org/3.11/library/codecs.html
+    """
+    try:
+        pom_bytes = pom_path.read_bytes()
+    except OSError as error:
+        logger.debug(error)
+        return None
+
+    try:
+        return pom_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            return pom_bytes.decode("latin-1")
+        except UnicodeDecodeError as error:
+            logger.debug("Failed to decode pom.xml %s: %s", pom_path, error)
+            return None
+
+
 def _tag_matches(tag: str, local_name: str) -> bool:
     """Return whether an XML tag matches a local name with/without namespace."""
     return tag == local_name or tag.endswith("}" + local_name)
@@ -91,7 +119,11 @@ def extract_gav_from_pom(pom_file: Path) -> tuple[str | None, str | None, str | 
       ``${project.version}``).
     * XML namespaces are handled by matching tag suffixes (e.g., ``...}groupId``).
     """
-    pom_content = pom_file.read_text(encoding="utf-8")
+    pom_content = _read_pom_text(pom_file)
+    if pom_content is None:
+        logger.debug("Could not read pom.xml: %s", str(pom_file))
+        return None, None, None
+
     pom_root = parse_pom_string(pom_content)
 
     if pom_root is None:
@@ -148,10 +180,8 @@ def detect_parent_pom(pom_path: Path, repo_root: str | Path) -> str | None:
     """
     repo_root = Path(repo_root)
 
-    try:
-        pom_content = pom_path.read_text(encoding="utf-8")
-    except OSError as error:
-        logger.debug(error)
+    pom_content = _read_pom_text(pom_path)
+    if pom_content is None:
         return None
 
     pom_root = parse_pom_string(pom_content)
@@ -199,10 +229,8 @@ def pom_has_modules(pom_path: Path) -> bool:
         ``True`` if the POM has a ``<modules><module>...`` entry; otherwise
         ``False``.
     """
-    try:
-        pom_content = pom_path.read_text(encoding="utf-8")
-    except OSError as error:
-        logger.debug(error)
+    pom_content = _read_pom_text(pom_path)
+    if pom_content is None:
         return False
 
     pom_root = parse_pom_string(pom_content)
@@ -230,10 +258,8 @@ def extract_included_pom_modules(pom_path: Path) -> list[str]:
         Ordered list of non-empty module paths declared under
         ``<project><modules><module>...``.
     """
-    try:
-        pom_content = pom_path.read_text(encoding="utf-8")
-    except OSError as error:
-        logger.debug(error)
+    pom_content = _read_pom_text(pom_path)
+    if pom_content is None:
         return []
 
     pom_root = parse_pom_string(pom_content)

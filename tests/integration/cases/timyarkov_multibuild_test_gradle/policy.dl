@@ -1,15 +1,16 @@
-/* Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
 
 Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_build_as_code_1"),
     check_passed(component_id, "mcn_build_script_1"),
     check_passed(component_id, "mcn_build_service_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     check_passed(component_id, "mcn_build_tool_1"),
-    build_tool_check(maven_id, "java", "maven", _, "mock_maven_proj/pom.xml", _, _, _),
-    check_facts(maven_id, _, component_id,_,_),
+    build_tool_check(gradle_id, "java", "gradle", _, _, _, _, _),
+    check_facts(gradle_id, _, component_id,_,_),
     check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_failed(component_id, "mcn_provenance_available_1"),
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
@@ -20,4 +21,4 @@ Policy("test_policy", component_id, "") :-
     is_repo_url(component_id, "https://github.com/timyarkov/multibuild_test").
 
 apply_policy_to("test_policy", component_id) :-
-    is_component(component_id, "pkg:maven/org.example/mock_maven_proj@1.0-SNAPSHOT?type=jar").
+    is_component(component_id, "pkg:maven/org.example/mock_gradle_proj@1.0?type=jar").
