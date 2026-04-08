@@ -75,6 +75,8 @@ class Maven(BaseBuildTool):
         seen_paths: set[Path] = set()
         confidence_score = 1.0
         maven_config_files = self.build_configs + self.entry_conf
+        if not maven_config_files:
+            maven_config_files = ["pom.xml"]
 
         if os.path.isfile(os.path.join(global_config.macaron_path, "pom.xml")):
             logger.error("Please remove pom.xml file in %s.", global_config.macaron_path)
@@ -106,6 +108,26 @@ class Maven(BaseBuildTool):
                 results.append((str(config_path.relative_to(repo_path)), confidence_score, None, entrypoint_pom))
                 seen_paths.add(config_path)
                 confidence_score = confidence_score / 2
+
+        # Fallback: if strict coordinate validation cannot find a config, return
+        # existing Maven config files with lower confidence.
+        if not results:
+            fallback_confidence = 0.1
+            for config_name in maven_config_files:
+                config_path = file_exists(
+                    repo_path,
+                    config_name,
+                    filters=self.path_filters,
+                    predicate=None,
+                )
+                if not config_path:
+                    continue
+                if config_path in seen_paths:
+                    continue
+                entrypoint_pom = find_nearest_modules_pom(config_path, repo_path)
+                results.append((str(config_path.relative_to(repo_path)), fallback_confidence, None, entrypoint_pom))
+                seen_paths.add(config_path)
+                fallback_confidence = fallback_confidence / 2
 
         return results
 

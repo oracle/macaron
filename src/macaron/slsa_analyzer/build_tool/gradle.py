@@ -122,6 +122,26 @@ class Gradle(BaseBuildTool):
                 seen_paths.add(config_path)
                 confidence_score = confidence_score / 2
 
+        # Fallback: if strict coordinate validation cannot find a config, return
+        # existing Gradle config files with lower confidence.
+        if not results:
+            fallback_confidence = 0.1
+            for config_name in gradle_config_files:
+                config_path = file_exists(
+                    repo_path,
+                    config_name,
+                    filters=self.path_filters,
+                    predicate=None,
+                )
+                if not config_path:
+                    continue
+                if config_path in seen_paths:
+                    continue
+                entrypoint_gradle = find_nearest_modules_gradle_config(config_path, repo_path)
+                results.append((str(config_path.relative_to(repo_path)), fallback_confidence, None, entrypoint_gradle))
+                seen_paths.add(config_path)
+                fallback_confidence = fallback_confidence / 2
+
         return results
 
     def validate_gradle_file(

@@ -41,7 +41,10 @@ def test_get_build_dirs(snapshot: list, maven_tool: Maven, mock_repo: Path) -> N
             Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_parent_pom"),
             "com.mock_repos.has_parent_pom",
             "sub_module_1",
-            [],
+            [
+                ("sub_module_1/pom.xml", 0.1, None, None),
+                ("sub_module_2/pom.xml", 0.05, None, None),
+            ],
         ),
         (
             Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_pom"),
@@ -84,7 +87,8 @@ def test_maven_build_tool_with_group_artifact_validation(maven_tool: Maven, maca
 
     ctx.component.name = "does-not-exist"
     not_detected = maven_tool.is_detected(ctx.component)
-    assert not not_detected
+    assert {item[0] for item in not_detected} == {"pom.xml", "sub_module_1/pom.xml", "sub_module_2/pom.xml"}
+    assert all(item[1] <= 0.1 for item in not_detected)
 
 
 def test_maven_build_tool_with_multimodule_artifact_suffix(maven_tool: Maven, tmp_path: Path) -> None:

@@ -83,7 +83,8 @@ def test_gradle_build_tool_with_group_artifact_validation(gradle_tool: Gradle, t
 
     ctx.component.name = "another-app"
     not_detected = gradle_tool.is_detected(ctx.component)
-    assert not not_detected
+    assert {item[0] for item in not_detected} == {"build.gradle", "settings.gradle"}
+    assert all(item[1] <= 0.1 for item in not_detected)
 
 
 def test_gradle_build_tool_with_project_group_and_multimodule_name(gradle_tool: Gradle, tmp_path: Path) -> None:
