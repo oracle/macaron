@@ -63,6 +63,18 @@ def test_compose_shell_commands(
         pytest.param(
             [
                 BuildToolFacts(
+                    language="python",
+                    build_tool_name="uv",
+                    confidence=1.0,
+                )
+            ],
+            "python",
+            ["uv"],
+            id="python_uv_supported",
+        ),
+        pytest.param(
+            [
+                BuildToolFacts(
                     language="java",
                     build_tool_name="gradle",
                     confidence=1.0,

@@ -30,6 +30,7 @@ from macaron.slsa_analyzer.build_tool.maven import Maven
 from macaron.slsa_analyzer.build_tool.npm import NPM
 from macaron.slsa_analyzer.build_tool.pip import Pip
 from macaron.slsa_analyzer.build_tool.poetry import Poetry
+from macaron.slsa_analyzer.build_tool.uv import Uv
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.ci_service.circleci import CircleCI
@@ -164,6 +165,25 @@ def flit_tool(setup_test) -> Flit:  # type: ignore # pylint: disable=unused-argu
     flit = Flit()
     flit.load_defaults()
     return flit
+
+
+@pytest.fixture(autouse=True)
+def uv_tool(setup_test) -> Uv:  # type: ignore # pylint: disable=unused-argument
+    """Create a Uv tool instance.
+
+    Parameters
+    ----------
+    setup_test
+        Depends on setup_test fixture.
+
+    Returns
+    -------
+    Uv
+        The Uv instance.
+    """
+    uv = Uv()
+    uv.load_defaults()
+    return uv
 
 
 @pytest.fixture(autouse=True)
@@ -308,6 +328,7 @@ def get_build_tools(
     gradle_tool: BaseBuildTool,
     pip_tool: BaseBuildTool,
     poetry_tool: BaseBuildTool,
+    uv_tool: BaseBuildTool,
     flit_tool: BaseBuildTool,
     hatch_tool: BaseBuildTool,
     conda_tool: BaseBuildTool,
@@ -326,6 +347,7 @@ def get_build_tools(
         "gradle": gradle_tool,
         "pip": pip_tool,
         "poetry": poetry_tool,
+        "uv": uv_tool,
         "flit": flit_tool,
         "hatch": hatch_tool,
         "conda": conda_tool,

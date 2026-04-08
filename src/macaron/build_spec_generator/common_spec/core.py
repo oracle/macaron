@@ -58,6 +58,7 @@ class MacaronBuildToolName(str, Enum):
     GRADLE = "gradle"
     PIP = "pip"
     POETRY = "poetry"
+    UV = "uv"
     FLIT = "flit"
     HATCH = "hatch"
     CONDA = "conda"
