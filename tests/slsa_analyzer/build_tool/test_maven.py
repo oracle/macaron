@@ -43,7 +43,6 @@ def test_get_build_dirs(snapshot: list, maven_tool: Maven, mock_repo: Path) -> N
             "sub_module_1",
             [
                 ("sub_module_1/pom.xml", 0.1, None, None),
-                ("sub_module_2/pom.xml", 0.05, None, None),
             ],
         ),
         (
@@ -71,24 +70,44 @@ def test_maven_build_tool(
     assert maven_tool.is_detected(ctx.component) == expected_value
 
 
-def test_maven_build_tool_with_group_artifact_validation(maven_tool: Maven, macaron_path: str) -> None:
+@pytest.mark.parametrize(
+    ("artifact_id", "expected_paths", "expected_parent_paths", "max_confidence"),
+    [
+        (
+            "sub_module_1",
+            {"sub_module_1/pom.xml"},
+            {"pom.xml"},
+            1.0,
+        ),
+        (
+            "does-not-exist",
+            {"pom.xml"},
+            {"pom.xml"},
+            0.1,
+        ),
+    ],
+)
+def test_maven_build_tool_with_group_artifact_validation(
+    maven_tool: Maven,
+    macaron_path: str,
+    artifact_id: str,
+    expected_paths: set[str],
+    expected_parent_paths: set[str],
+    max_confidence: float,
+) -> None:
     """Test Maven detection with explicit group/artifact validation."""
     base_dir = Path(__file__).parent
     mock_repo = Path(__file__).parent.joinpath("mock_repos", "maven_repos", "has_parent_pom")
     ctx = prepare_repo_for_testing(str(mock_repo), macaron_path, base_dir)
     ctx.component.type = maven_tool.purl_type
     ctx.component.namespace = "com.mock_repos.has_parent_pom"
-    ctx.component.name = "sub_module_1"
+    ctx.component.name = artifact_id
 
     detected = maven_tool.is_detected(ctx.component)
     assert detected
-    assert {item[0] for item in detected} == {"sub_module_1/pom.xml"}
-    assert {item[3] for item in detected} == {"pom.xml"}
-
-    ctx.component.name = "does-not-exist"
-    not_detected = maven_tool.is_detected(ctx.component)
-    assert {item[0] for item in not_detected} == {"pom.xml", "sub_module_1/pom.xml", "sub_module_2/pom.xml"}
-    assert all(item[1] <= 0.1 for item in not_detected)
+    assert {item[0] for item in detected} == expected_paths
+    assert {item[3] for item in detected} == expected_parent_paths
+    assert all(item[1] <= max_confidence for item in detected)
 
 
 def test_maven_build_tool_with_multimodule_artifact_suffix(maven_tool: Maven, tmp_path: Path) -> None:

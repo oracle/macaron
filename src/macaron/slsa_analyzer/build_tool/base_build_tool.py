@@ -87,7 +87,8 @@ def find_first_matching_file(directory: Path, pattern: str) -> Path | None:
     Path | None
         The first matching file's path, or None if no match is found.
     """
-    for match in directory.glob(pattern):
+    # Sort results to make selection deterministic across filesystems/platforms.
+    for match in sorted(directory.glob(pattern), key=lambda p: p.name):
         return match
     return None
 
@@ -147,7 +148,8 @@ def file_exists(
 
     def _enqueue_subdirs(directory: Path, queue: deque[Path]) -> None:
         """Add non-symlink subdirectories to the search queue."""
-        for entry in directory.iterdir():
+        # Sort subdirectories so BFS traversal order is deterministic.
+        for entry in sorted(directory.iterdir(), key=lambda p: p.name):
             if entry.is_dir() and not entry.is_symlink():
                 queue.append(entry)
 
