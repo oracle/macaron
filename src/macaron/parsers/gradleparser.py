@@ -36,20 +36,28 @@ def _extract_assignment_value(file_path: Path, keys: set[str]) -> str | None:
         return None
 
     assignment_re = re.compile(r"^\s*([A-Za-z0-9_.]+)\s*=\s*(.+?)\s*$")
+    # Support Groovy method-style property syntax like: group "org.example"
+    invocation_re = re.compile(r"^\s*([A-Za-z0-9_.]+)\s+(.+?)\s*$")
     for line in lines:
+        key: str | None = None
+        raw_value: str | None = None
         try:
-            match = assignment_re.match(line)
+            assignment_match = assignment_re.match(line)
+            if assignment_match:
+                key = assignment_match.group(1).strip()
+                raw_value = assignment_match.group(2).strip()
+            else:
+                # Fall back to method-style declarations when "=" assignment is not used.
+                invocation_match = invocation_re.match(line)
+                if invocation_match:
+                    key = invocation_match.group(1).strip()
+                    raw_value = invocation_match.group(2).strip()
         except re.error as error:
             logger.debug("Failed to apply assignment regex on %s: %s", str(file_path), error)
             continue
-        if not match:
+        if key not in keys or raw_value is None:
             continue
 
-        key = match.group(1).strip()
-        if key not in keys:
-            continue
-
-        raw_value = match.group(2).strip()
         if len(raw_value) >= 2 and raw_value[0] == raw_value[-1] and raw_value[0] in {"'", '"'}:
             raw_value = raw_value[1:-1]
         return raw_value
@@ -157,14 +165,75 @@ def extract_included_gradle_modules(settings_path: Path) -> list[str]:
         logger.debug("Failed to read Gradle settings file %s: %s", str(settings_path), error)
         return []
 
+    def _expand_it_name_from_local_modules(base_dir: Path) -> list[str]:
+        """Expand include(it.name) by enumerating sibling directories with Gradle build files."""
+        try:
+            child_dirs = sorted((child for child in base_dir.iterdir() if child.is_dir()), key=lambda path: path.name)
+        except OSError as error:
+            logger.debug("Failed to list child modules for include(it.name) in %s: %s", str(base_dir), error)
+            return []
+
+        expanded: list[str] = []
+        for child_dir in child_dirs:
+            if child_dir.name.startswith("."):
+                continue
+            if child_dir.joinpath("build.gradle").is_file() or child_dir.joinpath("build.gradle.kts").is_file():
+                expanded.append(child_dir.name)
+        return expanded
+
     modules: list[str] = []
     quoted_value_re = re.compile(r"""['"]([^'"]+)['"]""")
     for line in lines:
         stripped = line.strip()
         if not stripped.startswith("include"):
             continue
+        if stripped.startswith("include(") and "it.name" in stripped:
+            # Kotlin DSL patterns such as include(it.name) are common in repos
+            # that auto-register modules by scanning top-level directories.
+            modules.extend(_expand_it_name_from_local_modules(settings_path.parent))
+            continue
         modules.extend(match.group(1).strip() for match in quoted_value_re.finditer(stripped) if match.group(1).strip())
-    return modules
+
+    # Gradle settings can include dynamic module names using patterns like
+    # `include "path:${it.name}"` within `eachDirMatch` blocks. We expand the
+    # `${it.name}` segment from existing directories to keep module matching
+    # deterministic without evaluating arbitrary Gradle code.
+    expanded_modules: list[str] = []
+    for module in modules:
+        if "${it.name}" not in module:
+            expanded_modules.append(module)
+            continue
+
+        parts = module.split(":")
+        try:
+            token_index = next(index for index, part in enumerate(parts) if "${it.name}" in part)
+        except StopIteration:
+            expanded_modules.append(module)
+            continue
+
+        # `${it.name}` is expected to be the last path segment; everything before
+        # it maps to an on-disk directory whose children provide concrete values.
+        base_dir = settings_path.parent.joinpath(*parts[:token_index])
+        if not base_dir.is_dir():
+            logger.debug("Failed to expand dynamic Gradle module path %s: %s does not exist", module, str(base_dir))
+            expanded_modules.append(module)
+            continue
+
+        try:
+            child_dirs = sorted((child for child in base_dir.iterdir() if child.is_dir()), key=lambda path: path.name)
+        except OSError as error:
+            logger.debug("Failed to list children for dynamic Gradle module path %s: %s", str(base_dir), error)
+            expanded_modules.append(module)
+            continue
+
+        # Expand one logical include pattern into concrete modules, one per child
+        # directory (for example, spring-boot-starter-thymeleaf).
+        for child_dir in child_dirs:
+            expanded_parts = list(parts)
+            expanded_parts[token_index] = expanded_parts[token_index].replace("${it.name}", child_dir.name)
+            expanded_modules.append(":".join(expanded_parts))
+
+    return expanded_modules
 
 
 def find_matching_gradle_module_build_configs(repo_root: Path, artifact_id: str) -> list[Path]:

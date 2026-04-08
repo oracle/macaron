@@ -52,6 +52,26 @@ def test_extract_gav_from_gradle_project_not_found(tmp_path: Path) -> None:
     assert extract_gav_from_gradle_project(repo_path) == (None, None, None)
 
 
+def test_extract_gav_from_gradle_project_method_style_group(tmp_path: Path) -> None:
+    """Test extracting group from Gradle method-style syntax (group '...')."""
+    repo_path = tmp_path.joinpath("gradle_repo")
+    repo_path.mkdir()
+    repo_path.joinpath("gradle.properties").write_text("version=3.0.0\n")
+    repo_path.joinpath("settings.gradle").write_text("rootProject.name = 'spring-boot-build'\n")
+    repo_path.joinpath("build.gradle").write_text(
+        "\n".join(
+            [
+                "allprojects {",
+                '    group "org.springframework.boot"',
+                "}",
+            ]
+        )
+        + "\n"
+    )
+
+    assert extract_gav_from_gradle_project(repo_path) == ("org.springframework.boot", "spring-boot-build", "3.0.0")
+
+
 def test_extract_included_gradle_modules(tmp_path: Path) -> None:
     """Test extracting module names from include directives."""
     settings_file = tmp_path.joinpath("settings.gradle")
@@ -74,6 +94,29 @@ def test_extract_included_gradle_modules(tmp_path: Path) -> None:
     ]
 
 
+def test_extract_included_gradle_modules_dynamic_it_name(tmp_path: Path) -> None:
+    """Test expanding dynamic include entries that use ${it.name}."""
+    repo_path = tmp_path.joinpath("repo")
+    starters_dir = repo_path.joinpath("spring-boot-project", "spring-boot-starters")
+    starters_dir.joinpath("spring-boot-starter-thymeleaf").mkdir(parents=True)
+    starters_dir.joinpath("spring-boot-starter-web").mkdir(parents=True)
+    repo_path.joinpath("settings.gradle").write_text(
+        "\n".join(
+            [
+                'file("${rootDir}/spring-boot-project/spring-boot-starters").eachDirMatch(~/spring-boot-starter.*/) {',
+                '    include "spring-boot-project:spring-boot-starters:${it.name}"',
+                "}",
+            ]
+        )
+        + "\n"
+    )
+
+    assert extract_included_gradle_modules(repo_path.joinpath("settings.gradle")) == [
+        "spring-boot-project:spring-boot-starters:spring-boot-starter-thymeleaf",
+        "spring-boot-project:spring-boot-starters:spring-boot-starter-web",
+    ]
+
+
 def test_find_matching_gradle_module_build_configs(tmp_path: Path) -> None:
     """Test finding module build files based on artifact id suffix matching."""
     repo_path = tmp_path.joinpath("repo")
@@ -83,6 +126,32 @@ def test_find_matching_gradle_module_build_configs(tmp_path: Path) -> None:
     target_build.write_text("plugins { id 'java' }\n")
 
     assert find_matching_gradle_module_build_configs(repo_path, "micronaut-test-junit5") == [target_build]
+
+
+def test_find_matching_gradle_module_build_configs_dynamic_it_name(tmp_path: Path) -> None:
+    """Test finding module build files from dynamically included Gradle modules."""
+    repo_path = tmp_path.joinpath("repo")
+    starter_thymeleaf = repo_path.joinpath(
+        "spring-boot-project", "spring-boot-starters", "spring-boot-starter-thymeleaf"
+    )
+    starter_web = repo_path.joinpath("spring-boot-project", "spring-boot-starters", "spring-boot-starter-web")
+    starter_thymeleaf.mkdir(parents=True)
+    starter_web.mkdir(parents=True)
+    target_build = starter_thymeleaf.joinpath("build.gradle")
+    target_build.write_text("plugins { id 'java' }\n")
+    starter_web.joinpath("build.gradle").write_text("plugins { id 'java' }\n")
+    repo_path.joinpath("settings.gradle").write_text(
+        "\n".join(
+            [
+                'file("${rootDir}/spring-boot-project/spring-boot-starters").eachDirMatch(~/spring-boot-starter.*/) {',
+                '    include "spring-boot-project:spring-boot-starters:${it.name}"',
+                "}",
+            ]
+        )
+        + "\n"
+    )
+
+    assert find_matching_gradle_module_build_configs(repo_path, "spring-boot-starter-thymeleaf") == [target_build]
 
 
 def test_find_matching_gradle_module_build_configs_nested_fallback(tmp_path: Path) -> None:
@@ -95,6 +164,30 @@ def test_find_matching_gradle_module_build_configs_nested_fallback(tmp_path: Pat
     target_build.write_text("plugins { id 'java' }\n")
 
     assert find_matching_gradle_module_build_configs(repo_path, "micronaut-test-junit5") == [target_build]
+
+
+def test_extract_included_gradle_modules_include_it_name(tmp_path: Path) -> None:
+    """Test extracting include(it.name) modules from top-level Gradle subprojects."""
+    repo_path = tmp_path.joinpath("repo")
+    repo_path.joinpath("acra-core").mkdir(parents=True)
+    repo_path.joinpath("acra-http").mkdir(parents=True)
+    repo_path.joinpath("examples").mkdir(parents=True)
+    repo_path.joinpath("acra-core", "build.gradle.kts").write_text("plugins {}\n")
+    repo_path.joinpath("acra-http", "build.gradle.kts").write_text("plugins {}\n")
+    repo_path.joinpath("examples", "build.gradle.kts").write_text("plugins {}\n")
+    settings_file = repo_path.joinpath("settings.gradle.kts")
+    settings_file.write_text(
+        "\n".join(
+            [
+                "rootDir.listFiles()?.forEach {",
+                "  include(it.name)",
+                "}",
+            ]
+        )
+        + "\n"
+    )
+
+    assert extract_included_gradle_modules(settings_file) == ["acra-core", "acra-http", "examples"]
 
 
 def test_find_nearest_modules_gradle_config(tmp_path: Path) -> None:

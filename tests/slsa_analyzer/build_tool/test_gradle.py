@@ -107,6 +107,40 @@ def test_gradle_build_tool_with_project_group_and_multimodule_name(gradle_tool: 
     assert detected[0][3] == "settings.gradle"
 
 
+def test_gradle_build_tool_with_dynamic_include_it_name(gradle_tool: Gradle, tmp_path: Path) -> None:
+    """Test Gradle detection when modules are dynamically included via include(it.name)."""
+    gradle_repo = tmp_path.joinpath("gradle_repo")
+    gradle_repo.joinpath("acra-core").mkdir(parents=True)
+    gradle_repo.joinpath("acra-http").mkdir(parents=True)
+    gradle_repo.joinpath("gradle.properties").write_text("group=ch.acra\nversion=5.12.0\n", encoding="utf-8")
+    gradle_repo.joinpath("settings.gradle.kts").write_text(
+        "\n".join(
+            [
+                "rootDir.listFiles()?.forEach {",
+                '    if (it.isDirectory && it.name.startsWith("acra") && it.list()?.contains("build.gradle.kts") == true) {',
+                "        include(it.name)",
+                "    }",
+                "}",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    gradle_repo.joinpath("build.gradle.kts").write_text("plugins {}\n", encoding="utf-8")
+    gradle_repo.joinpath("acra-core", "build.gradle.kts").write_text("plugins {}\n", encoding="utf-8")
+    gradle_repo.joinpath("acra-http", "build.gradle.kts").write_text("plugins {}\n", encoding="utf-8")
+
+    ctx = MockAnalyzeContext(
+        macaron_path="",
+        output_dir="",
+        fs_path=str(gradle_repo),
+        purl="pkg:maven/ch.acra/acra-core@5.12.0",
+    )
+    detected = gradle_tool.is_detected(ctx.component)
+    assert detected
+    assert detected[0][0] == "acra-core/build.gradle.kts"
+
+
 @pytest.mark.parametrize(
     (
         "command",

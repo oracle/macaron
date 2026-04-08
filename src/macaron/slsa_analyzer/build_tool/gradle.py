@@ -157,11 +157,18 @@ class Gradle(BaseBuildTool):
         artifact_id = artifact_id or kwargs.get("artifact_id")
         repo_path = kwargs.get("repo_path")
         if group_id and artifact_id:
-            project_root = Path(repo_path) if repo_path else config_path.parent
-            ex_group_id, ex_artifact_id, _ = extract_gav_from_gradle_project(project_root)
+            repo_root = Path(repo_path) if repo_path else None
+            module_root = config_path.parent
+            # Validate artifact IDs against the candidate module itself so module
+            # directories (for example, acra-core) can still match even when
+            # settings files use dynamic include forms (e.g., include(it.name)).
+            ex_group_id, ex_artifact_id, _ = extract_gav_from_gradle_project(module_root)
+            if ex_group_id is None and repo_root:
+                # Group is often centralized at the repository root.
+                ex_group_id, _, _ = extract_gav_from_gradle_project(repo_root)
             if group_id != ex_group_id:
                 return False
-            return self._validate_artifact_id(project_root, artifact_id, ex_artifact_id)
+            return self._validate_artifact_id(module_root, artifact_id, ex_artifact_id)
 
         # If group or artifact ID is not provided, there is nothing to validate and return True.
         return True
