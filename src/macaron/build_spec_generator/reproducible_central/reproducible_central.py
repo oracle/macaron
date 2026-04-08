@@ -86,12 +86,10 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
         raise GenerateBuildSpecError(f"Version is missing in PURL {build_spec['purl']}")
 
     # Add -Dmaven.test.skip for Maven builds.
-    # TODO: Use the build tool associated with the build command once
-    # https://github.com/oracle/macaron/issues/1300 is closed.
     adapted_build_commands: list[list[str]] = []
     for build_command in build_spec["build_commands"]:
         command = build_command["command"]
-        if command and ReproducibleCentralBuildTool.MAVEN.value in command[0]:
+        if command and ReproducibleCentralBuildTool.MAVEN.name.lower() == build_command["build_tool"]:
             adapted_build_commands.append(command[:1] + ["-Dmaven.test.skip=true"] + command[1:])
         else:
             adapted_build_commands.append(command)
