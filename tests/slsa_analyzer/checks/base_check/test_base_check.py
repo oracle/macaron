@@ -1,10 +1,12 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for BaseCheck."""
 
 from unittest import TestCase
 from unittest.mock import MagicMock
+
+import pytest
 
 from macaron.slsa_analyzer.checks.base_check import BaseCheck
 
@@ -23,6 +25,6 @@ class TestConfiguration(TestCase):
             def __init__(self) -> None:
                 super().__init__("Child check", "Child check without implemented abstract method(s).")
 
-        with self.assertRaises(NotImplementedError):
-            check = ChildCheck()  # type: ignore
+        check = ChildCheck()  # type: ignore
+        with pytest.raises(NotImplementedError):
             check.run_check(MagicMock())

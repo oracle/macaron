@@ -86,7 +86,7 @@ class cache_return(typing.Generic[_T, _P]):  # pylint: disable=invalid-name # no
     def clear(self) -> None:
         """Remove the cached return value."""
         try:
-            delattr(self, "return_value")
+            del self.return_value
         except AttributeError:
             logger.debug("No cached return value to remove.")
 

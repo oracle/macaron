@@ -25,18 +25,21 @@ extend-select = B9, W504
 # E266: too many leading '#' for block comment
 # E501: line too long, managed better by Bugbear's B950
 # W503: line break before binary operator
-
+#
 # http://www.pydocstyle.org/en/latest/error_codes.html
 # D105: Missing docstring in magic method
 # D104: Missing docstring in public package
 # D404: First word of the docstring should not be `This`
-
+#
 # https://pypi.org/project/flake8-pytest-style/
 # PT009: use a regular assert instead of unittest-style
-
+#
 # https://github.com/peterjc/flake8-rst-docstrings#configuration
 # RST307: Error in "XXX" directive
-ignore = E203,E266,E501,W503,D105,D404,PT009
+#
+# https://github.com/PyCQA/flake8-bugbear
+# B907 'XXX' is manually surrounded by quotes, consider using the `!r` conversion flag.
+ignore = B907,E203,E266,E501,W503,D105,D404,PT009
 
 # Disabling the following for tests:
 #
@@ -67,6 +70,10 @@ noqa-require-code = true
 rst-roles = class, func, ref
 rst-directives = envvar, exception
 rst-substitutions = version
+
+# Ensure consistent pytest.fixture() use:
+# https://github.com/m-burst/flake8-pytest-style#configuration
+pytest-fixture-no-parentheses = false
 
 # Ensure that Sphinx docstrings use Numpy format for docstrings:
 # https://github.com/PyCQA/flake8-docstrings

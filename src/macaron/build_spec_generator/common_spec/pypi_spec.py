@@ -348,7 +348,7 @@ class PyPIBuildSpec(
             contents
         """
         # From https://peps.python.org/pep-0427/#escaping-and-unicode
-        normalized_name = re.sub(r"[^\w\d.]+", "_", purl.name, re.UNICODE)
+        normalized_name = re.sub(r"[^\w\d.]+", "_", purl.name, flags=re.UNICODE)
         dist_info = f"{normalized_name}-{purl.version}.dist-info"
         logger.debug(dist_info)
 

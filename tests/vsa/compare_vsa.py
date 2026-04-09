@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Script to compare a generated VSA with an expected payload."""
@@ -144,7 +144,7 @@ def compare_list(
 
     equal = True
 
-    for i, (result_element, expected_element) in enumerate(zip(result, expected)):
+    for i, (result_element, expected_element) in enumerate(zip(result, expected, strict=True)):
         equal &= compare_json(
             result=result_element,
             expected=expected_element,

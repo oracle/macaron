@@ -867,7 +867,7 @@ class PyPIPackageJsonAsset:
             try:
                 self.package_upload_time = datetime.strptime(distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S")
             except ValueError:
-                logging.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
+                logger.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
             # Only examine wheels
             if distribution.get("packagetype") != "bdist_wheel":
                 continue
@@ -883,7 +883,7 @@ class PyPIPackageJsonAsset:
                         distribution.get("upload_time") or "", "%Y-%m-%dT%H:%M:%S"
                     )
                 except ValueError:
-                    logging.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
+                    logger.debug("Could not parse the uploaded datetime: %s", distribution.get("upload_time") or "")
                 try:
                     parsed_url = urllib.parse.urlparse(wheel_url)
                 except ValueError:

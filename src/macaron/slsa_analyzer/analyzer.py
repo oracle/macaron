@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles the cloning and analyzing a Git repo."""
@@ -12,7 +12,7 @@ import tempfile
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import sqlalchemy.exc
 from packageurl import PackageURL
@@ -1221,7 +1221,7 @@ class Analyzer:
 class DuplicateCmpError(DuplicateError):
     """This class is used for duplicated software component errors."""
 
-    def __init__(self, *args: Any, context: AnalyzeContext | None = None, **kwargs: Any) -> None:
+    def __init__(self, message: str, context: AnalyzeContext | None = None) -> None:
         """Create a DuplicateCmpError instance.
 
         Parameters
@@ -1229,5 +1229,5 @@ class DuplicateCmpError(DuplicateError):
         context: AnalyzeContext | None
             The context in which the exception is raised.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(message, context)
         self.context: AnalyzeContext | None = context
