@@ -143,22 +143,22 @@ install-slsa-verifier:
 setup-schemastore: $(PACKAGE_PATH)/resources/schemastore/github-workflow.json $(PACKAGE_PATH)/resources/schemastore/LICENSE $(PACKAGE_PATH)/resources/schemastore/NOTICE
 $(PACKAGE_PATH)/resources/schemastore/github-workflow.json:
 	cd $(PACKAGE_PATH)/resources \
-		&& mkdir -p schemastore \
-		&& cd schemastore \
-		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/src/schemas/json/github-workflow.json \
-		&& cd $(REPO_PATH)
+	  && mkdir -p schemastore \
+	  && cd schemastore \
+	  && wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/src/schemas/json/github-workflow.json \
+	  && cd $(REPO_PATH)
 $(PACKAGE_PATH)/resources/schemastore/LICENSE:
 	cd $(PACKAGE_PATH)/resources \
-		&& mkdir -p schemastore \
-		&& cd schemastore \
-		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/LICENSE \
-		&& cd $(REPO_PATH)
+	  && mkdir -p schemastore \
+	  && cd schemastore \
+	  && wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/LICENSE \
+	  && cd $(REPO_PATH)
 $(PACKAGE_PATH)/resources/schemastore/NOTICE:
 	cd $(PACKAGE_PATH)/resources \
-		&& mkdir -p schemastore \
-		&& cd schemastore \
-		&& wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/NOTICE \
-		&& cd $(REPO_PATH)
+	  && mkdir -p schemastore \
+	  && cd schemastore \
+	  && wget https://raw.githubusercontent.com/SchemaStore/schemastore/a1689388470d1997f2e5ebd8b430e99587b8d354/NOTICE \
+	  && cd $(REPO_PATH)
 
 # Supports OL8+, Fedora 34+, Ubuntu 22.04+ and 24.04+, and macOS.
 OS := "$(shell uname)"
@@ -170,6 +170,7 @@ else
     OS_MAJOR_VERSION := "$(shell grep '^VERSION=' /etc/os-release | sed -r 's/^[^0-9]+([0-9]+)\..*/\1/')"
   endif
 endif
+
 # If Souffle cannot be installed, we advise the user to install it manually
 # and return status code 0, which is not considered a failure.
 .PHONY: souffle
@@ -227,7 +228,7 @@ gnu-sed:
 # here instead of `go get -u` to avoid updating indirect dependencies
 # and creating a broken state:
 # https://github.com/golang/go/issues/28424#issuecomment-1101896499
-.PHONY: upgrade force-upgrade
+.PHONY: upgrade force-upgrade upgrade-quiet upgrade-go
 upgrade: .venv/upgraded-on
 .venv/upgraded-on: pyproject.toml
 	python -m pip install --upgrade pip
@@ -299,13 +300,12 @@ requirements.txt: pyproject.toml
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
 # found an issue.
-# Remove GHSA-5239-wwwm-4pmq from the ignore list when it is patched.
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-5239-wwwm-4pmq
+	python -m pip_audit --skip-editable --desc on --fix --dry-run
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
@@ -335,10 +335,9 @@ check-actionlint:
 check:
 	pre-commit run --all-files
 
-
 # Run all unit tests. The --files option avoids stashing but passes files; however,
 # the hook setup itself does not pass files to pytest (see .pre-commit-config.yaml).
-.PHONY: test
+.PHONY: test test-go
 test: test-go
 	pre-commit run pytest --hook-stage push --files tests/
 test-go:
@@ -349,52 +348,64 @@ test-go:
 .PHONY: integration-test
 integration-test:
 	if [ "${NO_NPM}" == "TRUE" ]; then \
-    	echo "Note: NO_NPM environment variable is set to TRUE, so npm tests will be skipped."; \
-		python ./tests/integration/run.py \
-			run \
-			--include-tag macaron-python-package \
-			--exclude-tag skip \
-			--exclude-tag npm-registry-testcase \
-			./tests/integration/cases/...; \
+      echo "Note: NO_NPM environment variable is set to TRUE, so npm tests will be skipped."; \
+	  python ./tests/integration/run.py \
+	    run \
+	      --include-tag macaron-python-package \
+	      --exclude-tag skip \
+	      --exclude-tag npm-registry-testcase \
+	      ./tests/integration/cases/...; \
 	else \
-		python ./tests/integration/run.py \
-			run \
-			--include-tag macaron-python-package \
-			--exclude-tag skip \
-			./tests/integration/cases/...; \
+	  python ./tests/integration/run.py \
+	    run \
+	      --include-tag macaron-python-package \
+	      --exclude-tag skip \
+	      ./tests/integration/cases/...; \
 	fi
 
 .PHONY: integration-test-docker
 integration-test-docker:
 	python ./tests/integration/run.py \
-		run \
-		--macaron scripts/release_scripts/run_macaron.sh \
-		--include-tag macaron-docker-image \
-		--exclude-tag skip \
-		./tests/integration/cases/...
+	  run \
+	    --macaron scripts/release_scripts/run_macaron.sh \
+	    --include-tag macaron-docker-image \
+	    --exclude-tag skip \
+	    ./tests/integration/cases/...
 
 # Update the expected results of the integration tests after generating the actual results.
 .PHONY: integration-test-update
 integration-test-update:
 	python ./tests/integration/run.py \
-		update \
-		--exclude-tag skip \
-		./tests/integration/cases/...
+	  update \
+	    --exclude-tag skip \
+	    ./tests/integration/cases/...
 
 # Build a source distribution package and a binary wheel distribution artifact.
 # When building these artifacts, we need the environment variable SOURCE_DATE_EPOCH
 # set to the build date/epoch. For more details, see: https://flit.pypa.io/en/latest/reproducible.html
 .PHONY: dist
-dist: dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/$(PACKAGE_SDIST_NAME).tar.gz dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip dist/$(PACKAGE_WHEEL_DIST_NAME)-build-epoch.txt
+dist: dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/$(PACKAGE_SDIST_NAME).tar.gz dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip
 dist/$(PACKAGE_WHEEL_DIST_NAME).whl: check test integration-test
-	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) flit build --setup-py --format wheel
+	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) python -m flit build --no-setup-py --format wheel
+	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_WHEEL_DIST_NAME)-build-epoch.txt
 	mv dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-py3-none-any.whl dist/$(PACKAGE_WHEEL_DIST_NAME).whl
 dist/$(PACKAGE_SDIST_NAME).tar.gz: check test integration-test
-	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) flit build --setup-py --format sdist
+	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) python -m flit build --no-setup-py --format sdist
 dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip: docs
 	python -m zipfile -c dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)-docs-html.zip docs/_build/html
-dist/$(PACKAGE_WHEEL_DIST_NAME)-build-epoch.txt:
-	echo $(SOURCE_DATE_EPOCH) > dist/$(PACKAGE_WHEEL_DIST_NAME)-build-epoch.txt
+
+# Build a PEP-503 compatible Simple Repository directory inside of dist/. For details on
+# the layout of that directory and the normalized project name, see: https://peps.python.org/pep-0503/
+# The directory can then be used to install (hashed) artifacts by using `pip` and
+# its `--extra-index-url` argument: https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-extra-index-url
+PROJECT_NAME := $(shell python -c $$'import re; print(re.sub(r"[-_.]+", "-", "$(PACKAGE_NAME)").lower());')
+.PHONY: simple-index
+simple-index: dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
+	mkdir -p dist/simple-index/$(PROJECT_NAME)
+	echo -e "<!-- https://peps.python.org/pep-0503/ -->\n<!DOCTYPE html><html lang='en'><head><meta name='pypi:repository-version' content='1.3'><title>Simple Index</title></head><body><a href='/$(PACKAGE_NAME)/'>$(PACKAGE_NAME)</a></body></html>" > dist/simple-index/index.html
+	echo -e "<!-- https://peps.python.org/pep-0503/ -->\n<!DOCTYPE html><html lang='en'><head><meta name='pypi:repository-version' content='1.3'><title>Simple Index: $(PROJECT_NAME)</title></head><body><a href='$(PACKAGE_WHEEL_DIST_NAME).whl#sha256="$$(python -c "with open('dist/$(PACKAGE_WHEEL_DIST_NAME).whl', 'rb') as f: import hashlib; print(hashlib.sha256(f.read()).hexdigest());")"'>$(PACKAGE_WHEEL_DIST_NAME).whl</a><a href='$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz#sha256="$$(python -c "with open('dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz', 'rb') as f: import hashlib; print(hashlib.sha256(f.read()).hexdigest());")"'>$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz</a></body></html>" > dist/simple-index/$(PROJECT_NAME)/index.html
+	cp -f dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/simple-index/$(PROJECT_NAME)/
+	cp -f dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz dist/simple-index/$(PROJECT_NAME)/
 
 # Build the HTML documentation from the package's source.
 .PHONY: docs
@@ -458,7 +469,9 @@ clean: dist-clean bin-clean docs-clean
 	rm -fr .coverage .hypothesis/ .mypy_cache/ .pytest_cache/
 
 # Remove code caches, or the entire virtual environment if it is deactivated..
-.PHONY: nuke-caches nuke
+.PHONY: nuke-git-hooks nuke-caches nuke
+nuke-git-hooks:
+	find .git/hooks/ -type f ! -name '*.sample' -exec rm -fr {} +
 nuke-caches: clean
 	find src/ -type d -name __pycache__ -exec rm -fr {} +
 	find tests/ -type d -name __pycache__ -exec rm -fr {} +

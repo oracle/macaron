@@ -30,6 +30,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+PKG-INFO
 
 # Local venv
 bin/
@@ -136,7 +137,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-#Macaron
+# Macaron
 __pycache__
 .pyc
 .idea
