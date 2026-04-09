@@ -193,7 +193,7 @@ def test_construct_file_info_url(
                 "group_id": "com.fasterxml.jackson.core",
                 "artifact_id": "jackson-annotations",
             },
-            "https://registry.jfrog.com/api/search/latestVersion?repos=repo&g=com.fasterxml.jackson.core&a=jackson-annotations",  # noqa: B950
+            "https://registry.jfrog.com/api/search/latestVersion?repos=repo&g=com.fasterxml.jackson.core&a=jackson-annotations",
         ),
     ],
 )

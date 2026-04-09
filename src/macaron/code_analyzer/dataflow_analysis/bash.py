@@ -700,7 +700,7 @@ class BashStatementNode(core.InterpretationNode):
             for values_product_elem in values_product:
                 new_arg_vals: dict[int, list[facts.Value | None]] = {}
                 read_bindings_list: list[evaluation.ReadBindings] = []
-                for arg_index, value_index in zip(arg_indices_in_order, values_product_elem):
+                for arg_index, value_index in zip(arg_indices_in_order, values_product_elem, strict=True):
                     if value_index != -1:
                         expanded_vals, bindings = multitoken_resolved_arg_vals[arg_index][value_index]
                         read_bindings_list.append(bindings)

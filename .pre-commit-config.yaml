@@ -5,7 +5,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 default_install_hook_types: [pre-commit, commit-msg, pre-push]
 default_stages: [pre-commit]
-minimum_pre_commit_version: 3.0.0
+minimum_pre_commit_version: 4.0.0
 
 repos:
 
@@ -46,7 +46,7 @@ repos:
   - id: blacken-docs
     name: Format code in docstrings
     args: [--line-length, '120']
-    additional_dependencies: [black==22.10.0]
+    additional_dependencies: [black==26.3.1]
 
 # Upgrade and rewrite Python idioms.
 - repo: https://github.com/asottile/pyupgrade
@@ -66,7 +66,7 @@ repos:
     name: Check flake8 issues
     files: ^src/macaron/|^tests/
     types: [text, python]
-    additional_dependencies: [flake8-bugbear==22.10.27, flake8-builtins==2.0.1, flake8-comprehensions==3.10.1, flake8-docstrings==1.6.0, flake8-mutable==1.2.0, flake8-noqa==1.4.0, flake8-pytest-style==1.6.0, flake8-rst-docstrings==0.3.0, flake8-print==5.0.0, pep8-naming==0.13.2]
+    additional_dependencies: [flake8-bugbear==25.11.29, flake8-builtins==3.1.0, flake8-comprehensions==3.17.0, flake8-docstrings==1.7.0, flake8-logging==1.8.0, flake8-mutable==1.2.0, flake8-noqa==1.5.0, flake8-print==5.0.0, flake8-pytest-style==2.2.0, flake8-rst-docstrings==0.4.0, pep8-naming==0.15.1]
     exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
     args: [--config, .flake8]
 
@@ -220,7 +220,6 @@ repos:
     language: system
     always_run: true
     pass_filenames: false
-
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint

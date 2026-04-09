@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the Registry class."""
@@ -66,19 +66,19 @@ class TestRegistry(TestCase):
 
     def test_exit_on_duplicated(self) -> None:
         """Test registering a duplicated check_id Check."""
-        with self.assertRaises(SystemExit):
-            self.REGISTRY.register(MockCheck("mcn_duplicated_check_1", ""))
+        self.REGISTRY.register(MockCheck("mcn_duplicated_check_1", ""))
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(MockCheck("mcn_duplicated_check_1", ""))
 
     def test_exit_on_empty_check_id(self) -> None:
         """Test registering an empty check_id Check."""
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(MockCheck("", ""))
 
     @given(one_of(none(), text(), integers(), tuples(), binary(), booleans()))
     def test_exit_on_invalid_registered_check(self, check: SearchStrategy) -> None:
         """Test registering an invalid Check."""
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(check)  # type: ignore
 
     def test_add_successfully(self) -> None:
@@ -89,16 +89,14 @@ class TestRegistry(TestCase):
     def test_exit_on_registering_undefined_check(self) -> None:
         """Test registering a check which Macaron cannot resolve its module."""
         with patch("inspect.getmodule", return_value=False):
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 self.REGISTRY.register(MockCheck("mcn_undefined_check_1", "This check is an undefined Check."))
 
     @given(one_of(none(), text(), integers(), tuples(), binary(), booleans()))
     def test_exit_on_invalid_check_relationship(self, relationship: SearchStrategy) -> None:
         """Test registering a check with invalid parent status definition."""
-        with self.assertRaises(SystemExit):
-            check = MockCheck(
-                "mcn_invalid_status_1", "Invalid_status_check_should_exit", [relationship]  # type: ignore
-            )
+        check = MockCheck("mcn_invalid_status_1", "Invalid_status_check_should_exit", [relationship])  # type: ignore
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(check)
 
     def test_add_relationship_entry(self) -> None:
@@ -127,11 +125,11 @@ class TestRegistry(TestCase):
         }
 
         # Cannot add a check that depends on itself
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(MockCheck("mcn_e_1", "Self-dependent-check", [("mcn_e_1", CheckResultType.PASSED)]))
 
         # Add a check with duplicated relationships
-        with self.assertRaises(SystemExit):
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(
                 MockCheck(
                     "mcn_f_1",
@@ -151,8 +149,8 @@ class TestRegistry(TestCase):
     )
     def test_exit_on_invalid_eval_reqs(self, eval_reqs: SearchStrategy) -> None:
         """Test registering a check with invalid eval reqs definition."""
-        with self.assertRaises(SystemExit):
-            check = MockCheck("mcn_invalid_eval_reqs_1", "Invalid_eval_reqs_should_exit", [], eval_reqs)  # type: ignore
+        check = MockCheck("mcn_invalid_eval_reqs_1", "Invalid_eval_reqs_should_exit", [], eval_reqs)  # type: ignore
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(check)
 
     @given(
@@ -163,10 +161,10 @@ class TestRegistry(TestCase):
     )
     def test_exit_on_invalid_status_on_skipped(self, status_on_skipped: SearchStrategy) -> None:
         """Test registering a check with invalid status_on_skipped instance variable."""
-        with self.assertRaises(SystemExit):
-            check = MockCheck(
-                "mcn_invalid_eval_reqs_1", "Invalid_status_on_skipped", [], [], status_on_skipped  # type: ignore
-            )
+        check = MockCheck(
+            "mcn_invalid_eval_reqs_1", "Invalid_status_on_skipped", [], [], status_on_skipped  # type: ignore
+        )
+        with pytest.raises(SystemExit):
             self.REGISTRY.register(check)
 
     def test_circular_dependencies(self) -> None:

@@ -369,7 +369,7 @@ class CompareStep(Step[CompareStepOptions]):
             try:
                 shutil.copy2(result_file, expected_file)
             except OSError as err:
-                logger.error(
+                logger.exception(
                     "Failed to copy %s to %s: %s",
                     *(result_file, expected_file, err),
                 )
@@ -939,9 +939,8 @@ def load_test_cases(
     for test_case_dir in test_case_dirs:
         try:
             case_config = load_config(test_case_dir, check_expected_result_files)
-        except InvalidConfigError as exc:
-            logger.error("Case '%s' fails validation.", test_case_dir)
-            logger.error(exc.error_msg)
+        except InvalidConfigError:
+            logger.exception("Case '%s' fails validation.", test_case_dir)
             err = True
         else:
             # Each --include-tag/--exclude-tag argument adds an additional constraint

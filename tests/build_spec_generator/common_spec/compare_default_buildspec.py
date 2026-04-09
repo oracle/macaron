@@ -140,7 +140,7 @@ def compare_list(
 
     equal = True
 
-    for i, (result_element, expected_element) in enumerate(zip(result, expected)):
+    for i, (result_element, expected_element) in enumerate(zip(result, expected, strict=True)):
         equal &= compare_json(
             result=result_element,
             expected=expected_element,
