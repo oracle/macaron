@@ -227,12 +227,24 @@ gnu-sed:
 # here instead of `go get -u` to avoid updating indirect dependencies
 # and creating a broken state:
 # https://github.com/golang/go/issues/28424#issuecomment-1101896499
+#
+# Use `--uploaded-prior-to` option to avoid installing packages that
+# have very recently been published to PyPI. By doing so, this allows
+# for human operators like security researchers and PyPI admins a
+# chance to respond to reports of malware. See:
+# https://blog.pypi.org/posts/2026-04-02-incident-report-litellm-telnyx-supply-chain-attack/
+#
+# Override PYPI_UPLOAD_DELAY_DAYS for urgent security updates that were
+# released very recently, for example:
+# make setup PYPI_UPLOAD_DELAY_DAYS=1
+PYPI_UPLOAD_DELAY_DAYS ?= 2
+PYPI_UPLOADED_PRIOR_TO ?= $$(date -d '-$(PYPI_UPLOAD_DELAY_DAYS)days' -Idate)
 .PHONY: upgrade force-upgrade
 upgrade: .venv/upgraded-on
 .venv/upgraded-on: pyproject.toml
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test,test-docker]
+	python -m pip install --uploaded-prior-to=$(PYPI_UPLOADED_PRIOR_TO) --upgrade --upgrade-strategy eager --editable .[actions,dev,docs,hooks,test,test-docker]
 	$(MAKE) upgrade-quiet
 force-upgrade:
 	rm -f .venv/upgraded-on
@@ -250,7 +262,7 @@ upgrade-go:
 setup-github-actions:
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager .[actions]
+	python -m pip install --uploaded-prior-to=$(PYPI_UPLOADED_PRIOR_TO) --upgrade --upgrade-strategy eager .[actions]
 
 # Install dependencies for the integration test utility script in workflow to
 # test the docker image.
@@ -258,7 +270,7 @@ setup-github-actions:
 setup-integration-test-utility-for-docker:
 	python -m pip install --upgrade pip
 	python -m pip install --upgrade wheel
-	python -m pip install --upgrade --upgrade-strategy eager .[test-docker]
+	python -m pip install --uploaded-prior-to=$(PYPI_UPLOADED_PRIOR_TO) --upgrade --upgrade-strategy eager .[test-docker]
 
 # Generate a Software Bill of Materials (SBOM).
 .PHONY: sbom
@@ -299,13 +311,13 @@ requirements.txt: pyproject.toml
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
 # found an issue.
-# Remove GHSA-5239-wwwm-4pmq from the ignore list when it is patched.
+# Use --ignore-vuln to ignore an unfixed vulnerability.
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-5239-wwwm-4pmq
+	python -m pip_audit --skip-editable --desc on --fix --dry-run
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
