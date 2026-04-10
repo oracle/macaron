@@ -411,6 +411,19 @@ docs-api:
 .PHONY: docs-full
 docs-full: docs-api docs
 
+# Build a PEP-503 compatible Simple Repository directory inside of dist/. For details on
+# the layout of that directory and the normalized project name, see: https://peps.python.org/pep-0503/
+# The directory can then be used to install (hashed) artifacts by using `pip` and
+# its `--extra-index-url` argument: https://pip.pypa.io/en/stable/cli/pip_install/#cmdoption-extra-index-url
+PROJECT_NAME := $(shell python -c $$'import re; print(re.sub(r"[-_.]+", "-", "$(PACKAGE_NAME)").lower());')
+.PHONY: simple-index
+simple-index: dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/$(PACKAGE_SDIST_NAME).tar.gz
+	mkdir -p dist/simple-index/$(PROJECT_NAME)
+	echo -e "<!-- https://peps.python.org/pep-0503/ -->\n<!DOCTYPE html><html lang='en'><head><meta name='pypi:repository-version' content='1.3'><title>Simple Index</title></head><body><a href='$(PACKAGE_NAME)/index.html'>$(PACKAGE_NAME)</a></body></html>" > dist/simple-index/index.html
+	echo -e "<!-- https://peps.python.org/pep-0503/ -->\n<!DOCTYPE html><html lang='en'><head><meta name='pypi:repository-version' content='1.3'><title>Simple Index: $(PROJECT_NAME)</title></head><body><ul><li><a href='$(PACKAGE_WHEEL_DIST_NAME).whl#sha256="$$(python -c "with open('dist/$(PACKAGE_WHEEL_DIST_NAME).whl', 'rb') as f: import hashlib; print(hashlib.sha256(f.read()).hexdigest());")"'>$(PACKAGE_WHEEL_DIST_NAME).whl</a></li><li><a href='$(PACKAGE_SDIST_NAME).tar.gz#sha256="$$(python -c "with open('dist/$(PACKAGE_SDIST_NAME).tar.gz', 'rb') as f: import hashlib; print(hashlib.sha256(f.read()).hexdigest());")"'>$(PACKAGE_SDIST_NAME).tar.gz</a></li></ul></body></html>" > dist/simple-index/$(PROJECT_NAME)/index.html
+	cp -f dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/simple-index/$(PROJECT_NAME)/
+	cp -f dist/$(PACKAGE_SDIST_NAME).tar.gz dist/simple-index/$(PROJECT_NAME)/
+
 # Build the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
 # environment variables, respectively. By default "test" is used as the image tag.
 .PHONY: build-docker
