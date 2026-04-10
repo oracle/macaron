@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This is a trusted builder implemented as a reusable workflow that can be called by other
@@ -73,10 +73,11 @@ jobs:
     # Instead we create an empty .venv folder so that the Makefile continues to function
     # while Python operates within the runner's global environment. It is safe to ignore
     # warnings from the Makefile about the missing virtual environment.
+    # Remove PYPI_UPLOAD_DELAY_DAYS=1 when the security patches do not need it.
     - name: Create empty virtual environment for Actions
       run: mkdir .venv
     - name: Install dependencies
-      run: make setup
+      run: make setup PYPI_UPLOAD_DELAY_DAYS=1
 
     # Audit all currently installed packages for security vulnerabilities.
     - name: Audit installed packages
