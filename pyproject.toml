@@ -18,8 +18,10 @@ maintainers = [
     {"name" = "Trong Nhan Mai", "email" = "trong.nhan.mai@oracle.com"},
     {"name" = "Behnaz Hassanshahi", "email" = "behnaz.hassanshahi@oracle.com"},
 ]
-dynamic = ["version", "description"]
-license = {file = "LICENSE.txt"}
+dynamic = ["version"]
+license = "UPL-1.0"  # https://spdx.org/licenses/UPL-1.0.html
+license-files = ["LICENSE.txt"]
+description = "Macaron is an extensible supply-chain security analysis framework from Oracle Labs that supports a wide range of build systems and CI/CD services."
 readme = "README.md"
 dependencies = [
     "requests >=2.32.3,<3.0.0",
@@ -29,26 +31,25 @@ dependencies = [
     "jinja2 >=3.1.2,<4.0.0",
     "SQLAlchemy >=2.0.0,<3.0.0",
     "defusedxml >=0.7.1,<1.0.0",
-    "packageurl-python >= 0.11.1,<1.0.0",
-    "ruamel.yaml >= 0.18.6,<1.0.0",
-    "jsonschema >= 4.22.0,<5.0.0",
+    "packageurl-python >=0.11.1,<1.0.0",
+    "ruamel.yaml >=0.18.6,<1.0.0",
+    "jsonschema >=4.22.0,<5.0.0",
     "cyclonedx-bom >=7.0.0,<8.0.0",
     "cyclonedx-python-lib[validation] >=9.0.0,<12.0.0",
-    "beautifulsoup4 >= 4.12.0,<5.0.0",
-    "problog >= 2.2.6,<3.0.0",
+    "beautifulsoup4 >=4.12.0,<5.0.0",
+    "problog >=2.2.6,<3.0.0",
     "cryptography >=46.0.5,<47.0.0",
-    "semgrep == 1.151.0",
+    "semgrep ==1.151.0",
     "email-validator >=2.2.0,<3.0.0",
     "rich >=13.5.3,<15.0.0",
-    "lark >= 1.3.0,<2.0.0",
-    "frozendict >= 2.4.6, <3.0.0",
+    "lark >=1.3.0,<2.0.0",
+    "frozendict >=2.4.6,<3.0.0",
 ]
 keywords = []
 # https://pypi.org/classifiers/
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Universal Permissive License (UPL)",
     "Natural Language :: English",
     "Operating System :: POSIX",
     "Operating System :: POSIX :: Linux",
@@ -79,10 +80,11 @@ dev = [
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
     "types-jsonschema >=4.22.0,<5.0.0",
+    "types-defusedxml >=0.7.0,<1.0.0",
     "pip-audit >=2.5.6,<3.0.0",
     "pylint >=4.0.4,<5.0.0",
     "cyclonedx-bom >=7.0.0,<8.0.0",
-    "types-beautifulsoup4 >= 4.12.0,<5.0.0",
+    "types-beautifulsoup4 >=4.12.0,<5.0.0",
 ]
 docs = [
     "sphinx >=8.0.0,<9.0.0",
@@ -101,13 +103,14 @@ test = [
     "pytest >=9.0.2,<10.0.0",
     "pytest-custom_exit_code >=0.3.0,<1.0.0",
     "pytest-cov >=7.0.0,<8.0.0",
+    "pytest-doctestplus >=1.7.0,<2.0.0",
     "pytest-env >=1.0.0,<2.0.0",
     "pytest_httpserver >=1.0.10,<2.0.0",
     "syrupy >=5.1.0,<6.0.0",
 ]
 
 test-docker = [
-    "jsonschema >= 4.22.0,<5.0.0",
+    "jsonschema >=4.22.0,<5.0.0",
     "cfgv >=3.4.0,<4.0.0",
     "ruamel.yaml >=0.18.6,<1.0.0",
 ]
@@ -124,14 +127,14 @@ Issues = "https://github.com/oracle/macaron/issues"
 [tool.bandit]
 tests = []
 skips = ["B101"]
-exclude_dirs = ['tests/malware_analyzer/pypi/resources/sourcecode_samples']
+exclude_dirs = ["tests/malware_analyzer/pypi/resources/sourcecode_samples"]
+
 
 # https://github.com/psf/black#configuration
 [tool.black]
 line-length = 120
-force-exclude = '''
-tests/malware_analyzer/pypi/resources/sourcecode_samples/
-'''
+force-exclude = ["tests/malware_analyzer/pypi/resources/sourcecode_samples/"]
+
 
 # https://github.com/commitizen-tools/commitizen
 # https://commitizen-tools.github.io/commitizen/bump/
@@ -177,12 +180,14 @@ exclude = [
     "SECURITY.md",
 ]
 
+
 # https://pycqa.github.io/isort/
 [tool.isort]
 profile = "black"
 multi_line_output = 3
 line_length = 120
 skip_gitignore = true
+filter_files = true
 
 
 # https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
@@ -201,18 +206,18 @@ disallow_untyped_calls = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
-disable_error_code = []
+# disable_error_code =
 
 [[tool.mypy.overrides]]
 module = [
-    "pytest.*",
+    "pytest.*",  # https://github.com/pytest-dev/pytest/issues/7469
     "pydriller.*",
     "gitdb.*",
     "yamale.*",
-    "defusedxml.*",
     "problog.*",
 ]
 ignore_missing_imports = true
+
 
 # https://pylint.pycqa.org/en/latest/user_guide/configuration/index.html
 [tool.pylint.MASTER]
@@ -262,10 +267,23 @@ max-line-length = 120
 # https://docs.pytest.org/en/latest/reference/customize.html#configuration-file-formats
 # https://docs.pytest.org/en/latest/reference/reference.html#configuration-options
 # https://docs.pytest.org/en/latest/reference/reference.html#command-line-flags
+#
+# To integrate Hypothesis into pytest and coverage, we use its native plugin:
+# https://hypothesis.readthedocs.io/en/latest/details.html#the-hypothesis-pytest-plugin
+#
+# To discover tests in documentation, we use doctest and the doctest-plus plugin which
+# adds multiple useful options to control tests in documentation. More details at:
+# https://docs.python.org/3/library/doctest.html
+# https://github.com/scientific-python/pytest-doctestplus
+#
+# To avoid failing pytest when no tests were dicovered, we need an extra plugin:
+# https://docs.pytest.org/en/latest/reference/exit-codes.html
+# https://github.com/yashtodi94/pytest-custom_exit_code
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = """-vv -ra --tb native \
-    --doctest-modules --doctest-continue-on-failure --doctest-glob '*.rst' \
+addopts = """-vv -ra --tb native --import-mode importlib \
+    --hypothesis-show-statistics --hypothesis-explain --hypothesis-verbosity verbose \
+    --doctest-modules --doctest-continue-on-failure --doctest-glob '*.rst' --doctest-plus \
     --cov macaron \
     --ignore tests/integration \
     --ignore tests/malware_analyzer/pypi/resources/sourcecode_samples \
@@ -274,9 +292,11 @@ addopts = """-vv -ra --tb native \
 doctest_optionflags = "IGNORE_EXCEPTION_DETAIL"
 
 env = [
-    "PYTHONWARNINGS=always::DeprecationWarning",
+    "PYTHONDEVMODE=1",  # https://docs.python.org/3/library/devmode.html
 ]
 filterwarnings = [
+    "error",
+    "always::DeprecationWarning",
     # https://docs.pytest.org/en/latest/how-to/failures.html#warning-about-unraisable-exceptions-and-unhandled-thread-exceptions
     "error::pytest.PytestUnraisableExceptionWarning",
     "error::pytest.PytestUnhandledThreadExceptionWarning",
