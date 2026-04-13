@@ -16,7 +16,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypeAlias, TypedDict
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import Component
@@ -28,6 +28,13 @@ if TYPE_CHECKING:
     from macaron.code_analyzer.dataflow_analysis.core import Node
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+# Detection tuple fields:
+# - config_path: relative path to the build configuration file from repo root.
+# - confidence_score: confidence for this detection in [0, 1].
+# - build_tool_version: detected build tool version when available.
+# - parent_pom: optional path to parent configuration when applicable.
+BuildToolConfig: TypeAlias = tuple[str, float, str | None, str | None]
 
 
 class BuildEcosystem(str, Enum):
@@ -118,7 +125,7 @@ def file_exists(
         no directories are skipped.
     predicate : callable or None, optional
         Optional callable used to validate a matched file. If provided, a file is
-        accepted only if ``predicate(candidate_path, *predicate_args, **predicate_kwargs)``
+        accepted only if ``predicate(candidate_path, **predicate_kwargs)``
         returns ``True``.
     predicate_kwargs : Any
         Keyword arguments forwarded to `predicate`.
@@ -231,7 +238,7 @@ class BaseBuildTool(ABC):
         self.wrapper_files: list[str] = []
         self.runtime_options = RuntimeOptions()
         self.path_filters: list[str] = []
-        self.build_tool_configs: list[tuple[str, float, str | None, str | None]] = []
+        self.build_tool_configs: list[BuildToolConfig] = []
 
     def __str__(self) -> str:
         return self.name
@@ -240,7 +247,7 @@ class BaseBuildTool(ABC):
     def is_detected(
         self,
         target: Component,
-    ) -> list[tuple[str, float, str | None, str | None]]:
+    ) -> list[BuildToolConfig]:
         """
         Return the list of build tools and their information used in the target repo.
 
@@ -251,9 +258,8 @@ class BaseBuildTool(ABC):
 
         Returns
         -------
-        list[tuple[str, float, str | None, str | None]]
-            Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
-            where paths are relative to `repo_path` and `parent_pom` may be ``None``.
+        list[BuildToolConfig]
+            Detected build tool configurations.
         """
 
     def resolve_component_detection_target(
@@ -327,18 +333,14 @@ class BaseBuildTool(ABC):
         return NoneDependencyAnalyzer()
 
     def set_build_tool_configurations(
-        self, build_tool_configs: list[tuple[str, float, str | None, str | None]]
+        self, build_tool_configs: list[BuildToolConfig]
     ) -> None:
         """Set the build tool configurations for the instance.
 
         Parameters
         ----------
-        build_tool_configs : list[tuple[str, float, str | None]]
-            A list containing configuration tuples for each build tool. Each tuple consists of:
-            - str: The path to the build tool configuration file.
-            - float: The confidence score between 0 and 1 for identifying the correct build tool configuration.
-            - str | None: An optional build tool version.
-            - str | None: An optional path to the parent configuration file.
+        build_tool_configs : list[BuildToolConfig]
+            A list containing configuration tuples for each build tool.
 
         Returns
         -------

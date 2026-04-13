@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.go import Go
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from tests.conftest import MockAnalyzeContext
@@ -46,7 +46,7 @@ def test_go_build_tool(
     tmp_path: Path,
     folder: str,
     file: str,
-    expected_value: list[tuple[str, float, str | None, str | None]],
+    expected_value: list[BuildToolConfig],
 ) -> None:
     """Test the Go build tool."""
     base_dir = Path(__file__).parent

@@ -139,7 +139,7 @@ def get_macaron_build_tools(
 
     Returns
     -------
-    dict[str, dict[str, float, str | None]]| None:
+    dict[str, dict[str, float | str | None]]| None:
         The corresponding Macaron build tool name, config_path, confidence score, optional build tool version,
         and optional root config path if present.
     """
@@ -189,7 +189,7 @@ def get_build_tools(
 
     Returns
     -------
-    dict[str, dict[str, float, str | None]]| None:
+    dict[str, dict[str, float | str | None]]| None:
         The corresponding Macaron build tool name, config_path, confidence score, optional build tool version,
         and optional root config path if present.
     """
@@ -413,7 +413,7 @@ def gen_generic_build_spec(
     )
 
     lang_version = None
-    spec_build_commad_info_list = []
+    spec_build_command_info_list = []
     for db_build_command_info in db_build_command_info_list:
         logger.info(
             "Attempted to find build command from the database. Result: %s",
@@ -426,10 +426,10 @@ def gen_generic_build_spec(
             command=db_build_command_info.command,
         )
         if build_spec_command is not None:
-            spec_build_commad_info_list.append(build_spec_command)
+            spec_build_command_info_list.append(build_spec_command)
 
     # If no build commands were found from the analyze phase, add default commands for the identified build tools.
-    if not db_build_command_info_list:
+    if not spec_build_command_info_list:
         for build_tool_name in build_tool_names:
             build_spec_command = _build_spec_build_command(
                 build_tools=build_tools,
@@ -437,7 +437,7 @@ def gen_generic_build_spec(
                 command=[],
             )
             if build_spec_command is not None:
-                spec_build_commad_info_list.append(build_spec_command)
+                spec_build_command_info_list.append(build_spec_command)
 
     base_build_spec_dict = BaseBuildSpecDict(
         {
@@ -453,7 +453,7 @@ def gen_generic_build_spec(
             "purl": str(purl),
             "language": target_language,
             "build_tools": build_tool_names,
-            "build_commands": spec_build_commad_info_list,
+            "build_commands": spec_build_command_info_list,
         }
     )
 

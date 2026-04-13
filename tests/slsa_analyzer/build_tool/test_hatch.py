@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.hatch import Hatch
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from tests.conftest import MockAnalyzeContext
@@ -41,7 +41,7 @@ def test_hatch_build_tool(
     hatch_tool: Hatch,
     macaron_path: str,
     mock_repo: str,
-    expected_value: list[tuple[str, float, str | None, str | None]],
+    expected_value: list[BuildToolConfig],
 ) -> None:
     """Test the Hatch build tool."""
     base_dir = Path(__file__).parent

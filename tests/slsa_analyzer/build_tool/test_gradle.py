@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.gradle import Gradle
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from tests.conftest import MockAnalyzeContext
@@ -55,7 +55,7 @@ def test_gradle_build_tool(
     gradle_tool: Gradle,
     macaron_path: str,
     mock_repo: str,
-    expected_value: list[tuple[str, float, str | None, str | None]],
+    expected_value: list[BuildToolConfig],
 ) -> None:
     """Test the Gradle build tool."""
     base_dir = Path(__file__).parent

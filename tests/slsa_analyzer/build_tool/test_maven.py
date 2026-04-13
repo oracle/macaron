@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.build_tool.maven import Maven
 from tests.conftest import MockAnalyzeContext
@@ -59,7 +59,7 @@ def test_maven_build_tool(
     mock_repo: str,
     group_id: str,
     artifact_id: str,
-    expected_value: list[tuple[str, float, str | None, str | None]],
+    expected_value: list[BuildToolConfig],
 ) -> None:
     """Test the Maven build tool."""
     base_dir = Path(__file__).parent

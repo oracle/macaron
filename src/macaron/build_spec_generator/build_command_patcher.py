@@ -153,8 +153,7 @@ def patch_command(
     Returns
     -------
     list[str] | None
-        The patched command or None if there is an error. An error happens if a command,
-        or the patch value is valid.
+        The patched command or None if there is an error.
     """
     patch_cli_command = _patch_command(
         cmd=cmd,

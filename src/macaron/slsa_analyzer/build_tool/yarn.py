@@ -11,7 +11,12 @@ import os
 
 from macaron.config.defaults import defaults
 from macaron.database.table_definitions import Component
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
+from macaron.slsa_analyzer.build_tool.base_build_tool import (
+    BaseBuildTool,
+    BuildToolCommand,
+    BuildToolConfig,
+    file_exists,
+)
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
 
@@ -39,7 +44,7 @@ class Yarn(BaseBuildTool):
         #         if item in self.ci_deploy_kws:
         #             self.ci_deploy_kws[item] = defaults.get_list("builder.yarn.ci.deploy", item)
 
-    def is_detected(self, target: Component) -> list[tuple[str, float, str | None, str | None]]:
+    def is_detected(self, target: Component) -> list[BuildToolConfig]:
         """
         Return the list of build tools and their information used in the target repo.
 
@@ -50,9 +55,8 @@ class Yarn(BaseBuildTool):
 
         Returns
         -------
-        list[tuple[str, float, str | None, str | None]]
-            Tuples of ``(config_path, confidence_score, build_tool_version, parent_pom)``,
-            where paths are relative to `repo_path` and `parent_pom` may be ``None``.
+        list[BuildToolConfig]
+            See ``BuildToolConfig`` in ``base_build_tool.py`` for field definitions.
         """
         repo_path, _, _ = self.resolve_component_detection_target(target)
         if not repo_path:
@@ -62,7 +66,7 @@ class Yarn(BaseBuildTool):
         #       cases like .yarnrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         yarn_config_files = self.build_configs + self.package_lock + self.entry_conf
-        results: list[tuple[str, float, str | None, str | None]] = []
+        results: list[BuildToolConfig] = []
         confidence_score = 1.0
         for config_name in yarn_config_files:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
