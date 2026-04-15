@@ -114,8 +114,8 @@ jobs:
       shell: bash
       run: |
         set -euo pipefail
-        TARBALL_PATH=$(find dist/ -type f -name "*.tar.gz")
-        WHEEL_PATH=$(find dist/ -type f -name "*.whl")
+        TARBALL_PATH=$(find dist/ -maxdepth 1 -type f -name "*.tar.gz")
+        WHEEL_PATH=$(find dist/ -maxdepth 1 -type f -name "*.whl")
         SIMPLE_INDEX_PATH=$(find dist/ -type f -name "*-simple-index.tar")
         REQUIREMENTS_PATH=$(find dist/ -type f -name "*-requirements.txt")
         SBOM_PATH=$(find dist/ -type f -name "*-sbom.json")
