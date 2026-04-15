@@ -1,10 +1,15 @@
 Macaron GitHub Action
 =====================
 
+.. contents:: On This Page
+   :local:
+   :depth: 2
+
 Overview
 --------
 
 This document describes the composite GitHub Action defined in ``action.yaml`` at the repository root. The action uses the Macaron CLI to run supply-chain security analysis and policy verification from a GitHub Actions workflow.
+For the list of currently checked GitHub Actions security patterns, see the `GitHub Actions security analysis README <https://github.com/oracle/macaron/blob/main/src/macaron/code_analyzer/gha_security_analysis/README.md>`_.
 
 Quick usage
 -----------
@@ -17,11 +22,11 @@ When you use this action, you can reference it directly in your workflow. For a 
     analyze:
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         - name: Run Macaron Security Analysis Action
           uses: oracle/macaron@b31acfe389133a5587d9639063ec70cb84e7bc47 # v0.23.0
           with:
-            repo_path: 'https://github.com/example/project'
+            repo_path: ./
             policy_file: check-github-actions
             policy_purl: 'pkg:github.com/example/project@.*'
             reports_retention_days: 90
