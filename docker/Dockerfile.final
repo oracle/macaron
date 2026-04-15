@@ -15,8 +15,6 @@ FROM ghcr.io/oracle/macaron-base:latest@sha256:6d1d300d32060a75deffd2e6fce00e9f6
 
 ENV HOME="/home/macaron"
 
-ENV PACKAGE_PATH=$HOME/.venv/lib/python3.11/site-packages/macaron
-
 # Create the macaron user and group with arbitrary UID and GID.
 # The macaron GID and UID in this image will be modified by the
 # user.sh script on startup to get the UID and GID of the user who started
@@ -27,19 +25,23 @@ RUN : \
 
 WORKDIR $HOME
 
-# Build time ARG. This argument specifies the path of the wheel file from the host machine.
-ARG WHEEL_PATH
+# Build time ARGs. These arguments specify the path of Macaron's PEP-503 simple index
+# archive and its requirements.txt from the host.
+ARG SIMPLE_INDEX_PATH
+ARG REQUIREMENTS_PATH
 
 # Installing the Python dependencies in the Python virtual environment.
 # We switch to user macaron so that when we install the dependencies using pip,
 # the warning of not having correct ownership of /home/macaron is not raised.
 USER macaron:macaron
-COPY --chown=macaron:macaron $WHEEL_PATH $HOME/dist/
+COPY --chown=macaron:macaron $SIMPLE_INDEX_PATH $HOME/dist/macaron-simple-index.tar
+COPY --chown=macaron:macaron $REQUIREMENTS_PATH $HOME/dist/macaron-requirements.txt
 RUN : \
+    && tar --extract --directory $HOME/ --file $HOME/dist/macaron-simple-index.tar \
     && python3 -m venv $HOME/.venv \
     && . .venv/bin/activate \
-    && pip install --no-compile --no-cache-dir --upgrade pip setuptools \
-    && find $HOME/dist -depth \( -type f \( -name "macaron-*.whl" \) \) -exec pip install --no-compile --no-cache-dir '{}' \; \
+    && python3 -m pip install --no-compile --no-cache-dir --upgrade pip setuptools \
+    && python3 -m pip install --no-compile --no-cache-dir --no-deps --extra-index-url file://$HOME/dist/simple-index/ --requirement $HOME/dist/macaron-requirements.txt \
     && rm -rf $HOME/dist \
     && deactivate
 
