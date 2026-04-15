@@ -12,7 +12,7 @@
 
 if [ "$#" -ne 3 ];
 then
-    echo "Illegal number of parameters" && exit 1
+    echo "Required arguments are missing" && exit 1
 fi
 IMAGE_NAME=$1
 WORKSPACE=$2
@@ -21,17 +21,19 @@ RELEASE_TAG=$3
 DIST_PATH="${WORKSPACE}/dist"
 REPO_PATH="${WORKSPACE}"
 
-SIMPLE_INDEX_PATH=$(find "$DIST_PATH" -depth -type f -name 'macaron-*-pep503-simple-index.tar' | head -n 1)
+SIMPLE_INDEX_PATH=$(find "${DIST_PATH}" -depth -type f -name 'macaron-*-pep503-simple-index.tar' | head -n 1)
 if [[ -z "${SIMPLE_INDEX_PATH}" ]]; then
     echo "Unable to find Macaron Simple Index in ${DIST_PATH}."
     exit 1
 fi
+SIMPLE_INDEX_PATH=$(realpath --relative-to "${REPO_PATH}" "${SIMPLE_INDEX_PATH}")
 
-REQUIREMENTS_PATH=$(find "$DIST_PATH" -depth -type f -name 'macaron-*-requirements.txt' | head -n 1)
+REQUIREMENTS_PATH=$(find "${DIST_PATH}" -depth -type f -name 'macaron-*-requirements.txt' | head -n 1)
 if [[ -z "${REQUIREMENTS_PATH}" ]]; then
     echo "Unable to find Macaron requirements.txt in ${DIST_PATH}."
     exit 1
 fi
+REQUIREMENTS_PATH=$(realpath --relative-to "${REPO_PATH}" "${REQUIREMENTS_PATH}")
 
 if [[ -z "${RELEASE_TAG}" ]];
 then
