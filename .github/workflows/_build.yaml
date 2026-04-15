@@ -82,11 +82,12 @@ jobs:
     - name: Audit installed packages
       run: make audit
 
-    # Build the sdist and wheel distribution of the package and docs as a zip file.
-    # We don't need to check and test the package separately because `make dist` runs
-    # those targets first and only builds the package if they succeed.
+    # Build the sdist and wheel distribution of the package and docs as a zip file,
+    # as well as a PEP-503 simple index and its archives. We don't need to check and
+    # test the package separately because `make dist` runs those targets first and
+    # only builds the packages and index if they succeed.
     - name: Build the package
-      run: make dist
+      run: make dist simple-index
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
