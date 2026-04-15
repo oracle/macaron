@@ -33,6 +33,7 @@ class GenericBuildCommandInfo:
     language: str
     language_versions: list[str]
     build_tool_name: str
+    confidence_score: float
 
 
 T = TypeVar("T")
@@ -562,37 +563,44 @@ def extract_generic_build_command_info(
     json.decoder.JSONDecodeError
         If we failed to decode the JSON-serialized values stored in the Build*Facts instances.
     """
-    result = []
+    best_by_tool: dict[str, GenericBuildCommandInfo] = {}
     for fact in check_facts:
         match fact:
             case BuildAsCodeFacts():
-                result.append(
-                    GenericBuildCommandInfo(
-                        command=json.loads(fact.deploy_command),
-                        language=fact.language,
-                        language_versions=json.loads(fact.language_versions) if fact.language_versions else [],
-                        build_tool_name=fact.build_tool_name,
-                    )
-                )
-            case BuildServiceFacts():
-                result.append(
-                    GenericBuildCommandInfo(
-                        command=json.loads(fact.build_command),
-                        language=fact.language,
-                        language_versions=json.loads(fact.language_versions) if fact.language_versions else [],
-                        build_tool_name=fact.build_tool_name,
-                    )
-                )
-            case BuildScriptFacts():
-                result.append(
-                    GenericBuildCommandInfo(
-                        command=json.loads(fact.build_tool_command),
-                        language=fact.language,
-                        language_versions=json.loads(fact.language_versions) if fact.language_versions else [],
-                        build_tool_name=fact.build_tool_name,
-                    )
+                info = GenericBuildCommandInfo(
+                    command=json.loads(fact.deploy_command),
+                    language=fact.language,
+                    language_versions=json.loads(fact.language_versions) if fact.language_versions else [],
+                    build_tool_name=fact.build_tool_name,
+                    confidence_score=fact.confidence,
                 )
 
+            case BuildServiceFacts():
+                info = GenericBuildCommandInfo(
+                    command=json.loads(fact.build_command),
+                    language=fact.language,
+                    language_versions=json.loads(fact.language_versions) if fact.language_versions else [],
+                    build_tool_name=fact.build_tool_name,
+                    confidence_score=fact.confidence,
+                )
+
+            case BuildScriptFacts():
+                info = GenericBuildCommandInfo(
+                    command=json.loads(fact.build_tool_command),
+                    language=fact.language,
+                    language_versions=json.loads(fact.language_versions) if fact.language_versions else [],
+                    build_tool_name=fact.build_tool_name,
+                    confidence_score=fact.confidence,
+                )
+
+        existing = best_by_tool.get(info.build_tool_name)
+        if existing is None or info.confidence_score > existing.confidence_score:
+            best_by_tool[info.build_tool_name] = info
+
+    result = list(best_by_tool.values())
+
+    # Highest confidence first.
+    result.sort(key=lambda x: x.confidence_score, reverse=True)
     return result
 
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Conda build functions."""
@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.conda import Conda
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
+from tests.conftest import MockAnalyzeContext
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -22,21 +23,27 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 )
 def test_get_build_dirs(snapshot: list, conda_tool: Conda, mock_repo: Path) -> None:
     """Test discovering build directories."""
-    assert list(conda_tool.get_build_dirs(str(mock_repo))) == snapshot
+    ctx = MockAnalyzeContext(macaron_path="", output_dir="", fs_path=str(mock_repo))
+    assert list(conda_tool.get_build_dirs(ctx.component)) == snapshot
 
 
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "has_conda"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "no_conda"), False),
+        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "has_conda"), [("meta.yaml", 1.0, None, None)]),
+        (Path(__file__).parent.joinpath("mock_repos", "conda_repos", "no_conda"), []),
     ],
 )
-def test_conda_build_tool(conda_tool: Conda, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_conda_build_tool(
+    conda_tool: Conda,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[BuildToolConfig],
+) -> None:
     """Test the Conda build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert conda_tool.is_detected(ctx.component.repository.fs_path) == expected_value
+    assert conda_tool.is_detected(ctx.component) == expected_value
 
 
 @pytest.mark.parametrize(

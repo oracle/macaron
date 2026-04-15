@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -13,7 +13,7 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_provenance_derived_repo_1"),
     check_passed(component_id, "mcn_provenance_expectation_1"),
     check_passed(component_id, "mcn_build_tool_1"),
-    build_tool_check(pip_id, "pip", "python"),
+    build_tool_check(pip_id, "python", "pip", _, _, _, _, _),
     check_facts(pip_id, _, component_id,_,_),
     check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_passed(component_id, "mcn_provenance_verified_1"),

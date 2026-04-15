@@ -43,7 +43,7 @@ class GitHub(BaseGitService):
 
     @property
     def api_client(self) -> GhAPIClient:
-        """Return the API client used for querying GitHub API.
+        """Get the API client used for querying GitHub API.
 
         This API is used to check if a GitHub repo can be cloned.
         """

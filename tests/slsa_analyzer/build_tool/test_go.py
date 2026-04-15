@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Go build functions."""
@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.go import Go
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
+from tests.conftest import MockAnalyzeContext
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -28,18 +29,24 @@ def test_get_build_dirs(snapshot: list, tmp_path: Path, go_tool: Go, folder: str
     proj_dir.mkdir(parents=True)
 
     with open(proj_dir.joinpath(file), "w", encoding="utf-8"):
-        assert list(go_tool.get_build_dirs(str(proj_dir))) == snapshot
+        ctx = MockAnalyzeContext(macaron_path="", output_dir="", fs_path=str(proj_dir))
+        assert list(go_tool.get_build_dirs(ctx.component)) == snapshot
 
 
 @pytest.mark.parametrize(
     ("folder", "file", "expected_value"),
     [
-        ("root_go_mod", "go.mod", True),
-        ("no_go_mod", "dummyfile.txt", False),
+        ("root_go_mod", "go.mod", [("go.mod", 1.0, None, None)]),
+        ("no_go_mod", "dummyfile.txt", []),
     ],
 )
 def test_go_build_tool(
-    go_tool: Go, macaron_path: str, tmp_path: Path, folder: str, file: str, expected_value: bool
+    go_tool: Go,
+    macaron_path: str,
+    tmp_path: Path,
+    folder: str,
+    file: str,
+    expected_value: list[BuildToolConfig],
 ) -> None:
     """Test the Go build tool."""
     base_dir = Path(__file__).parent
@@ -53,7 +60,7 @@ def test_go_build_tool(
 
     with open(proj_dir.joinpath(file), "w", encoding="utf-8"):
         ctx = prepare_repo_for_testing(proj_dir, macaron_path, base_dir)
-        assert go_tool.is_detected(ctx.component.repository.fs_path) == expected_value
+        assert go_tool.is_detected(ctx.component) == expected_value
 
 
 @pytest.mark.parametrize(

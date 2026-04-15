@@ -6,14 +6,14 @@
 import pytest
 from packageurl import PackageURL
 
-from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
+from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.build_spec_generator.common_spec.core import (
     ECOSYSTEMS,
     LANGUAGES,
     MacaronBuildToolName,
     compose_shell_commands,
     get_language_version,
-    get_macaron_build_tool_names,
+    get_macaron_build_tools,
 )
 from macaron.build_spec_generator.macaron_db_extractor import GenericBuildCommandInfo
 from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
@@ -53,10 +53,11 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="python",
                     build_tool_name="pip",
+                    confidence=1.0,
                 )
             ],
             "python",
-            [MacaronBuildToolName.PIP],
+            ["pip"],
             id="python_pip_supported",
         ),
         pytest.param(
@@ -64,10 +65,11 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="java",
                     build_tool_name="gradle",
+                    confidence=1.0,
                 )
             ],
             "java",
-            [MacaronBuildToolName.GRADLE],
+            ["gradle"],
             id="build_tool_gradle",
         ),
         pytest.param(
@@ -75,10 +77,11 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="java",
                     build_tool_name="maven",
+                    confidence=1.0,
                 )
             ],
             "java",
-            [MacaronBuildToolName.MAVEN],
+            ["maven"],
             id="build_tool_maven",
         ),
         pytest.param(
@@ -86,6 +89,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="not_java",
                     build_tool_name="maven",
+                    confidence=1.0,
                 )
             ],
             "java",
@@ -97,6 +101,7 @@ def test_compose_shell_commands(
                 BuildToolFacts(
                     language="java",
                     build_tool_name="some_java_build_tool",
+                    confidence=1.0,
                 )
             ],
             "java",
@@ -108,10 +113,11 @@ def test_compose_shell_commands(
 def test_get_build_tool_name(
     build_tool_facts: list[BuildToolFacts],
     language: str,
-    expected: list[MacaronBuildToolName] | None,
+    expected: list[str] | None,
 ) -> None:
     """Test build tool name detection."""
-    assert get_macaron_build_tool_names(build_tool_facts, target_language=language) == expected
+    result = get_macaron_build_tools(build_tool_facts, target_language=language)
+    assert (list(result.keys()) if result else None) == expected
 
 
 @pytest.mark.parametrize(
@@ -123,6 +129,7 @@ def test_get_build_tool_name(
                 language="java",
                 language_versions=["8"],
                 build_tool_name="maven",
+                confidence_score=1.0,
             ),
             "8",
             id="has_language_version",
@@ -133,6 +140,7 @@ def test_get_build_tool_name(
                 language="java",
                 language_versions=[],
                 build_tool_name="maven",
+                confidence_score=1.0,
             ),
             None,
             id="no_language_version",
@@ -185,7 +193,14 @@ def test_get_language_version(
                     "purl": "pkg:maven/foo/bar@1.0.0",
                     "language": LANGUAGES.MAVEN.value,
                     "build_tools": ["ant"],
-                    "build_commands": [["ant", "dist"]],
+                    "build_commands": [
+                        SpecBuildCommandDict(
+                            build_tool="ant",
+                            command=["ant", "dist"],
+                            build_config_path="build.xml",
+                            confidence_score=1.0,
+                        )
+                    ],
                 }
             ),
             id="unsupported build tool for maven",
@@ -225,7 +240,14 @@ def test_get_language_version(
                     "purl": "pkg:pypi/bar@1.0.0",
                     "language": LANGUAGES.PYPI.value,
                     "build_tools": ["uv"],
-                    "build_commands": [["python", "-m", "build"]],
+                    "build_commands": [
+                        SpecBuildCommandDict(
+                            build_tool="uv",
+                            command=["python", "-m", "build"],
+                            build_config_path="pyproject.toml",
+                            confidence_score=1.0,
+                        )
+                    ],
                 }
             ),
             id="unsupported build tool for pypi",

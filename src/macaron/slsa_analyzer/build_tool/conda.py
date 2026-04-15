@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Conda class which inherits BaseBuildTool.
@@ -13,9 +13,15 @@ from cyclonedx_py import __version__ as cyclonedx_version
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
+from macaron.database.table_definitions import Component
 from macaron.dependency_analyzer.cyclonedx import DependencyAnalyzer
 from macaron.dependency_analyzer.cyclonedx_python import CycloneDxPython
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
+from macaron.slsa_analyzer.build_tool.base_build_tool import (
+    BaseBuildTool,
+    BuildToolCommand,
+    BuildToolConfig,
+    file_exists,
+)
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
 
@@ -42,20 +48,31 @@ class Conda(BaseBuildTool):
                 if item in self.ci_deploy_kws:
                     self.ci_deploy_kws[item] = defaults.get_list("builder.conda.ci.deploy", item)
 
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
+    def is_detected(self, target: Component) -> list[BuildToolConfig]:
+        """
+        Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
+        target : Component
+            The target software component.
 
         Returns
         -------
-        bool
-            True if this build tool is detected, else False.
+        list[BuildToolConfig]
+            See ``BuildToolConfig`` in ``base_build_tool.py`` for field definitions.
         """
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
+        repo_path, _, _ = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return []
+
+        results: list[BuildToolConfig] = []
+        confidence_score = 1.0
+        for config_name in self.build_configs:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2
+        return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.

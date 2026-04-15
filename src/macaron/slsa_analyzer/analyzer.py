@@ -1056,8 +1056,9 @@ class Analyzer:
                     build_tool.name,
                 )
 
-                if build_tool.is_detected(analyze_ctx.component.repository.fs_path):
+                if build_tool_configs := build_tool.is_detected(analyze_ctx.component):
                     logger.info("The repo uses %s build tool.", build_tool.name)
+                    build_tool.set_build_tool_configurations(build_tool_configs)
                     analyze_ctx.dynamic_data["build_spec"]["tools"].append(build_tool)
 
         if not analyze_ctx.dynamic_data["build_spec"]["tools"]:

@@ -8,10 +8,8 @@ from collections.abc import Mapping
 import pytest
 
 from macaron.build_spec_generator.build_command_patcher import (
-    CLICommand,
-    CLICommandParser,
     PatchValueType,
-    _patch_commands,
+    _patch_command,
 )
 from macaron.build_spec_generator.cli_command_parser import PatchCommandBuildTool
 from macaron.build_spec_generator.cli_command_parser.gradle_cli_parser import (
@@ -22,7 +20,6 @@ from macaron.build_spec_generator.cli_command_parser.maven_cli_parser import (
     MavenCLICommandParser,
     MavenOptionPatchValueType,
 )
-from macaron.build_spec_generator.cli_command_parser.unparsed_cli_command import UnparsedCLICommand
 
 
 @pytest.mark.parametrize(
@@ -119,15 +116,14 @@ def test_patch_mvn_cli_command(
     expected: str,
 ) -> None:
     """Test the patch maven cli command on valid input."""
-    patch_cmds = _patch_commands(
-        cmds_sequence=[original.split()],
+    patch_cmd = _patch_command(
+        cmd=original.split(),
         cli_parsers=[maven_cli_parser],
         patches={PatchCommandBuildTool.MAVEN: patch_options},
     )
-    assert patch_cmds
-    assert len(patch_cmds) == 1
+    assert patch_cmd
 
-    patch_mvn_cli_command = maven_cli_parser.parse(patch_cmds.pop().to_cmds())
+    patch_mvn_cli_command = maven_cli_parser.parse(patch_cmd.to_cmds())
     expected_mvn_cli_command = maven_cli_parser.parse(expected.split())
 
     assert patch_mvn_cli_command == expected_mvn_cli_command
@@ -173,11 +169,11 @@ def test_patch_mvn_cli_command_error(
     invalid_patch: dict[str, MavenOptionPatchValueType | None],
 ) -> None:
     """Test patch mvn cli command patching with invalid patch."""
-    cmd_list = "mvn -s ../.github/maven-settings.xml install -Pexamples,noRun".split()
+    original_cmd = "mvn -s ../.github/maven-settings.xml install -Pexamples,noRun".split()
 
     assert (
-        _patch_commands(
-            cmds_sequence=[cmd_list],
+        _patch_command(
+            cmd=original_cmd,
             cli_parsers=[maven_cli_parser],
             patches={
                 PatchCommandBuildTool.MAVEN: invalid_patch,
@@ -281,15 +277,14 @@ def test_patch_gradle_cli_command(
     expected: str,
 ) -> None:
     """Test the patch gradle cli command on valid input."""
-    patch_cmds = _patch_commands(
-        cmds_sequence=[original.split()],
+    patch_cmd = _patch_command(
+        cmd=original.split(),
         cli_parsers=[gradle_cli_parser],
         patches={PatchCommandBuildTool.GRADLE: patch_options},
     )
-    assert patch_cmds
-    assert len(patch_cmds) == 1
+    assert patch_cmd
 
-    patch_gradle_cli_command = gradle_cli_parser.parse(patch_cmds.pop().to_cmds())
+    patch_gradle_cli_command = gradle_cli_parser.parse(patch_cmd.to_cmds())
     expected_gradle_cli_command = gradle_cli_parser.parse(expected.split())
 
     assert patch_gradle_cli_command == expected_gradle_cli_command
@@ -353,10 +348,10 @@ def test_patch_gradle_cli_command_error(
     invalid_patch: dict[str, GradleOptionPatchValueType | None],
 ) -> None:
     """Test patch mvn cli command patching with invalid patch."""
-    cmd_list = "gradle clean build --no-build-cache --debug --console plain -Dorg.gradle.parallel=true".split()
+    original_cmd = "gradle clean build --no-build-cache --debug --console plain -Dorg.gradle.parallel=true".split()
     assert (
-        _patch_commands(
-            cmds_sequence=[cmd_list],
+        _patch_command(
+            cmd=original_cmd,
             cli_parsers=[gradle_cli_parser],
             patches={
                 PatchCommandBuildTool.GRADLE: invalid_patch,
@@ -367,128 +362,51 @@ def test_patch_gradle_cli_command_error(
 
 
 @pytest.mark.parametrize(
-    ("cmds_sequence", "patches", "expected"),
+    ("original", "patch_options", "expected"),
     [
         pytest.param(
-            [
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-            ],
+            "make setup",
             {
-                PatchCommandBuildTool.MAVEN: {
-                    "--debug": True,
-                },
-                PatchCommandBuildTool.GRADLE: {
-                    "--debug": True,
-                },
+                "--threads": None,
+                "--no-transfer-progress": None,
+                "--define": None,
             },
-            [
-                "mvn clean package --debug".split(),
-                "gradle clean build --debug".split(),
-            ],
-            id="apply_multiple_types_of_patches",
+            "make setup",
+            id="make_command",
         ),
         pytest.param(
-            [
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-            ],
+            "./configure",
             {
-                PatchCommandBuildTool.MAVEN: {
-                    "--debug": True,
-                },
+                "--threads": None,
+                "--no-transfer-progress": None,
+                "--define": None,
             },
-            [
-                "mvn clean package --debug".split(),
-                "gradle clean build".split(),
-            ],
-            id="apply_one_type_of_patch_to_multiple_commands",
-        ),
-        pytest.param(
-            [
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-            ],
-            {},
-            [
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-            ],
-            id="apply_no_patch_to_multiple_build_commands",
-        ),
-        pytest.param(
-            [
-                "make setup".split(),
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-                "make clean".split(),
-            ],
-            {
-                PatchCommandBuildTool.MAVEN: {
-                    "--debug": True,
-                },
-                PatchCommandBuildTool.GRADLE: {
-                    "--debug": True,
-                },
-            },
-            [
-                "make setup".split(),
-                "mvn clean package --debug".split(),
-                "gradle clean build --debug".split(),
-                "make clean".split(),
-            ],
-            id="command_that_we_cannot_parse_stay_the_same",
+            "./configure",
+            id="configure_command",
         ),
     ],
 )
-def test_patching_multiple_commands(
+def test_patch_arbitrary_command(
     maven_cli_parser: MavenCLICommandParser,
-    gradle_cli_parser: GradleCLICommandParser,
-    cmds_sequence: list[list[str]],
-    patches: Mapping[
-        PatchCommandBuildTool,
-        Mapping[str, PatchValueType | None],
-    ],
-    expected: list[list[str]],
+    original: str,
+    patch_options: Mapping[str, MavenOptionPatchValueType | None],
+    expected: str,
 ) -> None:
-    """Test patching multiple commands."""
-    patch_cli_commands = _patch_commands(
-        cmds_sequence=cmds_sequence,
-        cli_parsers=[maven_cli_parser, gradle_cli_parser],
-        patches=patches,
+    """Test the patch function for arbitrary commands."""
+    patched_cmd = _patch_command(
+        cmd=original.split(),
+        cli_parsers=[maven_cli_parser],
+        patches={PatchCommandBuildTool.MAVEN: patch_options},
     )
-
-    assert patch_cli_commands
-
-    expected_cli_commands: list[CLICommand] = []
-    cli_parsers: list[CLICommandParser] = [maven_cli_parser, gradle_cli_parser]
-    for cmd in expected:
-        effective_cli_parser = None
-        for cli_parser in cli_parsers:
-            if cli_parser.is_build_tool(cmd[0]):
-                effective_cli_parser = cli_parser
-                break
-
-        if effective_cli_parser:
-            expected_cli_commands.append(effective_cli_parser.parse(cmd))
-        else:
-            expected_cli_commands.append(
-                UnparsedCLICommand(
-                    original_cmds=cmd,
-                )
-            )
-
-    assert patch_cli_commands == expected_cli_commands
+    assert patched_cmd
+    assert patched_cmd.to_cmds() == expected.split()
 
 
 @pytest.mark.parametrize(
-    ("cmds_sequence", "patches"),
+    ("cmd", "patches"),
     [
         pytest.param(
-            [
-                "mvn --this-is-not-a-mvn-option".split(),
-                "gradle clean build".split(),
-            ],
+            "mvn --this-is-not-a-mvn-option".split(),
             {
                 PatchCommandBuildTool.MAVEN: {
                     "--debug": True,
@@ -500,10 +418,7 @@ def test_patching_multiple_commands(
             id="incorrect_mvn_command",
         ),
         pytest.param(
-            [
-                "mvn clean package".split(),
-                "gradle clean build --not-a-gradle-command".split(),
-            ],
+            "gradle clean build --not-a-gradle-command".split(),
             {
                 PatchCommandBuildTool.MAVEN: {
                     "--debug": True,
@@ -515,45 +430,39 @@ def test_patching_multiple_commands(
             id="incorrect_gradle_command",
         ),
         pytest.param(
-            [
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-            ],
+            "mvn clean package".split(),
             {
                 PatchCommandBuildTool.MAVEN: {
                     "--not-a-valid-option": True,
                 },
             },
-            id="incorrrect_patch_option_long_name",
+            id="incorrect_patch_option_long_name",
         ),
         pytest.param(
-            [
-                "mvn clean package".split(),
-                "gradle clean build".split(),
-            ],
+            "mvn clean package".split(),
             {
                 PatchCommandBuildTool.MAVEN: {
                     # --debug expects a boolean or a None value.
                     "--debug": 10,
                 },
             },
-            id="incorrrect_patch_value",
+            id="incorrect_patch_value",
         ),
     ],
 )
-def test_patching_multiple_commands_error(
+def test_multiple_patches_error(
     maven_cli_parser: MavenCLICommandParser,
     gradle_cli_parser: GradleCLICommandParser,
-    cmds_sequence: list[list[str]],
+    cmd: list[str],
     patches: Mapping[
         PatchCommandBuildTool,
         Mapping[str, PatchValueType | None],
     ],
 ) -> None:
-    """Test error cases for patching multiple commands."""
+    """Test error cases for multiple patches and parsers."""
     assert (
-        _patch_commands(
-            cmds_sequence=cmds_sequence,
+        _patch_command(
+            cmd=cmd,
             cli_parsers=[maven_cli_parser, gradle_cli_parser],
             patches=patches,
         )
@@ -562,23 +471,19 @@ def test_patching_multiple_commands_error(
 
 
 @pytest.mark.parametrize(
-    ("original_cmd_sequence"),
+    ("original_cmd"),
     [
         pytest.param(
             [],
-            id="empty sequence",
-        ),
-        pytest.param(
-            [[]],
             id="empty command",
         ),
     ],
 )
-def test_empty_command(maven_cli_parser: MavenCLICommandParser, original_cmd_sequence: list[list[str]]) -> None:
-    """Test the patch command for empty commands."""
-    patch_cmds = _patch_commands(
-        cmds_sequence=original_cmd_sequence,
+def test_empty_command(maven_cli_parser: MavenCLICommandParser, original_cmd: list[str]) -> None:
+    """Test the patch command for an empty command."""
+    patch_cmd = _patch_command(
+        cmd=original_cmd,
         cli_parsers=[maven_cli_parser],
         patches={PatchCommandBuildTool.MAVEN: {}},
     )
-    assert patch_cmds == []
+    assert patch_cmd is None

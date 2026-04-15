@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.20.0",
+    "macaron_version": "0.22.0",
     "group_id": null,
     "artifact_id": "cachetools",
     "version": "6.2.1",
@@ -16,13 +16,18 @@
         "pip"
     ],
     "build_commands": [
-        [
-            "python",
-            "-m",
-            "build",
-            "--wheel",
-            "-n"
-        ]
+        {
+            "build_tool": "pip",
+            "command": [
+                "python",
+                "-m",
+                "build",
+                "--wheel",
+                "-n"
+            ],
+            "build_config_path": "setup.py",
+            "confidence_score": 1.0
+        }
     ],
     "has_binaries": false,
     "build_requires": {

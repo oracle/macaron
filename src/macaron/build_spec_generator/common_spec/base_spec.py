@@ -9,6 +9,32 @@ from typing import NotRequired, Required, TypedDict
 from packageurl import PackageURL
 
 
+class SpecBuildCommandDict(TypedDict, total=False):
+    """
+    Initialize build command section of the build specification.
+
+    It contains helpful information related to a build command.
+    """
+
+    #: The build tool.
+    build_tool: Required[str]
+
+    #: The build tool version.
+    build_tool_version: NotRequired[str]
+
+    #: The build configuration path
+    build_config_path: Required[str]
+
+    #: The root build configuration path if present
+    root_build_config_path: NotRequired[str]
+
+    #: The build command.
+    command: Required[list[str]]
+
+    #: The confidence score for the analysis result that has inferred the build tool information.
+    confidence_score: Required[float]
+
+
 class BaseBuildSpecDict(TypedDict, total=False):
     """
     Initialize base build specification.
@@ -58,8 +84,8 @@ class BaseBuildSpecDict(TypedDict, total=False):
     #: List of build dependencies, which includes tests.
     build_dependencies: NotRequired[list[str]]
 
-    #: List of shell commands to build the project.
-    build_commands: NotRequired[list[list[str]]]
+    #: List of shell commands and related information to build the project.
+    build_commands: NotRequired[list[SpecBuildCommandDict]]
 
     #: List of shell commands to test the project.
     test_commands: NotRequired[list[list[str]]]
@@ -103,24 +129,14 @@ class BaseBuildSpec(ABC):
         """
 
     @abstractmethod
-    def get_default_build_commands(
+    def set_default_build_commands(
         self,
-        build_tool_names: list[str],
-    ) -> list[list[str]]:
+        build_cmd_spec: SpecBuildCommandDict,
+    ) -> None:
         """Return the default build commands for the build tools.
 
         Parameters
         ----------
-        build_tool_names: list[str]
-            The build tools to get the default build command.
-
-        Returns
-        -------
-        list[list[str]]
-            The build command as a list[list[str]].
-
-        Raises
-        ------
-        GenerateBuildSpecError
-            If there is no default build command available for the specified build tool.
+        build_cmd_spec: SpecBuildCommandDict
+            The build command and related information.
         """

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Docker class which inherits BaseBuildTool.
@@ -7,7 +7,8 @@ This module is used to work with repositories that use Docker as a build tool.
 """
 
 from macaron.config.defaults import defaults
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, file_exists
+from macaron.database.table_definitions import Component
+from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolConfig, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 
 
@@ -31,17 +32,28 @@ class Docker(BaseBuildTool):
                 if item in self.ci_deploy_kws:
                     self.ci_deploy_kws[item] = defaults.get_list("builder.docker.ci.deploy", item)
 
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
+    def is_detected(self, target: Component) -> list[BuildToolConfig]:
+        """
+        Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
+        target : Component
+            The target software component.
 
         Returns
         -------
-        bool
-            True if this build tool is detected, else False.
+        list[BuildToolConfig]
+            See ``BuildToolConfig`` in ``base_build_tool.py`` for field definitions.
         """
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
+        repo_path, _, _ = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return []
+
+        results: list[BuildToolConfig] = []
+        confidence_score = 1.0
+        for config_name in self.build_configs:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2
+        return results

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the NPM class which inherits BaseBuildTool.
@@ -11,7 +11,13 @@ import logging
 import os
 
 from macaron.config.defaults import defaults
-from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
+from macaron.database.table_definitions import Component
+from macaron.slsa_analyzer.build_tool.base_build_tool import (
+    BaseBuildTool,
+    BuildToolCommand,
+    BuildToolConfig,
+    file_exists,
+)
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
 
@@ -40,24 +46,35 @@ class NPM(BaseBuildTool):
                 if item in self.ci_deploy_kws:
                     self.ci_deploy_kws[item] = defaults.get_list("builder.npm.ci.deploy", item)
 
-    def is_detected(self, repo_path: str) -> bool:
-        """Return True if this build tool is used in the target repo.
+    def is_detected(self, target: Component) -> list[BuildToolConfig]:
+        """
+        Return the list of build tools and their information used in the target repo.
 
         Parameters
         ----------
-        repo_path : str
-            The path to the target repo.
+        target : Component
+            The target software component.
 
         Returns
         -------
-        bool
-            True if this build tool is detected, else False.
+        list[BuildToolConfig]
+            See ``BuildToolConfig`` in ``base_build_tool.py`` for field definitions.
         """
+        repo_path, _, _ = self.resolve_component_detection_target(target)
+        if not repo_path:
+            return []
+
         # TODO: When more complex build detection is being implemented, consider
         #       cases like .npmrc existing but not package-lock.json and whether
         #       they would still count as "detected"
         npm_config_files = self.build_configs + self.package_lock + self.entry_conf
-        return any(file_exists(repo_path, file, filters=self.path_filters) for file in npm_config_files)
+        results: list[BuildToolConfig] = []
+        confidence_score = 1.0
+        for config_name in npm_config_files:
+            if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
+                results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
+                confidence_score = confidence_score / 2
+        return results
 
     def is_deploy_command(
         self, cmd: BuildToolCommand, excluded_configs: list[str] | None = None, provenance_workflow: str | None = None

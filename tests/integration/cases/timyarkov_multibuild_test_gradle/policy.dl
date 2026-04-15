@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 #include "prelude.dl"
@@ -9,8 +9,8 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_service_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     check_passed(component_id, "mcn_build_tool_1"),
-    build_tool_check(docker_id, "docker", "docker", _, _, _, _, _),
-    check_facts(docker_id, _, component_id,_,_),
+    build_tool_check(gradle_id, "java", "gradle", _, _, _, _, _),
+    check_facts(gradle_id, _, component_id,_,_),
     check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_failed(component_id, "mcn_provenance_available_1"),
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
@@ -18,7 +18,7 @@ Policy("test_policy", component_id, "") :-
     check_failed(component_id, "mcn_provenance_expectation_1"),
     check_failed(component_id, "mcn_provenance_witness_level_one_1"),
     check_failed(component_id, "mcn_trusted_builder_level_three_1"),
-    is_repo_url(component_id, "https://github.com/timyarkov/docker_test").
+    is_repo_url(component_id, "https://github.com/timyarkov/multibuild_test").
 
 apply_policy_to("test_policy", component_id) :-
-    is_component(component_id, "pkg:github.com/timyarkov/docker_test@404a51a2f38c4470af6b32e4e00b5318c2d7c0cc").
+    is_component(component_id, "pkg:maven/org.example/mock_gradle_proj@1.0?type=jar").

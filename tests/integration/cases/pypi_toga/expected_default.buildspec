@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.20.0",
+    "macaron_version": "0.22.0",
     "group_id": null,
     "artifact_id": "toga",
     "version": "0.5.1",
@@ -17,19 +17,24 @@
         "pip"
     ],
     "build_commands": [
-        [
-            "python",
-            "-m",
-            "build",
-            "--wheel",
-            "-n"
-        ]
+        {
+            "build_tool": "pip",
+            "command": [
+                "python",
+                "-m",
+                "build",
+                "--wheel",
+                "-n"
+            ],
+            "build_config_path": "pyproject.toml",
+            "confidence_score": 1.0
+        }
     ],
     "has_binaries": false,
     "build_requires": {
         "setuptools": "==80.3.1",
-        "setuptools_dynamic_dependencies": "==1.0.0",
-        "setuptools_scm": "==8.3.1"
+        "setuptools_scm": "==8.3.1",
+        "setuptools_dynamic_dependencies": "==1.0.0"
     },
     "build_backends": [
         "setuptools.build_meta"

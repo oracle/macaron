@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Maven build functions."""
@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.build_tool.maven import Maven
+from tests.conftest import MockAnalyzeContext
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -23,22 +24,144 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 )
 def test_get_build_dirs(snapshot: list, maven_tool: Maven, mock_repo: Path) -> None:
     """Test discovering build directories."""
-    assert list(maven_tool.get_build_dirs(str(mock_repo))) == snapshot
+    ctx = MockAnalyzeContext(macaron_path="", output_dir="", fs_path=str(mock_repo))
+    assert list(maven_tool.get_build_dirs(ctx.component)) == snapshot
 
 
 @pytest.mark.parametrize(
-    ("mock_repo", "expected_value"),
+    ("mock_repo", "group_id", "artifact_id", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "maven_repos", "has_parent_pom"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_parent_pom"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_pom"), False),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "maven_repos", "has_parent_pom"),
+            "com.mock_repos.has_parent_pom",
+            "sub_module_1",
+            [("sub_module_1/pom.xml", 1.0, None, "pom.xml")],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_parent_pom"),
+            "com.mock_repos.has_parent_pom",
+            "sub_module_1",
+            [
+                ("sub_module_1/pom.xml", 0.1, None, None),
+            ],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "maven_repos", "no_pom"),
+            "com.mock_repos.has_parent_pom",
+            "sub_module_1",
+            [],
+        ),
     ],
 )
-def test_maven_build_tool(maven_tool: Maven, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_maven_build_tool(
+    maven_tool: Maven,
+    macaron_path: str,
+    mock_repo: str,
+    group_id: str,
+    artifact_id: str,
+    expected_value: list[BuildToolConfig],
+) -> None:
     """Test the Maven build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert maven_tool.is_detected(ctx.component.repository.fs_path) == expected_value
+    ctx.component.type = maven_tool.purl_type
+    ctx.component.namespace = group_id
+    ctx.component.name = artifact_id
+    assert maven_tool.is_detected(ctx.component) == expected_value
+
+
+@pytest.mark.parametrize(
+    ("artifact_id", "expected_paths", "expected_parent_paths", "max_confidence"),
+    [
+        (
+            "sub_module_1",
+            {"sub_module_1/pom.xml"},
+            {"pom.xml"},
+            1.0,
+        ),
+        (
+            "does-not-exist",
+            {"pom.xml"},
+            {"pom.xml"},
+            0.1,
+        ),
+    ],
+)
+def test_maven_build_tool_with_group_artifact_validation(
+    maven_tool: Maven,
+    macaron_path: str,
+    artifact_id: str,
+    expected_paths: set[str],
+    expected_parent_paths: set[str],
+    max_confidence: float,
+) -> None:
+    """Test Maven detection with explicit group/artifact validation."""
+    base_dir = Path(__file__).parent
+    mock_repo = Path(__file__).parent.joinpath("mock_repos", "maven_repos", "has_parent_pom")
+    ctx = prepare_repo_for_testing(str(mock_repo), macaron_path, base_dir)
+    ctx.component.type = maven_tool.purl_type
+    ctx.component.namespace = "com.mock_repos.has_parent_pom"
+    ctx.component.name = artifact_id
+
+    detected = maven_tool.is_detected(ctx.component)
+    assert detected
+    assert {item[0] for item in detected} == expected_paths
+    assert {item[3] for item in detected} == expected_parent_paths
+    assert all(item[1] <= max_confidence for item in detected)
+
+
+def test_maven_build_tool_with_multimodule_artifact_suffix(maven_tool: Maven, tmp_path: Path) -> None:
+    """Test Maven detection with prefixed multi-module artifact ids."""
+    maven_repo = tmp_path.joinpath("maven_repo")
+    maven_repo.joinpath("test-junit5").mkdir(parents=True)
+    maven_repo.joinpath("pom.xml").write_text(
+        "\n".join(
+            [
+                "<project>",
+                "  <modelVersion>4.0.0</modelVersion>",
+                "  <groupId>io.micronaut.test</groupId>",
+                "  <artifactId>test-parent</artifactId>",
+                "  <version>1.0.0</version>",
+                "  <packaging>pom</packaging>",
+                "  <modules>",
+                "    <module>test-junit5</module>",
+                "  </modules>",
+                "</project>",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    maven_repo.joinpath("test-junit5", "pom.xml").write_text(
+        "\n".join(
+            [
+                "<project>",
+                "  <modelVersion>4.0.0</modelVersion>",
+                "  <parent>",
+                "    <groupId>io.micronaut.test</groupId>",
+                "    <artifactId>test-parent</artifactId>",
+                "    <version>1.0.0</version>",
+                "    <relativePath>../</relativePath>",
+                "  </parent>",
+                "  <artifactId>micronaut-test-junit5</artifactId>",
+                "</project>",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    ctx = MockAnalyzeContext(
+        macaron_path="",
+        output_dir="",
+        fs_path=str(maven_repo),
+        purl="pkg:maven/io.micronaut.test/micronaut-test-junit5@1.0.0",
+    )
+    detected = maven_tool.is_detected(ctx.component)
+
+    assert detected
+    assert detected[0][0] == "test-junit5/pom.xml"
+    assert detected[0][3] == "pom.xml"
 
 
 @pytest.mark.parametrize(

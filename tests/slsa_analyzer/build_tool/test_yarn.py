@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Yarn build functions."""
@@ -7,9 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
+from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand, BuildToolConfig
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.build_tool.yarn import Yarn
+from tests.conftest import MockAnalyzeContext
 from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 
 
@@ -24,23 +25,38 @@ from tests.slsa_analyzer.mock_git_utils import prepare_repo_for_testing
 )
 def test_get_build_dirs(snapshot: list, yarn_tool: Yarn, mock_repo: Path) -> None:
     """Test discovering build directories."""
-    assert list(yarn_tool.get_build_dirs(str(mock_repo))) == snapshot
+    ctx = MockAnalyzeContext(macaron_path="", output_dir="", fs_path=str(mock_repo))
+    assert list(yarn_tool.get_build_dirs(ctx.component)) == snapshot
 
 
 @pytest.mark.parametrize(
     ("mock_repo", "expected_value"),
     [
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package_packagelock"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "nested_package"), True),
-        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "no_package"), False),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package"),
+            [("package.json", 1.0, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "root_package_packagelock"),
+            [("package.json", 1.0, None, None), ("package-lock.json", 0.5, None, None)],
+        ),
+        (
+            Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "nested_package"),
+            [("project/package.json", 1.0, None, None)],
+        ),
+        (Path(__file__).parent.joinpath("mock_repos", "yarn_repos", "no_package"), []),
     ],
 )
-def test_yarn_build_tool(yarn_tool: Yarn, macaron_path: str, mock_repo: str, expected_value: bool) -> None:
+def test_yarn_build_tool(
+    yarn_tool: Yarn,
+    macaron_path: str,
+    mock_repo: str,
+    expected_value: list[BuildToolConfig],
+) -> None:
     """Test the yarn build tool."""
     base_dir = Path(__file__).parent
     ctx = prepare_repo_for_testing(mock_repo, macaron_path, base_dir)
-    assert yarn_tool.is_detected(ctx.component.repository.fs_path) == expected_value
+    assert yarn_tool.is_detected(ctx.component) == expected_value
 
 
 @pytest.mark.parametrize(
