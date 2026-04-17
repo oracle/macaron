@@ -6,7 +6,6 @@
 This module is used to work with repositories that use uv for dependency management.
 """
 
-import logging
 import os
 
 from cyclonedx_py import __version__ as cyclonedx_version
@@ -20,8 +19,6 @@ from macaron.slsa_analyzer.build_tool import pyproject
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool, BuildToolCommand, file_exists
 from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.checks.check_result import Confidence
-
-logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Uv(BaseBuildTool):

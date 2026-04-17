@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.22.0",
+    "macaron_version": "0.23.0",
     "group_id": null,
     "artifact_id": "markdown-it-py",
     "version": "4.0.0",
@@ -14,7 +14,8 @@
     "purl": "pkg:pypi/markdown-it-py@4.0.0",
     "language": "python",
     "build_tools": [
-        "flit"
+        "flit",
+        "pip"
     ],
     "build_commands": [
         {

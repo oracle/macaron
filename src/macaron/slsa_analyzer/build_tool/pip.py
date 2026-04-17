@@ -75,7 +75,7 @@ class Pip(BaseBuildTool):
         for config_name in self.build_configs:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
                 config_path_relative = config_path.relative_to(repo_path)
-                if os.path.basename(config_path) == "pyproject.toml" and config_path_relative:
+                if os.path.basename(config_path) == "pyproject.toml":
                     # Check the build-system section. If it doesn't exist, by default setuptools should be used.
                     if pyproject.get_build_system(config_path) is None:
                         results.append((str(config_path_relative), confidence_score, None, None))
@@ -87,11 +87,12 @@ class Pip(BaseBuildTool):
                     if not results:
                         # If we still have not found an evidence, we add pip as build tool anyway but with a lower confidence score.
                         results.append((str(config_path_relative), confidence_score / 2, None, None))
-
-                else:
-                    # TODO: For other build configuration files, like setup.py, we need to improve the logic.
-                    # For now we assign a lower confidence score.
+                # TODO: For other build configuration files, like setup.py, we need to improve the logic.
+                # For now we assign a lower confidence score if we already have found other config paths.
+                elif results:
                     results.append((str(config_path_relative), confidence_score / 2, None, None))
+                else:
+                    results.append((str(config_path_relative), confidence_score, None, None))
         return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
