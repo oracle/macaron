@@ -507,6 +507,34 @@ class GhAPIClient(BaseAPIClient):
 
         return response_data
 
+    def get_license(self, full_name: str) -> dict:
+        """Get license information for a GitHub repository.
+
+        Uses the endpoint: ``GET /repos/{owner}/{repo}/license``
+
+        See: https://docs.github.com/en/rest/licenses/licenses?apiVersion=2022-11-28
+
+        Parameters
+        ----------
+        full_name : str
+            The full name of the repository in the format ``owner/repo``.
+
+        Returns
+        -------
+        dict
+            License information from the GitHub API, or an empty dict if not found.
+            Key fields: ``license.spdx_id``, ``license.name``, ``html_url``.
+
+        Examples
+        --------
+        >>> api_client = GhAPIClient(profile={"headers": "", "query": []})
+        >>> api_client.get_license("apache/maven")  # doctest: +SKIP
+        {'license': {'spdx_id': 'Apache-2.0', ...}, ...}
+        """
+        logger.debug("Get license for repository %s", full_name)
+        url = f"{GhAPIClient._REPO_END_POINT}/{full_name}/license"
+        return send_get_http(url, self.headers) or {}
+
     def get_file_link(self, full_name: str, commit_sha: str, file_path: str) -> str:
         """Return a GitHub hyperlink tag or just a link to the file.
 
