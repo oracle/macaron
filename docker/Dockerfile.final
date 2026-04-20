@@ -37,9 +37,9 @@ USER macaron:macaron
 COPY --chown=macaron:macaron $SIMPLE_INDEX_PATH $HOME/dist/macaron-simple-index.tar
 COPY --chown=macaron:macaron $REQUIREMENTS_PATH $HOME/dist/macaron-requirements.txt
 RUN : \
-    && tar --extract --directory $HOME/ --file $HOME/dist/macaron-simple-index.tar \
     && python3 -m venv $HOME/.venv \
     && . .venv/bin/activate \
+    && python3 -m tarfile --extract $HOME/dist/macaron-simple-index.tar $HOME/ \
     && python3 -m pip install --no-compile --no-cache-dir --upgrade pip setuptools \
     && python3 -m pip install --no-compile --no-cache-dir --no-deps --extra-index-url file://$HOME/dist/simple-index/ --requirement $HOME/dist/macaron-requirements.txt \
     && rm -rf $HOME/dist \
