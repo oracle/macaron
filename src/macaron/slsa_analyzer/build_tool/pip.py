@@ -72,27 +72,29 @@ class Pip(BaseBuildTool):
         )
 
         confidence_score = 1.0
+
+        pyproject_path = file_exists(repo_path, "pyproject.toml", filters=self.path_filters)
+        if pyproject_path:
+            pyproject_path_relative = pyproject_path.relative_to(repo_path)
+            # Check the build-system section. If it doesn't exist, by default setuptools should be used.
+            if pyproject.get_build_system(pyproject_path) is None:
+                results.append((str(pyproject_path_relative), confidence_score, None, None))
+            else:
+                for tool in self.build_requires + self.build_backend:
+                    if pyproject.build_system_contains_tool(tool, pyproject_path):
+                        results.append((str(pyproject_path_relative), confidence_score, None, None))
+                        break
+            if not results:
+                # If we still have not found an evidence, we add pip as build tool anyway but with a lower confidence score.
+                results.append((str(pyproject_path_relative), confidence_score / 2, None, None))
+
         for config_name in self.build_configs:
+            if config_name == "pyproject.toml":
+                continue
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
                 config_path_relative = config_path.relative_to(repo_path)
-                if os.path.basename(config_path) == "pyproject.toml":
-                    # Check the build-system section. If it doesn't exist, by default setuptools should be used.
-                    if pyproject.get_build_system(config_path) is None:
-                        results.append((str(config_path_relative), confidence_score, None, None))
-                        continue
-                    for tool in self.build_requires + self.build_backend:
-                        if pyproject.build_system_contains_tool(tool, config_path):
-                            results.append((str(config_path_relative), confidence_score, None, None))
-                            break
-                    if not results:
-                        # If we still have not found an evidence, we add pip as build tool anyway but with a lower confidence score.
-                        results.append((str(config_path_relative), confidence_score / 2, None, None))
-                # TODO: For other build configuration files, like setup.py, we need to improve the logic.
-                # For now we assign a lower confidence score if we already have found other config paths.
-                elif results:
-                    results.append((str(config_path_relative), confidence_score / 2, None, None))
-                else:
-                    results.append((str(config_path_relative), confidence_score, None, None))
+                confidence = confidence_score / 2 if results else confidence_score
+                results.append((str(config_path_relative), confidence, None, None))
         return results
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
