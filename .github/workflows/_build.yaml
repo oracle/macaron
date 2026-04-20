@@ -107,7 +107,8 @@ jobs:
 
     # Find the paths to the artifact files that will be included in the release, compute
     # the SHA digest for all the release files and encode them using Base64, and export it
-    # from this job.
+    # from this job. Note that using -maxdepth 1 prevents searching through the generated
+    # Simple Index, which contains duplicated sdist and wheel files.
     - name: Compute package hash
       if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
       id: compute-hash
@@ -116,12 +117,12 @@ jobs:
         set -euo pipefail
         TARBALL_PATH=$(find dist/ -maxdepth 1 -type f -name "*.tar.gz")
         WHEEL_PATH=$(find dist/ -maxdepth 1 -type f -name "*.whl")
-        SIMPLE_INDEX_PATH=$(find dist/ -type f -name "*-simple-index.tar")
-        REQUIREMENTS_PATH=$(find dist/ -type f -name "*-requirements.txt")
-        SBOM_PATH=$(find dist/ -type f -name "*-sbom.json")
-        SBOM_GO_PATH=$(find dist/ -type f -name "*-sbom-go.json")
-        HTML_DOCS_PATH=$(find dist/ -type f -name "*-docs-html.zip")
-        BUILD_EPOCH_PATH=$(find dist/ -type f -name "*-build-epoch.txt")
+        SIMPLE_INDEX_PATH=$(find dist/ -maxdepth 1 -type f -name "*-simple-index.tar")
+        REQUIREMENTS_PATH=$(find dist/ -maxdepth 1 -type f -name "*-requirements.txt")
+        SBOM_PATH=$(find dist/ -maxdepth 1 -type f -name "*-sbom.json")
+        SBOM_GO_PATH=$(find dist/ -maxdepth 1 -type f -name "*-sbom-go.json")
+        HTML_DOCS_PATH=$(find dist/ -maxdepth 1 -type f -name "*-docs-html.zip")
+        BUILD_EPOCH_PATH=$(find dist/ -maxdepth 1 -type f -name "*-build-epoch.txt")
         DIGEST=$(sha256sum "$TARBALL_PATH" "$WHEEL_PATH" "$SIMPLE_INDEX_PATH" "$REQUIREMENTS_PATH" "$SBOM_PATH" \
           "$SBOM_GO_PATH" "$HTML_DOCS_PATH" "$BUILD_EPOCH_PATH" | base64 -w0)
         echo "Digest of artifacts is $DIGEST."
