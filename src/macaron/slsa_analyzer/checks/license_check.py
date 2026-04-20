@@ -5,6 +5,7 @@
 
 import logging
 import os
+import re
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,18 +19,6 @@ from macaron.slsa_analyzer.git_service.github import GitHub
 from macaron.slsa_analyzer.registry import registry
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-_LICENSE_FILENAMES = (
-    "LICENSE",
-    "LICENSE.md",
-    "LICENSE.txt",
-    "LICENSE.rst",
-    "LICENCE",
-    "LICENCE.md",
-    "COPYING",
-    "COPYING.md",
-    "COPYING.txt",
-)
 
 
 def _find_license_file(fs_path: str) -> str | None:
@@ -45,10 +34,26 @@ def _find_license_file(fs_path: str) -> str | None:
     str | None
         Absolute path to the license file if found, otherwise ``None``.
     """
-    for name in _LICENSE_FILENAMES:
-        candidate = os.path.join(fs_path, name)
-        if os.path.isfile(candidate):
-            return candidate
+    pattern = defaults.get(
+        "license",
+        "license_filename_pattern",
+        fallback=r"(LICENSE|LICENCE|COPYING)(\.md|\.txt|\.rst)?",
+    )
+    try:
+        regex = re.compile(pattern, flags=re.IGNORECASE)
+    except re.error as err:
+        logger.error("Invalid regex pattern for license_filename_pattern: %s (%s)", pattern, err)
+        return None
+
+    try:
+        for name in os.listdir(fs_path):
+            if regex.fullmatch(name):
+                candidate = os.path.join(fs_path, name)
+                if os.path.isfile(candidate):
+                    return candidate
+    except OSError as err:
+        logger.debug("Failed to list directory %s: %s", fs_path, err)
+
     return None
 
 
@@ -99,26 +104,17 @@ class LicenseCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        # Read configuration.
-        if not defaults.getboolean("license", "enabled", fallback=False):
-            logger.info("License check is disabled.")
-            return CheckResultData(result_tables=[], result_type=CheckResultType.SKIPPED)
-
-        allowed_list = [
-            s.strip()
-            for s in defaults.get("license", "allowed_licenses", fallback="").splitlines()
-            if s.strip()
-        ]
+        allowed_list = defaults.get_list("license", "allowed_licenses", fallback=[])
         require_license = defaults.getboolean("license", "require_license", fallback=False)
 
         # Only supported for GitHub repositories.
         git_service = ctx.dynamic_data["git_service"]
         if not isinstance(git_service, GitHub):
-            logger.info("License check is not supported for non-GitHub repositories.")
-            return CheckResultData(result_tables=[], result_type=CheckResultType.SKIPPED)
+            logger.debug("License check is not supported for non-GitHub repositories.")
+            return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-        if ctx.component.repository is None:
-            logger.info("No repository found for %s.", ctx.component.purl)
+        if not getattr(ctx.component, "repository", None):
+            logger.debug("No repository found for %s.", ctx.component.purl)
             return CheckResultData(result_tables=[], result_type=CheckResultType.FAILED)
 
         full_name = f"{ctx.component.repository.owner}/{ctx.component.repository.name}"
@@ -153,22 +149,22 @@ class LicenseCheck(BaseCheck):
         # Determine result.
         if spdx_id is None:
             if require_license:
-                logger.info("No license detected for %s and require_license is True.", full_name)
+                logger.debug("No license detected for %s and require_license is True.", full_name)
                 result_type = CheckResultType.FAILED
             else:
-                logger.info("No license detected for %s.", full_name)
+                logger.debug("No license detected for %s.", full_name)
                 result_type = CheckResultType.PASSED
             confidence = Confidence.LOW
         elif not allowed_list:
-            logger.info("License %s detected for %s (all licenses allowed).", spdx_id, full_name)
+            logger.debug("License %s detected for %s (all licenses allowed).", spdx_id, full_name)
             result_type = CheckResultType.PASSED
             confidence = Confidence.HIGH
         elif spdx_id in allowed_list:
-            logger.info("License %s is in the allow-list for %s.", spdx_id, full_name)
+            logger.debug("License %s is in the allow-list for %s.", spdx_id, full_name)
             result_type = CheckResultType.PASSED
             confidence = Confidence.HIGH
         else:
-            logger.info("License %s is not in the allow-list for %s.", spdx_id, full_name)
+            logger.debug("License %s is not in the allow-list for %s.", spdx_id, full_name)
             result_type = CheckResultType.FAILED
             confidence = Confidence.HIGH
 

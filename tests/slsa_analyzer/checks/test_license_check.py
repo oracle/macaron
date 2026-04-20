@@ -22,11 +22,11 @@ def _make_github_service() -> GitHub:
     return service
 
 
-def _load_license_config(tmp_path: Path, enabled: bool, allowed: str = "", require: bool = False) -> None:
+def _load_license_config(tmp_path: Path, allowed: str = "", require: bool = False) -> None:
     """Write a temporary ini file with [license] settings and load it into defaults."""
     config = f"""
 [license]
-enabled = {enabled}
+license_filename_pattern = (LICENSE|LICENCE|COPYING)(\\.md|\\.txt|\\.rst)?
 allowed_licenses =
 {chr(10).join("    " + s for s in allowed.splitlines() if s.strip())}
 require_license = {require}
@@ -37,26 +37,18 @@ require_license = {require}
     load_defaults(config_path)
 
 
-def test_check_disabled(macaron_path: Path, tmp_path: Path) -> None:
-    """Test that the check is skipped when disabled in config."""
-    _load_license_config(tmp_path, enabled=False)
-    check = LicenseCheck()
-    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    assert check.run_check(ctx).result_type == CheckResultType.SKIPPED
-
-
 def test_non_github_service(macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check is skipped for non-GitHub repositories."""
-    _load_license_config(tmp_path, enabled=True)
+    _load_license_config(tmp_path)
     check = LicenseCheck()
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.dynamic_data["git_service"] = NoneGitService()
-    assert check.run_check(ctx).result_type == CheckResultType.SKIPPED
+    assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
 
 def test_no_repository(macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check fails when no repository is found."""
-    _load_license_config(tmp_path, enabled=True)
+    _load_license_config(tmp_path)
     check = LicenseCheck()
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
     ctx.dynamic_data["git_service"] = _make_github_service()
@@ -67,7 +59,7 @@ def test_no_repository(macaron_path: Path, tmp_path: Path) -> None:
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_api_allowed_license(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check passes when the repository license is in the allow-list."""
-    _load_license_config(tmp_path, enabled=True, allowed="MIT\nApache-2.0")
+    _load_license_config(tmp_path, allowed="MIT\nApache-2.0")
     mock_api_client.get_license.return_value = {
         "license": {"spdx_id": "MIT", "name": "MIT License"},
         "html_url": "https://github.com/owner/repo/blob/main/LICENSE",
@@ -81,7 +73,7 @@ def test_api_allowed_license(mock_api_client: MagicMock, macaron_path: Path, tmp
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_api_disallowed_license(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check fails when the repository license is not in the allow-list."""
-    _load_license_config(tmp_path, enabled=True, allowed="MIT\nApache-2.0")
+    _load_license_config(tmp_path, allowed="MIT\nApache-2.0")
     mock_api_client.get_license.return_value = {
         "license": {"spdx_id": "GPL-3.0-only", "name": "GNU General Public License v3.0"},
         "html_url": "https://github.com/owner/repo/blob/main/LICENSE",
@@ -95,7 +87,7 @@ def test_api_disallowed_license(mock_api_client: MagicMock, macaron_path: Path, 
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_api_empty_allowlist(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check passes for any license when the allow-list is empty."""
-    _load_license_config(tmp_path, enabled=True, allowed="")
+    _load_license_config(tmp_path, allowed="")
     mock_api_client.get_license.return_value = {
         "license": {"spdx_id": "Apache-2.0", "name": "Apache License 2.0"},
         "html_url": "https://github.com/owner/repo/blob/main/LICENSE",
@@ -111,7 +103,7 @@ def test_api_noassertion_with_filesystem_fallback(
     mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path
 ) -> None:
     """Test that NOASSERTION triggers filesystem fallback and passes when license file is found."""
-    _load_license_config(tmp_path, enabled=True, require=False)
+    _load_license_config(tmp_path, require=False)
     mock_api_client.get_license.return_value = {
         "license": {"spdx_id": "NOASSERTION"},
     }
@@ -128,7 +120,7 @@ def test_api_noassertion_with_filesystem_fallback(
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_no_license_require_true(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check fails when no license is found and require_license is True."""
-    _load_license_config(tmp_path, enabled=True, require=True)
+    _load_license_config(tmp_path, require=True)
     mock_api_client.get_license.return_value = {}
     check = LicenseCheck()
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", fs_path=str(tmp_path))
@@ -139,7 +131,7 @@ def test_no_license_require_true(mock_api_client: MagicMock, macaron_path: Path,
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_no_license_require_false(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check passes when no license is found but require_license is False."""
-    _load_license_config(tmp_path, enabled=True, require=False)
+    _load_license_config(tmp_path, require=False)
     mock_api_client.get_license.return_value = {}
     check = LicenseCheck()
     ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", fs_path=str(tmp_path))
@@ -150,7 +142,7 @@ def test_no_license_require_false(mock_api_client: MagicMock, macaron_path: Path
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_filesystem_fallback_only(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """Test that the check passes when the API returns nothing but a LICENSE file exists on disk."""
-    _load_license_config(tmp_path, enabled=True, require=False)
+    _load_license_config(tmp_path, require=False)
     mock_api_client.get_license.return_value = {}
     license_file = tmp_path / "LICENSE"
     license_file.write_text("MIT License\n", encoding="utf-8")
