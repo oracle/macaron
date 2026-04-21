@@ -56,6 +56,8 @@ class PyPIBuildSpec(
                 build_cmd_spec["command"] = "python -m build --wheel -n".split()
             case "poetry":
                 build_cmd_spec["command"] = "poetry build".split()
+            case "uv":
+                build_cmd_spec["command"] = "uv build".split()
 
             case "flit":
                 # We might also want to deal with existence flit.ini, we can do so via

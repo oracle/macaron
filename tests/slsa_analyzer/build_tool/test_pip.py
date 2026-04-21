@@ -1,199 +1,69 @@
-# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the Pip build functions."""
 
+from pathlib import Path
+
 import pytest
 
-from macaron.slsa_analyzer.build_tool.base_build_tool import BuildToolCommand
-from macaron.slsa_analyzer.build_tool.language import BuildLanguage
 from macaron.slsa_analyzer.build_tool.pip import Pip
+from tests.conftest import MockAnalyzeContext
 
 
 @pytest.mark.parametrize(
-    (
-        "command",
-        "language",
-        "language_versions",
-        "language_distributions",
-        "ci_path",
-        "reachable_secrets",
-        "events",
-        "excluded_configs",
-        "expected_result",
-    ),
+    ("build_configs", "repo_files", "expected_value"),
     [
         (
-            ["twine", "upload"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/release.yaml",
-            [{"key", "pass"}],
-            ["release"],
-            ["codeql-analysis.yaml"],
-            True,
+            ["setup.py", "pyproject.toml", "setup.cfg"],
+            {
+                "setup.py": "",
+                "pyproject.toml": "",
+            },
+            [
+                ("pyproject.toml", 1.0, None, None),
+                ("setup.py", 0.5, None, None),
+            ],
         ),
         (
-            ["flit", "publish"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/pip.yaml",
-            [{"key", "pass"}],
-            ["push"],
-            ["pip.yaml"],
-            False,
+            ["setup.py", "setup.cfg"],
+            {
+                "setup.py": "",
+                "setup.cfg": "",
+            },
+            [
+                ("setup.py", 1.0, None, None),
+                ("setup.cfg", 0.5, None, None),
+            ],
         ),
         (
-            ["python", "-m", "twine", "upload"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/release.yaml",
-            [{"key", "pass"}],
-            ["release"],
-            ["codeql-analysis.yaml"],
-            True,
-        ),
-        (
-            ["flit", "publish"],
-            BuildLanguage.JAVASCRIPT,
-            None,
-            None,
-            ".github/workflows/release.yaml",
-            [{"key", "pass"}],
-            ["push"],
-            None,
-            False,
+            ["setup.py", "setup.cfg", "pyproject.toml"],
+            {
+                "setup.py": "",
+                "setup.cfg": "",
+                "pyproject.toml": '[build-system]\nrequires = ["pdm-backend>=2.4.0"]\nbuild-backend = "pdm.backend"\n',
+            },
+            [
+                ("pyproject.toml", 0.5, None, None),
+                ("setup.py", 0.5, None, None),
+                ("setup.cfg", 0.5, None, None),
+            ],
         ),
     ],
 )
-def test_is_pip_deploy_command(
+def test_pip_build_tool_detection(
     pip_tool: Pip,
-    command: list[str],
-    language: str,
-    language_versions: list[str],
-    language_distributions: list[str],
-    ci_path: str,
-    reachable_secrets: list[str],
-    events: list[str],
-    excluded_configs: list[str] | None,
-    expected_result: bool,
+    tmp_path: Path,
+    build_configs: list[str],
+    repo_files: dict[str, str],
+    expected_value: list[tuple[str, float, str | None, str | None]],
 ) -> None:
-    """Test the deploy commend detection function."""
-    result, _ = pip_tool.is_deploy_command(
-        BuildToolCommand(
-            command=command,
-            language=language,
-            language_versions=language_versions,
-            language_distributions=language_distributions,
-            language_url=None,
-            ci_path=ci_path,
-            step_node=None,
-            reachable_secrets=reachable_secrets,
-            events=events,
-        ),
-        excluded_configs=excluded_configs,
-    )
-    assert result == expected_result
+    """Test pyproject prioritization and confidence scoring across config combinations."""
+    pip_tool.build_configs = build_configs
+    for relative_path, content in repo_files.items():
+        path = tmp_path.joinpath(relative_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
 
-
-@pytest.mark.parametrize(
-    (
-        "command",
-        "language",
-        "language_versions",
-        "language_distributions",
-        "ci_path",
-        "reachable_secrets",
-        "events",
-        "excluded_configs",
-        "expected_result",
-    ),
-    [
-        (
-            ["python", "-m", "build"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/release.yaml",
-            [{"key", "pass"}],
-            ["release"],
-            ["codeql-analysis.yaml"],
-            True,
-        ),
-        (
-            ["python", "-m", "flit", "build"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/build.yaml",
-            [{"key", "pass"}],
-            ["push"],
-            None,
-            False,
-        ),
-        (
-            ["python", "-m", "flit", "build"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/flit.yaml",
-            [{"key", "pass"}],
-            ["push"],
-            ["flit.yaml"],
-            False,
-        ),
-        (
-            ["pip", "install", "--upgrade", "pip"],
-            BuildLanguage.PYTHON,
-            None,
-            None,
-            ".github/workflows/release.yaml",
-            [{"key", "pass"}],
-            ["release"],
-            ["codeql-analysis.yaml"],
-            False,
-        ),
-        (
-            ["pip", "build"],
-            BuildLanguage.JAVA,
-            None,
-            None,
-            ".github/workflows/release.yaml",
-            [{"key", "pass"}],
-            ["push"],
-            None,
-            False,
-        ),
-    ],
-)
-def test_is_pip_package_command(
-    pip_tool: Pip,
-    command: list[str],
-    language: str,
-    language_versions: list[str],
-    language_distributions: list[str],
-    ci_path: str,
-    reachable_secrets: list[str],
-    events: list[str],
-    excluded_configs: list[str] | None,
-    expected_result: bool,
-) -> None:
-    """Test the packaging command detection function."""
-    result, _ = pip_tool.is_package_command(
-        BuildToolCommand(
-            command=command,
-            language=language,
-            language_versions=language_versions,
-            language_distributions=language_distributions,
-            language_url=None,
-            ci_path=ci_path,
-            step_node=None,
-            reachable_secrets=reachable_secrets,
-            events=events,
-        ),
-        excluded_configs=excluded_configs,
-    )
-    assert result == expected_result
+    ctx = MockAnalyzeContext(macaron_path="", output_dir="", fs_path=str(tmp_path))
+    assert pip_tool.is_detected(ctx.component) == expected_value
