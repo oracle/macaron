@@ -98,8 +98,8 @@ the requirements that are currently supported by Macaron.
      - **Detect vulnerable GitHub Actions** - Check whether the GitHub Actions called from the corresponding repo have known vulnerabilities.
      - This check identifies third-party GitHub Actions used in a repository and reports any known vulnerabilities associated with the used versions.
    * - ``mcn_license_1``
-     - **License check** - Check whether the repository license is in the configured allow-list.
-     - This check detects the repository license via the GitHub API and validates it against a user-defined list of allowed SPDX identifiers configured in ``defaults.ini``. If the allow-list is empty, any detected license is accepted.
+     - **License check** - Check whether the repository license is not in the configured deny-list.
+     - This check detects the repository license via the GitHub API and validates it against a user-defined list of denied SPDX identifiers configured in ``defaults.ini``. If the deny-list is empty, any detected license is accepted.
 
 ----------------------
 How does Macaron work?

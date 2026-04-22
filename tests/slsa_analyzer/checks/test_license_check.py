@@ -22,13 +22,13 @@ def _make_github_service() -> GitHub:
     return service
 
 
-def _load_license_config(tmp_path: Path, allowed: str = "", require: bool = False) -> None:
+def _load_license_config(tmp_path: Path, denied: str = "", require: bool = False) -> None:
     """Write a temporary ini file with [license] settings and load it into defaults."""
     config = f"""
 [license]
 license_filename_pattern = (LICENSE|LICENCE|COPYING)(\\.md|\\.txt|\\.rst)?
-allowed_licenses =
-{chr(10).join("    " + s for s in allowed.splitlines() if s.strip())}
+denied_licenses =
+{chr(10).join("    " + s for s in denied.splitlines() if s.strip())}
 require_license = {require}
 """
     config_path = os.path.join(tmp_path, "license_config.ini")
@@ -57,23 +57,9 @@ def test_no_repository(macaron_path: Path, tmp_path: Path) -> None:
 
 
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
-def test_api_allowed_license(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
-    """Test that the check passes when the repository license is in the allow-list."""
-    _load_license_config(tmp_path, allowed="MIT\nApache-2.0")
-    mock_api_client.get_license.return_value = {
-        "license": {"spdx_id": "MIT", "name": "MIT License"},
-        "html_url": "https://github.com/owner/repo/blob/main/LICENSE",
-    }
-    check = LicenseCheck()
-    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
-    ctx.dynamic_data["git_service"] = _make_github_service()
-    assert check.run_check(ctx).result_type == CheckResultType.PASSED
-
-
-@patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
-def test_api_disallowed_license(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
-    """Test that the check fails when the repository license is not in the allow-list."""
-    _load_license_config(tmp_path, allowed="MIT\nApache-2.0")
+def test_api_denied_license(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
+    """Test that the check fails when the repository license is in the deny-list."""
+    _load_license_config(tmp_path, denied="GPL-3.0-only\nAGPL-3.0-or-later")
     mock_api_client.get_license.return_value = {
         "license": {"spdx_id": "GPL-3.0-only", "name": "GNU General Public License v3.0"},
         "html_url": "https://github.com/owner/repo/blob/main/LICENSE",
@@ -85,9 +71,23 @@ def test_api_disallowed_license(mock_api_client: MagicMock, macaron_path: Path, 
 
 
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
-def test_api_empty_allowlist(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
-    """Test that the check passes for any license when the allow-list is empty."""
-    _load_license_config(tmp_path, allowed="")
+def test_api_non_denied_license(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
+    """Test that the check passes when the repository license is not in the deny-list."""
+    _load_license_config(tmp_path, denied="GPL-3.0-only\nAGPL-3.0-or-later")
+    mock_api_client.get_license.return_value = {
+        "license": {"spdx_id": "MIT", "name": "MIT License"},
+        "html_url": "https://github.com/owner/repo/blob/main/LICENSE",
+    }
+    check = LicenseCheck()
+    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="")
+    ctx.dynamic_data["git_service"] = _make_github_service()
+    assert check.run_check(ctx).result_type == CheckResultType.PASSED
+
+
+@patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
+def test_api_empty_denylist(mock_api_client: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
+    """Test that the check passes for any license when the deny-list is empty."""
+    _load_license_config(tmp_path, denied="")
     mock_api_client.get_license.return_value = {
         "license": {"spdx_id": "Apache-2.0", "name": "Apache License 2.0"},
         "html_url": "https://github.com/owner/repo/blob/main/LICENSE",

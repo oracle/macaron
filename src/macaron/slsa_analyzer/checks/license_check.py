@@ -83,12 +83,12 @@ class LicenseFacts(CheckFacts):
 
 
 class LicenseCheck(BaseCheck):
-    """Check whether the repository license is in the configured allow-list."""
+    """Check whether the repository license is not in the configured deny-list."""
 
     def __init__(self) -> None:
         """Initialize instance."""
         check_id = "mcn_license_1"
-        description = "Check whether the repository license is in the configured allow-list."
+        description = "Check whether the repository license is not in the configured deny-list."
         super().__init__(check_id=check_id, description=description)
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
@@ -104,7 +104,7 @@ class LicenseCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        allowed_list = defaults.get_list("license", "allowed_licenses", fallback=[])
+        denied_list = defaults.get_list("license", "denied_licenses", fallback=[])
         require_license = defaults.getboolean("license", "require_license", fallback=False)
 
         # Only supported for GitHub repositories.
@@ -155,17 +155,13 @@ class LicenseCheck(BaseCheck):
                 logger.debug("No license detected for %s.", full_name)
                 result_type = CheckResultType.PASSED
             confidence = Confidence.LOW
-        elif not allowed_list:
-            logger.debug("License %s detected for %s (all licenses allowed).", spdx_id, full_name)
-            result_type = CheckResultType.PASSED
-            confidence = Confidence.HIGH
-        elif spdx_id in allowed_list:
-            logger.debug("License %s is in the allow-list for %s.", spdx_id, full_name)
-            result_type = CheckResultType.PASSED
+        elif denied_list and spdx_id in denied_list:
+            logger.debug("License %s is in the deny-list for %s.", spdx_id, full_name)
+            result_type = CheckResultType.FAILED
             confidence = Confidence.HIGH
         else:
-            logger.debug("License %s is not in the allow-list for %s.", spdx_id, full_name)
-            result_type = CheckResultType.FAILED
+            logger.debug("License %s is not in the deny-list for %s (allowed).", spdx_id, full_name)
+            result_type = CheckResultType.PASSED
             confidence = Confidence.HIGH
 
         return CheckResultData(
