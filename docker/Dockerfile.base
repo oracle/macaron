@@ -9,7 +9,7 @@
 #   Souffle 2.5 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
-FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:41a867b7f24306cf38c01ba578598164397bd07aa26dbdc9a985bedd9177e82e
+FROM container-registry.oracle.com/os/oraclelinux:10-slim@sha256:b1ce2f91df26a9b35a02a713218bd9857805fabb4e8056dfa02a557c74a0e2d0
 
 ENV HOME="/home/macaron" \
     # Setting Python related environment variables.
@@ -31,19 +31,6 @@ RUN : \
     && microdnf install -y dnf \
     # We can then safely remove the unused microdnf.
     && dnf remove -y microdnf \
-    # Add the EPEL packages yum repo following the convention as existing repo definitions in OL9.
-    # The following yum repo will be resolved to this URL:
-    # https://yum.oracle.com/repo/OracleLinux/OL9/developer/EPEL/x86_64/index.html
-    # This repo contains the package lcov which is later used in building Python from source.
-    && echo -e \
-"\
-[ol9_epel]\n\
-name=EPEL packages for test and development (\$basearch)\n\
-baseurl=https://yum\$ociregion.\$ocidomain/repo/OracleLinux/OL9/developer/EPEL/\$basearch/\n\
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle\n\
-gpgcheck=1\n\
-enabled=1\
-" >> /etc/yum.repos.d/epel-ol9.repo \
     # We clean all here so that when we run upgrade, the newly added yum repo is used.
     && dnf clean all    \
     && dnf upgrade -y   \
@@ -74,8 +61,8 @@ enabled=1\
     && USER_MANUAL_INSTALLED="$(dnf history userinstalled | tail -n +2)" \
 # ---------------------------------------------------------------------------------------------------------------------
     # INSTALL PYTHON FROM SOURCE.
-    # We enable the ol9_core_ready_builder repo for the package gdbm-devel
-    && dnf --enablerepo=ol9_codeready_builder install -y \
+    # We enable the ol10_core_ready_builder repo for the package gdbm-devel
+    && dnf --enablerepo=ol10_codeready_builder install -y \
         # Install Python build dependencies. These libraries are not needed during runtime and should be removed after
         # the build completes.
         # The required packages are listed here:
@@ -86,15 +73,12 @@ enabled=1\
         bluez-libs      \
         bzip2-devel     \
         expat-devel     \
-        libdb-devel     \
         libffi-devel    \
         libuuid-devel   \
         gcc             \
         gdbm-devel      \
         glibc-devel     \
         gnupg           \
-        gpm-devel       \
-        lcov            \
         make            \
         ncurses-devel   \
         openssl-devel   \
@@ -106,10 +90,6 @@ enabled=1\
         xz              \
         xz-devel        \
         zlib-devel      \
-        # The dpkg-dev package is used to query for used shared libraries:
-        #   https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L34
-        #   https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L114
-        dpkg-dev        \
     # Download the source tarball and verify its integrity.
     # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#L56
     && wget -O python.tar.xz "https://www.python.org/ftp/python/$PYTHON3_VERSION/Python-$PYTHON3_VERSION.tar.xz" \
@@ -118,7 +98,7 @@ enabled=1\
     && export GNUPGHOME \
     && gpg --recv-keys "$PYTHON_SOURCE_GPG" \
     && gpg --verify python.tar.xz.asc python.tar.xz \
-    && command -v gpgconf > /dev/null && gpgconf --kill all || : \
+    && (command -v gpgconf > /dev/null && gpgconf --kill all || :) \
     && rm -rf "$GNUPGHOME" python.tar.xz.asc \
     # Compile and install Python from source.
     # https://github.com/docker-library/python/blob/f568f56f28fab0fe87b34db777e2c2861cef002b/3.11/slim-buster/Dockerfile#LL56C2-L99C3
@@ -126,7 +106,7 @@ enabled=1\
     && tar --extract --directory /usr/src/python --strip-components=1 --file python.tar.xz \
     && rm python.tar.xz \
     && cd /usr/src/python \
-    && gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+    && gnuArch="$(rpm --eval '%{_host}')" \
     && ./configure \
         --build="$gnuArch" \
         --enable-loadable-sqlite-extensions \
@@ -175,8 +155,9 @@ enabled=1\
     # However, some parts are different on Oracle Linux 9.
     && mkdir /souffle-src \
     && cd /souffle-src \
+    && dnf --enablerepo=ol10_codeready_builder install -y lcov \
     # Install build dependencies.
-    && dnf --enablerepo=ol9_codeready_builder install -y \
+    && dnf --enablerepo=ol10_codeready_builder install -y \
         autoconf \
         automake \
         bash-completion \
@@ -208,8 +189,7 @@ enabled=1\
     && find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
         | awk '/=>/ { print $(NF-1) }' \
         | sort -u \
-        | xargs -r dpkg-query --search \
-        | cut -d: -f1 \
+        | xargs -r rpm -qf --queryformat '%{NAME}\n' \
         | sort -u \
         | xargs -r dnf mark install \
     # We exclude systemd-udev because currently one of the build dependencies for Souffle pull this protected package.
