@@ -299,14 +299,17 @@ requirements.txt: pyproject.toml
 # Audit the currently installed packages. Skip packages that are installed in
 # editable mode (like the one in development here) because they may not have
 # a PyPI entry; also print out CVE description and potential fixes if audit
-# found an issue.
-# Remove GHSA-5239-wwwm-4pmq from the ignore list when it is patched.
+# found an issue. If an advisory needs to be ignored, use the --ignore-vuln option.
+#
+# Remove GHSA-vfmq-68hx-4jfw when the following issue is resolved to be able to
+# install the latest version of lxml.
+# https://github.com/semgrep/semgrep/issues/11630
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-5239-wwwm-4pmq
+	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
@@ -423,6 +426,7 @@ simple-index: dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/$(PACKAGE_SDIST_NAME).tar
 	echo -e "<!-- https://peps.python.org/pep-0503/ -->\n<!DOCTYPE html><html lang='en'><head><meta name='pypi:repository-version' content='1.3'><title>Simple Index: $(PROJECT_NAME)</title></head><body><ul><li><a href='$(PACKAGE_WHEEL_DIST_NAME).whl#sha256="$$(python -c "with open('dist/$(PACKAGE_WHEEL_DIST_NAME).whl', 'rb') as f: import hashlib; print(hashlib.sha256(f.read()).hexdigest());")"'>$(PACKAGE_WHEEL_DIST_NAME).whl</a></li><li><a href='$(PACKAGE_SDIST_NAME).tar.gz#sha256="$$(python -c "with open('dist/$(PACKAGE_SDIST_NAME).tar.gz', 'rb') as f: import hashlib; print(hashlib.sha256(f.read()).hexdigest());")"'>$(PACKAGE_SDIST_NAME).tar.gz</a></li></ul></body></html>" > dist/simple-index/$(PROJECT_NAME)/index.html
 	cp -f dist/$(PACKAGE_WHEEL_DIST_NAME).whl dist/simple-index/$(PROJECT_NAME)/
 	cp -f dist/$(PACKAGE_SDIST_NAME).tar.gz dist/simple-index/$(PROJECT_NAME)/
+	python -m tarfile --create dist/$(PACKAGE_SDIST_NAME)-pep503-simple-index.tar dist/simple-index/
 
 # Build the Docker image. The image name and tag are read from IMAGE_NAME and RELEASE_TAG
 # environment variables, respectively. By default "test" is used as the image tag.

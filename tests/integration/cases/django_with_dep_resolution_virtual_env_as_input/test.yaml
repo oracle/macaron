@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
@@ -87,7 +87,7 @@ steps:
   kind: verify
   options:
     policy: policy-sourcecode.dl
-- name: Query the output database to verify the suspicious_patterns rull passed.
+- name: Query the output database to verify the suspicious_patterns rule passed.
   kind: shell
   options:
     cmd: ./check_sourcecode_patterns.sh
