@@ -14,7 +14,14 @@ from itertools import product
 from typing import cast
 
 from macaron import MACARON_PATH
-from macaron.code_analyzer.dataflow_analysis import core, evaluation, facts, github, models, printing
+from macaron.code_analyzer.dataflow_analysis import (  # pylint: disable=cyclic-import
+    core,
+    evaluation,
+    facts,
+    github,
+    models,
+    printing,
+)
 from macaron.errors import CallGraphError, ParseError
 from macaron.parsers import bashparser, bashparser_model
 

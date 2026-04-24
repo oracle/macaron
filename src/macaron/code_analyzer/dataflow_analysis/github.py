@@ -10,7 +10,15 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from graphlib import TopologicalSorter
 
-from macaron.code_analyzer.dataflow_analysis import bash, core, evaluation, facts, github_expr, models, printing
+from macaron.code_analyzer.dataflow_analysis import (  # pylint: disable=cyclic-import
+    bash,
+    core,
+    evaluation,
+    facts,
+    github_expr,
+    models,
+    printing,
+)
 from macaron.errors import CallGraphError
 from macaron.parsers import github_workflow_model
 
