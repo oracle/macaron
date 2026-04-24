@@ -192,8 +192,14 @@ runs:
   - name: Enforce VSA generation
     if: ${{ always() && inputs.policy_file != '' }}
     run: |
+      RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+      SUMMARY_URL="${RUN_URL}#macaron-analysis-summary"
+      REMEDIATIONS_URL="${RUN_URL}#macaron-full-findings-remediation-details"
       if [ "${VSA_GENERATED}" != "true" ]; then
-        echo "Policy verification failed. VSA was not generated at ${OUTPUT_DIR}/vsa.intoto.jsonl. Check uploaded reports."
+        echo "Policy verification failed. VSA was not generated at ${OUTPUT_DIR}/vsa.intoto.jsonl."
+        echo "Check Workflow summary and uploaded reports: ${SUMMARY_URL}"
+        echo "Full Findings and Remediation details: ${REMEDIATIONS_URL}"
+        echo "If the action failed but no findings are reported, check your configuration and make sure policy_purl is valid."
         exit 1
       fi
     shell: bash
@@ -201,6 +207,9 @@ runs:
       OUTPUT_DIR: ${{ inputs.output_dir }}
       VSA_GENERATED: ${{ steps.collect-reports.outputs.vsa_generated }}
       POLICY_FILE: ${{ inputs.policy_file }}
+      GITHUB_SERVER_URL: ${{ github.server_url }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_RUN_ID: ${{ github.run_id }}
 
   - name: Upload Attestation
     if: ${{ inputs.upload_attestation == 'true' && steps.collect-reports.outputs.vsa_generated == 'true' }}

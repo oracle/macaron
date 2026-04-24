@@ -90,7 +90,7 @@ def _write_header(
         vsa_path = _env("VSA_PATH", f"{output_dir}/vsa.intoto.jsonl")
         policy_succeeded = bool(vsa_path) and Path(vsa_path).is_file()
 
-    _append_line(summary_path, "## Macaron Analysis Results")
+    _append_line(summary_path, "<h2 id=\"macaron-analysis-summary\">Macaron Analysis Results</h2>")
     _append_line(summary_path)
     if upload_reports:
         _append_line(summary_path, "Download reports from this artifact link:")
@@ -371,8 +371,13 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
                 )
 
     _append_line(summary_path)
+    _append_line(
+        summary_path,
+        "<h2 id=\"macaron-full-findings-remediation-details\">Full Findings and Remediation Details</h2>",
+    )
+    _append_line(summary_path)
     _append_line(summary_path, "<details>")
-    _append_line(summary_path, "<summary>Detailed findings</summary>")
+    _append_line(summary_path, "<summary>Show full findings</summary>")
     _append_line(summary_path)
     detail_groups = groups_in_rows if groups_in_rows else ["all_findings"]
     row_counter = 1
