@@ -1,3 +1,13 @@
+## v0.24.0 (2026-04-24)
+
+### Feat
+
+- improve Macaron's GitHub Actions reports (#1376)
+- add license filtering with compliance check (#1379)
+- add support for uv build tool (#1350)
+- improve source code detection using malware insights on obfuscation (#1378)
+- extend build command information in buildspec (#1308)
+
 ## v0.23.0 (2026-03-31)
 
 ### Feat
