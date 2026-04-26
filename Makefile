@@ -304,12 +304,15 @@ requirements.txt: pyproject.toml
 # Remove GHSA-vfmq-68hx-4jfw when the following issue is resolved to be able to
 # install the latest version of lxml.
 # https://github.com/semgrep/semgrep/issues/11630
+#
+# Remove GHSA-58qw-9mgm-455v once a patch is available.
+# https://github.com/advisories/GHSA-58qw-9mgm-455v
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw
+	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw --ignore-vuln GHSA-58qw-9mgm-455v
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
