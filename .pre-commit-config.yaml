@@ -17,7 +17,7 @@ repos:
 
 # Commitizen enforces semantic and conventional commit messages.
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: 4fbeae7861663ecf4b4989211eba41c1a3fb1227  # v4.13.9
+  rev: 2ca29f9297911f8f5a4e8f97100b7832f045e8d3  # frozen: v4.13.10
   hooks:
   - id: commitizen
     name: Check conventional commit message
@@ -25,7 +25,7 @@ repos:
 
 # Sort imports.
 - repo: https://github.com/pycqa/isort
-  rev: a333737ed43df02b18e6c95477ea1b285b3de15a  # v8.0.1
+  rev: dac090ce4d9ee313d086e2e89ab1acb8c2664fa1  # frozen: 9.0.0a3
   hooks:
   - id: isort
     name: Sort import statements
@@ -34,14 +34,14 @@ repos:
 
 # Add Black code formatters.
 - repo: https://github.com/ambv/black
-  rev: c6755bb741b6481d6b3d3bb563c83fa060db96c9  # v26.3.1
+  rev: c6755bb741b6481d6b3d3bb563c83fa060db96c9  # frozen: v26.3.1
   hooks:
   - id: black
     name: Format code
     args: [--config, pyproject.toml, --target-version, py311]
     exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
 - repo: https://github.com/asottile/blacken-docs
-  rev: 1.20.0
+  rev: dda8db18cfc68df532abf33b185ecd12d5b7b326  # frozen: 1.20.0
   hooks:
   - id: blacken-docs
     name: Format code in docstrings
@@ -50,7 +50,7 @@ repos:
 
 # Upgrade and rewrite Python idioms.
 - repo: https://github.com/asottile/pyupgrade
-  rev: 75992aaa40730136014f34227e0135f63fc951b4  # v3.21.2
+  rev: 75992aaa40730136014f34227e0135f63fc951b4  # frozen: v3.21.2
   hooks:
   - id: pyupgrade
     name: Upgrade code idioms
@@ -60,7 +60,7 @@ repos:
 # Similar to pylint, with a few more/different checks. For more available
 # extensions: https://github.com/DmytroLitvinov/awesome-flake8-extensions
 - repo: https://github.com/pycqa/flake8
-  rev: c48217e1fc006c2dddd14df54e83b67da15de5cd  # v7.3.0
+  rev: d93590f5be797aabb60e3b09f2f52dddb02f349f  # frozen: 7.3.0
   hooks:
   - id: flake8
     name: Check flake8 issues
@@ -72,13 +72,13 @@ repos:
 
 # Check GitHub Actions workflow files.
 - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-  rev: 2f3dbd354aa118b539dee99d8eed05a83097a199  # v1.7.12.24
+  rev: c04ed26e40637cab1aa9879c693832a9c120fb20  # frozen: v1.7.12.24
   hooks:
   - id: actionlint
 
 # Check shell scripts with shellcheck.
 - repo: https://github.com/shellcheck-py/shellcheck-py
-  rev: 745eface02aef23e168a8afb6b5737818efbea95  # v0.11.0.1
+  rev: 745eface02aef23e168a8afb6b5737818efbea95  # frozen: v0.11.0.1
   hooks:
   - id: shellcheck
     exclude: ^tests/
@@ -110,7 +110,7 @@ repos:
 
 # Check for potential security issues.
 - repo: https://github.com/PyCQA/bandit
-  rev: 92ae8b82fb422a639f0ed8d99e96cea769594e08  # v1.9.4
+  rev: 92ae8b82fb422a639f0ed8d99e96cea769594e08  # frozen: v1.9.4
   hooks:
   - id: bandit
     name: Check for security issues
@@ -123,7 +123,7 @@ repos:
 # Enable a whole bunch of useful helper hooks, too.
 # See https://pre-commit.com/hooks.html for more hooks.
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # v6.0.0
+  rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
   hooks:
   - id: check-ast
   - id: check-case-conflict
@@ -142,7 +142,7 @@ repos:
     args: [--allow-multiple-documents]
   - id: check-toml
 - repo: https://github.com/pre-commit/pygrep-hooks
-  rev: 3a6eb0fadf60b3cccfd80bad9dbb6fae7e47b316  # v1.10.0
+  rev: 3a6eb0fadf60b3cccfd80bad9dbb6fae7e47b316  # frozen: v1.10.0
   hooks:
   - id: python-check-blanket-noqa
   # Disabling blanket-type-ignore for now until type stubs are added.
@@ -158,13 +158,13 @@ repos:
 # this package's documentation.
 # Commenting this out because https://github.com/Lucas-C/pre-commit-hooks-markup/issues/13
 # - repo: https://github.com/Lucas-C/pre-commit-hooks-markup
-#   rev: v1.0.1
+#   rev: 501f3d60cee13c712492103343bc23efdc7b3d1f  # frozen: v1.0.1
 #   hooks:
 #   - id: rst-linter
 
 # Check and prettify the configuration files.
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: 4380fbb73a154b5f5624794c1c78d9719ccc860f  # v2.16.0
+  rev: 4380fbb73a154b5f5624794c1c78d9719ccc860f  # frozen: v2.16.0
   hooks:
   - id: pretty-format-ini
     args: [--autofix]
@@ -223,7 +223,7 @@ repos:
 
 # A linter for Golang
 - repo: https://github.com/golangci/golangci-lint
-  rev: 8f3b0c7ed018e57905fbd873c697e0b1ede605a5  # v2.11.4
+  rev: 8f3b0c7ed018e57905fbd873c697e0b1ede605a5  # frozen: v2.11.4
   hooks:
   - id: golangci-lint
 
@@ -235,7 +235,7 @@ repos:
 # Other staged files shouldn't trigger these hooks.
 # Documentation: https://github.com/TekWizely/pre-commit-golang/blob/v1.0.0-rc.1/README.md.
 - repo: https://github.com/tekwizely/pre-commit-golang
-  rev: f298c082154b2cb239fac06a4f452368e66e66dd  # v1.0.0-rc.4
+  rev: f298c082154b2cb239fac06a4f452368e66e66dd  # frozen: v1.0.0-rc.4
   hooks:
   - id: go-build-mod
   - id: go-build-repo-mod
