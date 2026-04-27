@@ -128,14 +128,18 @@ jobs:
         echo "Digest of artifacts is $DIGEST."
         echo "artifacts-sha256=$DIGEST" >> "$GITHUB_OUTPUT"
 
-    # For now only generate artifacts for the specified OS and Python version in env variables.
-    # Currently reusable workflows do not support setting strategy property from the caller workflow.
+    # For now only generate artifacts for the specified OS and Python version in env
+    # variables. Currently reusable workflows do not support setting strategy property
+    # from the caller workflow. Furthermore, add only top-level files as artifacts;
+    # do not copy the generated simple-index/ folder.
     - name: Upload the package artifact for debugging and release
       if: matrix.os == env.ARTIFACT_OS && matrix.python == env.ARTIFACT_PYTHON
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: artifact-${{ matrix.os }}-python-${{ matrix.python }}
-        path: dist
+        path: |
+          dist/*.*
+          !dist/simple-index
         if-no-files-found: error
         retention-days: 7
 
