@@ -60,7 +60,7 @@ repos:
 # Similar to pylint, with a few more/different checks. For more available
 # extensions: https://github.com/DmytroLitvinov/awesome-flake8-extensions
 - repo: https://github.com/pycqa/flake8
-  rev: d93590f5be797aabb60e3b09f2f52dddb02f349f  # frozen: 7.3.0
+  rev: c48217e1fc006c2dddd14df54e83b67da15de5cd  # frozen: 7.3.0
   hooks:
   - id: flake8
     name: Check flake8 issues
