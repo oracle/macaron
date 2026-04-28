@@ -17,7 +17,7 @@ repos:
 
 # Commitizen enforces semantic and conventional commit messages.
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: 2ca29f9297911f8f5a4e8f97100b7832f045e8d3  # frozen: v4.13.10
+  rev: b5d5040f7980a5d2bce320d2a1ea1e04ac54b00c  # frozen: v4.13.10
   hooks:
   - id: commitizen
     name: Check conventional commit message
