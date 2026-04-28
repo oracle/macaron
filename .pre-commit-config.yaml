@@ -235,7 +235,7 @@ repos:
 # Other staged files shouldn't trigger these hooks.
 # Documentation: https://github.com/TekWizely/pre-commit-golang/blob/v1.0.0-rc.1/README.md.
 - repo: https://github.com/tekwizely/pre-commit-golang
-  rev: f298c082154b2cb239fac06a4f452368e66e66dd  # frozen: v1.0.0-rc.4
+  rev: a701af726d456597f5b0c3b55af615451489ceeb  # frozen: v0.8.3-rc.4
   hooks:
   - id: go-build-mod
   - id: go-build-repo-mod
