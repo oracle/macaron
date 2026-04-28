@@ -72,7 +72,7 @@ repos:
 
 # Check GitHub Actions workflow files.
 - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
-  rev: c04ed26e40637cab1aa9879c693832a9c120fb20  # frozen: v1.7.12.24
+  rev: 2f3dbd354aa118b539dee99d8eed05a83097a199  # frozen: v1.7.12.24
   hooks:
   - id: actionlint
 
