@@ -25,7 +25,7 @@ repos:
 
 # Sort imports.
 - repo: https://github.com/pycqa/isort
-  rev: dac090ce4d9ee313d086e2e89ab1acb8c2664fa1  # frozen: 9.0.0a3
+  rev: a333737ed43df02b18e6c95477ea1b285b3de15a  # frozen: 8.0.1a3
   hooks:
   - id: isort
     name: Sort import statements
