@@ -1,0 +1,38 @@
+/* Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved. */
+/* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
+
+#include "prelude.dl"
+
+Policy("test_policy", component_id, "") :-
+    check_passed(component_id, "mcn_provenance_available_1"),
+    check_passed(component_id, "mcn_provenance_verified_1"),
+    check_passed(component_id, "mcn_provenance_derived_repo_1"),
+    check_failed(component_id, "mcn_provenance_derived_commit_1"),
+    check_passed(component_id, "mcn_scm_authenticity_1"),
+    provenance_available_check(_, asset_name, asset_url),
+    asset_name = "aiohappyeyeballs",
+    asset_url = "https://pypi.org/integrity/aiohappyeyeballs/2.6.1/aiohappyeyeballs-2.6.1-py3-none-any.whl/provenance",
+    provenance(_, component_id, _, slsa_level, _, repo_url, attested_commit, _, asset_name, asset_url, _),
+    slsa_level = 2,
+    repo_url = "https://github.com/aio-libs/aiohappyeyeballs",
+    attested_commit = "2042c82f9978f41c31b58aa4e3d8fc3b9c3ec2ec",
+    repository(
+        _,
+        component_id,
+        "github.com/aio-libs/aiohappyeyeballs",
+        "aio-libs/aiohappyeyeballs",
+        "github.com",
+        "aio-libs",
+        "aiohappyeyeballs",
+        "https://github.com/aio-libs/aiohappyeyeballs",
+        _,
+        _,
+        release_commit,
+        _,
+        _
+    ),
+    release_commit = "e3bd5bdf44f5d187802de6dcb08d27e1ca6da048",
+    attested_commit != release_commit.
+
+apply_policy_to("test_policy", component_id) :-
+    is_component(component_id, "pkg:pypi/aiohappyeyeballs@2.6.1").

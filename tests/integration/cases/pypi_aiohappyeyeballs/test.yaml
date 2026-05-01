@@ -1,0 +1,21 @@
+# Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing a PyPI PURL that has provenance available on the PyPI registry, but whose attested commit does not match
+  the release tag commit.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/aiohappyeyeballs@2.6.1
+- name: Run macaron verify-policy to verify passed/failed checks
+  kind: verify
+  options:
+    policy: policy.dl

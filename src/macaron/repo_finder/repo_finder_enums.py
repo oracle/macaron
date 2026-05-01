@@ -140,5 +140,8 @@ class CommitFinderInfo(Enum):
     #: Reported if a match was found.
     MATCHED = "Matched"
 
+    #: Commit is extracted from the provenance.
+    PROVENANCE_USED = "Provenance used"
+
     #: Default state. Reported if the commit finder was not called. E.g. Because the Repo Finder failed.
     NOT_USED = "Not used"
