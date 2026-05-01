@@ -29,9 +29,9 @@ The integration cases in `tests/integration/cases/pypi_toga/test.yaml` and `test
 | `environment` | No | Environment variables needed by the build or test steps. Values are strings. |
 | `artifact_path` | No | Expected output artifact path or location, if known. |
 | `entry_point` | No | Script, class, binary, or other entry point for running the project, if known. |
-| `build_requires` | No | Build environment requirements as a mapping from package name to version specifier. This is currently most useful for PyPI, where values are inferred from wheel metadata, `pyproject.toml`, source distributions, and fallback heuristics. A value may be an empty string when a package is required but no concrete version constraint is known. |
+| `build_requires` | No | Build environment requirements as a mapping from package name to version specifier. This is currently used for PyPI packages only, where values are inferred from wheel metadata, `pyproject.toml`, source distributions, and fallback heuristics. A value may be an empty string when a package is required but no concrete version constraint is known. |
 | `build_backends` | No | Build backends used by a frontend build tool. For PyPI, this can include values such as `setuptools.build_meta`; these correspond to the backend that tools such as `pip` or `python -m build` call to create a wheel. |
-| `has_binaries` | No | Whether the package artifact includes non-pure binaries. |
+| `has_binaries` | No | Whether the package artifact includes non-pure binaries. Currently ony PyPI packages are supported.|
 | `upstream_artifacts` | No | Upstream artifacts analyzed while generating the spec, grouped by artifact kind. For example, PyPI may record wheel and sdist URLs; downstream rebuild formats can use the wheel URL to compare the rebuilt artifact with the published artifact. |
 
 ## `build_commands`
