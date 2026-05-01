@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """
@@ -419,6 +419,7 @@ def prepare_repo(
     digest: str = "",
     purl: PackageURL | None = None,
     latest_version_fallback: bool = True,
+    provenance_commit_digest: str | None = None
 ) -> tuple[Git | None, CommitFinderInfo]:
     """Prepare the target repository for analysis.
 
@@ -444,6 +445,8 @@ def prepare_repo(
         The PURL of the analysis target.
     latest_version_fallback: bool
         A flag that determines whether the latest version of the same artifact can be checked as a fallback option.
+    provenance_commit_digest: str | None
+        The commit extracted from the provenance.
 
     Returns
     -------
@@ -504,16 +507,20 @@ def prepare_repo(
         found_digest, commit_finder_outcome = find_commit(git_obj, purl)
         if not found_digest:
             logger.error("Could not map the input purl string to a specific commit in the corresponding repository.")
-            if not latest_version_fallback:
-                return None, commit_finder_outcome
-            # If the commit could not be found, check if the latest version of the artifact has a different repository.
-            latest_purl = get_latest_purl_if_different(purl)
-            if not latest_purl:
-                return None, commit_finder_outcome
-            latest_repo = get_latest_repo_if_different(latest_purl, repo_path)
-            if not latest_repo:
-                return None, commit_finder_outcome
-            return prepare_repo(latest_repo, latest_repo, target_dir, latest_version_fallback=False)
+            if provenance_commit_digest:
+                found_digest = provenance_commit_digest
+                commit_finder_outcome = CommitFinderInfo.PROVENANCE_USED
+            else:
+                if not latest_version_fallback:
+                    return None, commit_finder_outcome
+                # If the commit could not be found, check if the latest version of the artifact has a different repository.
+                latest_purl = get_latest_purl_if_different(purl)
+                if not latest_purl:
+                    return None, commit_finder_outcome
+                latest_repo = get_latest_repo_if_different(latest_purl, repo_path)
+                if not latest_repo:
+                    return None, commit_finder_outcome
+                return prepare_repo(latest_repo, latest_repo, target_dir, latest_version_fallback=False)
 
         digest = found_digest
 

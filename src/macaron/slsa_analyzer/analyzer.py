@@ -421,7 +421,6 @@ class Analyzer:
                 available_domains,
                 parsed_purl,
                 provenance_repo_url,
-                provenance_commit_digest,
                 package_registries_info,
             )
         except InvalidAnalysisTargetError as error:
@@ -454,6 +453,7 @@ class Analyzer:
                 analysis_target.branch,
                 analysis_target.digest,
                 analysis_target.parsed_purl,
+                provenance_commit_digest=provenance_commit_digest
             )
             if git_obj:
                 final_digest = git_obj.get_head().hash
@@ -880,7 +880,6 @@ class Analyzer:
         available_domains: list[str],
         parsed_purl: PackageURL | None,
         provenance_repo_url: str | None = None,
-        provenance_commit_digest: str | None = None,
         package_registries_info: list[PackageRegistryInfo] | None = None,
     ) -> AnalysisTarget:
         """Resolve the details of a software component from user input.
@@ -896,8 +895,6 @@ class Analyzer:
             The PURL to use for the analysis target, or None if one has not been provided.
         provenance_repo_url: str | None
             The repository URL extracted from provenance, or None if not found or no provenance.
-        provenance_commit_digest: str | None
-            The commit extracted from provenance, or None if not found or no provenance.
         package_registries_info: list[PackageRegistryInfo] | None
             The list of package registry information if available.
             If no package registries are loaded, this can be set to None.
@@ -930,12 +927,12 @@ class Analyzer:
                 repo: str | None = None
                 # parsed_purl cannot be None here, but mypy cannot detect that without some extra help.
                 if parsed_purl is not None:
-                    if provenance_repo_url or provenance_commit_digest:
+                    if provenance_repo_url:
                         return Analyzer.AnalysisTarget(
                             parsed_purl=parsed_purl,
                             repo_path=provenance_repo_url or "",
                             branch="",
-                            digest=provenance_commit_digest or "",
+                            digest="",
                             repo_finder_outcome=repo_finder_outcome,
                         )
 
@@ -978,7 +975,7 @@ class Analyzer:
                     parsed_purl=parsed_purl,
                     repo_path=repo_path_input,
                     branch=input_branch,
-                    digest=provenance_commit_digest or "",
+                    digest="",
                     repo_finder_outcome=repo_finder_outcome,
                 )
 
