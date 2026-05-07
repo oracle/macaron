@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import bisect
+import copy
 import hashlib
 import logging
 import os
@@ -208,6 +209,7 @@ class PyPIRegistry(PackageRegistry):
             logger.debug(error_message)
         try:
             shutil.rmtree(directory, onerror=_handle_temp_dir_clean)
+            logger.debug("Successfully cleaned up temporary directory %s.", directory)
         except SourceCodeError as tempdir_exception:
             tempdir_exception_msg = (
                 f"Unable to cleanup temporary directory {directory} for source code: {tempdir_exception}"
@@ -266,26 +268,48 @@ class PyPIRegistry(PackageRegistry):
         source_file = os.path.join(temp_dir, file_name)
         timeout = defaults.getint("downloads", "timeout", fallback=120)
         size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
-        if not download_file_with_size_limit(url, {}, source_file, timeout, size_limit):
-            self.cleanup_sourcecode_directory(temp_dir, "Could not download the file.")
+
+        download_succeeded = False
+        try:
+            download_succeeded = download_file_with_size_limit(url, {}, source_file, timeout, size_limit)
+        except requests.exceptions.RequestException as error:
+            self.cleanup_sourcecode_directory(
+                temp_dir, f"Error downloading source code from file {file_name}: {error}", error
+            )
+        if not download_succeeded:
+            self.cleanup_sourcecode_directory(
+                temp_dir, f"Error downloading source code from file {file_name}."
+            )
 
         if not tarfile.is_tarfile(source_file):
             self.cleanup_sourcecode_directory(temp_dir, f"Unable to extract source code from file {file_name}")
 
         try:
             with tarfile.open(source_file, "r:gz") as sourcecode_tar:
-                sourcecode_tar.extractall(temp_dir, filter="data")
+                members = sourcecode_tar.getmembers()
+                if members and all(
+                    member.name == package_name or member.name.startswith(f"{package_name}/")
+                    for member in members
+                ):
+                    # Most sdists wrap their contents in a single package-version directory.
+                    # Strip that wrapper during extraction so the returned temp directory
+                    # contains the package files directly and cleanup removes the whole tree.
+                    members_to_extract = []
+                    for member in members:
+                        if member.name == package_name:
+                            continue
+                        stripped_member = copy.copy(member)
+                        stripped_member.name = member.name.removeprefix(f"{package_name}/")
+                        members_to_extract.append(stripped_member)
+                    members = members_to_extract
+
+                sourcecode_tar.extractall(temp_dir, members=members, filter="data")
         except tarfile.TarError as tar_error:
             self.cleanup_sourcecode_directory(
                 temp_dir, f"Error extracting source code tar file: {tar_error}", tar_error
             )
 
         os.remove(source_file)
-
-        extracted_dir = os.listdir(temp_dir)
-        if len(extracted_dir) == 1 and extracted_dir[0] == package_name:
-            # Structure used package name and version as top-level directory.
-            temp_dir = os.path.join(temp_dir, extracted_dir[0])
 
         logger.debug("Temporary download and unzip of %s stored in %s", file_name, temp_dir)
         return temp_dir
@@ -321,8 +345,17 @@ class PyPIRegistry(PackageRegistry):
         timeout = defaults.getint("downloads", "timeout", fallback=120)
         size_limit = defaults.getint("downloads", "max_download_size", fallback=10000000)
 
-        if not download_file_with_size_limit(url, {}, wheel_file, timeout, size_limit):
-            self.cleanup_sourcecode_directory(temp_dir, "Could not download the file.")
+        download_succeeded = False
+        try:
+            download_succeeded = download_file_with_size_limit(url, {}, wheel_file, timeout, size_limit)
+        except requests.exceptions.RequestException as error:
+            self.cleanup_sourcecode_directory(
+                temp_dir, f"Error downloading wheel from file {file_name}: {error}", error
+            )
+        if not download_succeeded:
+            self.cleanup_sourcecode_directory(
+                temp_dir, f"Error downloading wheel from file {file_name}."
+            )
 
         # Wheel is a zip
         if not zipfile.is_zipfile(wheel_file):
@@ -943,10 +976,12 @@ class PyPIPackageJsonAsset:
             raise WheelTagError("Macaron does not currently support analysis of non-pure Python wheels.")
         if not self.download_wheel():
             raise SourceCodeError("Unable to download requested wheel.")
-        yield
-        if self.wheel_path:
-            # Name for cleanup_sourcecode_directory could be refactored here
-            PyPIRegistry.cleanup_sourcecode_directory(self.wheel_path)
+        try:
+            yield
+        finally:
+            if self.wheel_path:
+                # Name for cleanup_sourcecode_directory could be refactored here
+                PyPIRegistry.cleanup_sourcecode_directory(self.wheel_path)
 
     def download_wheel(self) -> bool:
         """Download and extract wheel metadata to a temporary directory.
@@ -996,9 +1031,11 @@ class PyPIPackageJsonAsset:
         """Download and cleanup source code of the package with a context manager."""
         if not self.download_sourcecode():
             raise SourceCodeError("Unable to download package source code.")
-        yield
-        if self.package_sourcecode_path:
-            PyPIRegistry.cleanup_sourcecode_directory(self.package_sourcecode_path)
+        try:
+            yield
+        finally:
+            if self.package_sourcecode_path:
+                PyPIRegistry.cleanup_sourcecode_directory(self.package_sourcecode_path)
 
     def download_sourcecode(self) -> bool:
         """Get the source code of the package and store it in a temporary directory.
