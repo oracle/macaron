@@ -29,10 +29,18 @@
         }
     ],
     "has_binaries": false,
-    "build_requires": {
-        "flit": "==3.12.0",
-        "flit_core": "<4,>=3.4"
-    },
+    "build_requires": [
+        {
+            "name": "flit",
+            "version": "==3.12.0",
+            "installer": "pip"
+        },
+        {
+            "name": "flit_core",
+            "version": "<4,>=3.4",
+            "installer": "pip"
+        }
+    ],
     "build_backends": [
         "flit_core.buildapi"
     ],

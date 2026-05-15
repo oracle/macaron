@@ -111,8 +111,17 @@
       "description": "Entry point script, class, or binary for running the project."
     },
     "build_requires": {
-      "type": "object",
-      "additionalProperties": { "type": "string" },
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "installer": { "type": "string" }
+        },
+        "required": ["name", "installer"],
+        "additionalProperties": false
+      },
       "description": "Required packages that must be available in the build environment."
     },
     "build_backends": {

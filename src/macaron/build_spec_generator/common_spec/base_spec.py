@@ -9,6 +9,24 @@ from typing import NotRequired, Required, TypedDict
 from packageurl import PackageURL
 
 
+class SpecBuildRequirementDict(TypedDict, total=False):
+    """
+    Initialize build requirement section of the build specification.
+
+    It contains information about tools/packages that must be available before
+    running a build command.
+    """
+
+    #: Build requirement name, e.g., "maturin", "rust", "rustup", "pkg-config".
+    name: Required[str]
+
+    #: Build requirement version or version constraint, e.g., "1.75.0", ">=1.4,<2".
+    version: NotRequired[str]
+
+    #: Build requirement installer, e.g., "pip", "rustup", "system", or "bootstrap".
+    installer: Required[str]
+
+
 class SpecBuildCommandDict(TypedDict, total=False):
     """
     Initialize build command section of the build specification.
@@ -100,7 +118,7 @@ class BaseBuildSpecDict(TypedDict, total=False):
     entry_point: NotRequired[str | None]
 
     #: The build_requires is the required packages that need to be available in the build environment.
-    build_requires: NotRequired[dict[str, str]]
+    build_requires: NotRequired[list[SpecBuildRequirementDict]]
 
     #: A "back end" is tool that a "front end" (such as pip/build) would call to
     #: package the source distribution into the wheel format. build_backends would
