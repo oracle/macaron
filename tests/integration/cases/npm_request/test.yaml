@@ -1,0 +1,29 @@
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing a deprecated npm package to verify that mcn_registry_maintainability_1 fails
+  when a package has been explicitly marked as deprecated on the npm registry.
+
+tags:
+- macaron-python-package
+- npm-registry-testcase
+
+steps:
+- name: Run macaron analyze on deprecated npm request package.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:npm/request@2.88.2
+- name: Run macaron verify-policy to check maintainability fails.
+  kind: verify
+  options:
+    policy: policy.dl
+  expect_fail: true
+- name: Compare verify policy result.
+  kind: compare
+  options:
+    kind: policy_report
+    result: output/policy_report.json
+    expected: policy_report.json
