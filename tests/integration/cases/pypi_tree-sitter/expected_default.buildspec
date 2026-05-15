@@ -15,11 +15,28 @@
     "build_tools": [
         "pip"
     ],
-    "build_commands": [],
+    "build_commands": [
+        {
+            "build_tool": "pip",
+            "command": [
+                "python",
+                "-m",
+                "build",
+                "--wheel",
+                "-n"
+            ],
+            "build_config_path": "pyproject.toml",
+            "confidence_score": 1.0
+        }
+    ],
     "has_binaries": true,
-    "build_requires": {
-        "setuptools": ">=43"
-    },
+    "build_requires": [
+        {
+            "name": "setuptools",
+            "version": ">=43",
+            "installer": "pip"
+        }
+    ],
     "build_backends": [
         "setuptools.build_meta"
     ],

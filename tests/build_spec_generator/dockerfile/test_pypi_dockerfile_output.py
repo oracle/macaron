@@ -8,7 +8,7 @@ Test the logic for dockerfile generation to rebuild PyPI packages.
 import pytest
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
-from macaron.build_spec_generator.dockerfile.pypi_dockerfile_output import gen_dockerfile
+from macaron.build_spec_generator.dockerfile.pypi_dockerfile_output import build_backend_commands, gen_dockerfile
 
 
 @pytest.fixture(name="pypi_build_spec")
@@ -37,7 +37,10 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
                     confidence_score=1.0,
                 )
             ],
-            "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
+            "build_requires": [
+                {"name": "setuptools", "version": "==80.9.0", "installer": "pip"},
+                {"name": "wheel", "installer": "pip"},
+            ],
             "build_backends": ["setuptools.build_meta"],
             "upstream_artifacts": {
                 "wheels": [
@@ -56,3 +59,18 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
 def test_successful_generation(snapshot: str, pypi_build_spec: BaseBuildSpecDict) -> None:
     """Ensure that dockerfile is correctly generated for pypi_build_spec"""
     assert gen_dockerfile(pypi_build_spec) == snapshot
+
+
+def test_build_backend_commands_only_uses_pip_requirements(pypi_build_spec: BaseBuildSpecDict) -> None:
+    """Ensure non-pip build requirements are ignored in pip installation commands."""
+    pypi_build_spec["build_requires"] = [
+        {"name": "setuptools", "version": "==80.9.0", "installer": "pip"},
+        {"name": "wheel", "installer": "pip"},
+        {"name": "rustup", "installer": "bootstrap"},
+        {"name": "rust", "version": "1.75.0", "installer": "rustup"},
+    ]
+
+    assert build_backend_commands(pypi_build_spec) == [
+        '/deps/bin/pip install "wheel"',
+        "/deps/bin/pip install --upgrade setuptools",
+    ]
