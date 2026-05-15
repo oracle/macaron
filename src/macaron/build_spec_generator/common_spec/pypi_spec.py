@@ -522,23 +522,13 @@ class PyPIBuildSpec(
         str | None
             The inferred Rust toolchain version, or None if unavailable.
         """
-        stripped = content.strip()
-        if not stripped:
-            return None
-
         try:
             parsed = tomli.loads(content)
             toolchain_version = json_extract(parsed, ["toolchain", "channel"], str)
             if toolchain_version:
                 return toolchain_version.strip()
         except tomli.TOMLDecodeError:
-            pass
-
-        for line in stripped.splitlines():
-            sanitized = line.strip().strip('"').strip("'")
-            if not sanitized or sanitized.startswith("#"):
-                continue
-            return sanitized
+            logger.debug("Failed to infer Rust toolchain version")
         return None
 
     def apply_tool_specific_inferences(
