@@ -15,5 +15,4 @@ Policy("registry-maintainability", component_id, "Require package to be actively
     check_passed(component_id, "mcn_registry_maintainability_1").
 
 apply_policy_to("registry-maintainability", component_id) :-
-    is_component(component_id, purl),
-    match("pkg:pypi/arrow.*", purl).
+    is_component(component_id, "pkg:pypi/arrow@0.15.0").
