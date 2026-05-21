@@ -105,7 +105,7 @@ test = [
     "pytest-cov >=7.0.0,<8.0.0",
     "pytest-doctestplus >=1.7.0,<2.0.0",
     "pytest-env >=1.0.0,<2.0.0",
-    "pytest_httpserver >=1.0.10,<2.0.0",
+    "pytest_httpserver >=1.1.5,<2.0.0",
     "syrupy >=5.1.0,<6.0.0",
 ]
 
