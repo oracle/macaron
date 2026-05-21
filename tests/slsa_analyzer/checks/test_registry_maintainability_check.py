@@ -95,7 +95,9 @@ def test_unknown_api_error(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_pass_recent_release(
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -106,6 +108,7 @@ def test_pass_recent_release(
     recent = datetime.now(timezone.utc) - timedelta(days=30)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_pypi_ctx(macaron_path)
@@ -116,7 +119,9 @@ def test_pass_recent_release(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_fail_stale_release(
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -127,6 +132,7 @@ def test_fail_stale_release(
     stale = datetime.now(timezone.utc) - timedelta(days=500)
     mock_timestamp.return_value = stale
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_pypi_ctx(macaron_path)
@@ -137,7 +143,9 @@ def test_fail_stale_release(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_fail_yanked_pypi(
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -148,6 +156,7 @@ def test_fail_yanked_pypi(
     recent = datetime.now(timezone.utc) - timedelta(days=10)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (True, "Security vulnerability discovered.")
+    mock_latest.return_value = None
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_pypi_ctx(macaron_path)
@@ -158,7 +167,9 @@ def test_fail_yanked_pypi(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_fail_deprecated_npm(
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -169,6 +180,7 @@ def test_fail_deprecated_npm(
     recent = datetime.now(timezone.utc) - timedelta(days=10)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (True, "Use express@5 instead.")
+    mock_latest.return_value = None
 
     check = RegistryMaintainabilityCheck()
     npm_registry = NPMRegistry()
@@ -185,9 +197,11 @@ def test_fail_deprecated_npm(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_fail_archived_repo(
     mock_api_client: MagicMock,
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -198,6 +212,7 @@ def test_fail_archived_repo(
     recent = datetime.now(timezone.utc) - timedelta(days=10)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
     mock_api_client.get_repo_data.return_value = {
         "archived": True,
         "pushed_at": (datetime.now(timezone.utc) - timedelta(days=10)).strftime(
@@ -215,9 +230,11 @@ def test_fail_archived_repo(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_fail_stale_commit(
     mock_api_client: MagicMock,
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -229,6 +246,7 @@ def test_fail_stale_commit(
     stale_push = datetime.now(timezone.utc) - timedelta(days=500)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
     mock_api_client.get_repo_data.return_value = {
         "archived": False,
         "pushed_at": stale_push.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -244,7 +262,9 @@ def test_fail_stale_commit(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_custom_threshold(
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -256,6 +276,7 @@ def test_custom_threshold(
     slightly_stale = datetime.now(timezone.utc) - timedelta(days=90)
     mock_timestamp.return_value = slightly_stale
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None  # fall back to find_publish_timestamp value
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_pypi_ctx(macaron_path)
@@ -266,7 +287,9 @@ def test_custom_threshold(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_boundary_at_threshold(
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -274,10 +297,10 @@ def test_boundary_at_threshold(
 ) -> None:
     """The check passes when days_since_release equals the threshold exactly (threshold is exclusive)."""
     _load_registry_config(tmp_path, threshold_days=365)
-    # Exactly at threshold: days_since_release == 365, condition is >, so should PASS.
     at_threshold = datetime.now(timezone.utc) - timedelta(days=365)
     mock_timestamp.return_value = at_threshold
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_pypi_ctx(macaron_path)
@@ -288,9 +311,11 @@ def test_boundary_at_threshold(
     "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
 )
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
 def test_skip_github_for_non_github(
     mock_api_client: MagicMock,
+    mock_latest: MagicMock,
     mock_deprecated: MagicMock,
     mock_timestamp: MagicMock,
     macaron_path: Path,
@@ -301,6 +326,7 @@ def test_skip_github_for_non_github(
     recent = datetime.now(timezone.utc) - timedelta(days=30)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_pypi_ctx(macaron_path)

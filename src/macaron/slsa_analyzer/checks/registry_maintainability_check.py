@@ -72,14 +72,14 @@ class RegistryMaintainabilityFacts(CheckFacts):
         info={"justification": JustificationType.HREF},
     )
 
-    #: Date string of the most recent release.
+    #: Date string of the most recent release of the package (across all versions).
     last_release_date: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
         info={"justification": JustificationType.TEXT},
     )
 
-    #: Number of days elapsed since the most recent release.
+    #: Number of days elapsed since the most recent release of the package (across all versions).
     days_since_release: Mapped[int | None] = mapped_column(
         Integer,
         nullable=True,
@@ -133,7 +133,9 @@ class RegistryMaintainabilityFacts(CheckFacts):
     }
 
 
-def _build_registry_url(registry_info: PackageRegistryInfo, name: str, version: str) -> str | None:
+def _build_registry_url(
+    registry_info: PackageRegistryInfo, name: str, namespace: str | None, version: str
+) -> str | None:
     """Build a human-facing package page URL for the given registry and package coordinates.
 
     Parameters
@@ -142,6 +144,8 @@ def _build_registry_url(registry_info: PackageRegistryInfo, name: str, version: 
         The matched package registry information.
     name : str
         The package name.
+    namespace : str | None
+        The package namespace (used for scoped npm packages, e.g. ``@scope``).
     version : str
         The package version.
 
@@ -156,7 +160,8 @@ def _build_registry_url(registry_info: PackageRegistryInfo, name: str, version: 
         return urllib.parse.urljoin(pkg_registry.registry_url, f"project/{name}/{version}/")
 
     if isinstance(pkg_registry, NPMRegistry):
-        return f"https://www.npmjs.com/package/{name}/v/{version}"
+        package_name = f"{namespace}/{name}" if namespace else name
+        return f"https://www.npmjs.com/package/{package_name}/v/{version}"
 
     return None
 
@@ -234,6 +239,80 @@ def _check_deprecated(
     return None, None
 
 
+def _get_latest_release_timestamp(
+    registry_info: PackageRegistryInfo,
+    name: str,
+    namespace: str | None,
+    version: str,
+) -> datetime | None:
+    """Return the publish timestamp of the *latest* release of the package.
+
+    This is used for the release-recency signal so that a pinned old version of
+    an actively maintained package is not incorrectly flagged as unmaintained.
+
+    For PyPI the package-level JSON endpoint already exposes the latest
+    version's files under the ``urls`` key, so we reuse the already-cached
+    asset.  For npm we resolve the latest version via the registry API and
+    then query its publish timestamp via deps.dev.
+
+    Parameters
+    ----------
+    registry_info : PackageRegistryInfo
+        The matched package registry information.
+    name : str
+        The package name.
+    namespace : str | None
+        The package namespace (used for scoped npm packages).
+    version : str
+        The specific version of the analysed PURL, used only as a cache key
+        when fetching the PyPI asset.
+
+    Returns
+    -------
+    datetime | None
+        The publish timestamp of the latest release, or ``None`` if it cannot
+        be determined.
+    """
+    pkg_registry = registry_info.package_registry
+
+    if isinstance(pkg_registry, PyPIRegistry):
+        pypi_asset = find_or_create_pypi_asset(name, version, registry_info)
+        if pypi_asset is None:
+            return None
+        if not (pypi_asset.package_json or pypi_asset.download(dest="")):
+            return None
+        upload_time_str = pypi_asset.get_latest_release_upload_time()
+        if upload_time_str:
+            try:
+                # PyPI upload_time strings use "%Y-%m-%dT%H:%M:%S" (no tz suffix); assume UTC.
+                return datetime.strptime(upload_time_str, "%Y-%m-%dT%H:%M:%S").replace(
+                    tzinfo=timezone.utc
+                )
+            except ValueError:
+                logger.debug(
+                    "Could not parse PyPI latest release upload time %r.", upload_time_str
+                )
+        return None
+
+    if isinstance(pkg_registry, NPMRegistry):
+        latest_version = pkg_registry.get_latest_version(namespace, name)
+        if latest_version is None:
+            logger.debug("Could not determine latest version for npm package %s.", name)
+            return None
+        latest_purl = str(
+            PackageURL(type="npm", namespace=namespace, name=name, version=latest_version)
+        )
+        try:
+            return pkg_registry.find_publish_timestamp(latest_purl)
+        except InvalidHTTPResponseError as error:
+            logger.debug(
+                "Could not retrieve latest release timestamp for npm package %s: %s", name, error
+            )
+        return None
+
+    return None
+
+
 class RegistryMaintainabilityCheck(BaseCheck):
     """Check whether a package exists in its public registry and is actively maintained.
 
@@ -295,64 +374,69 @@ class RegistryMaintainabilityCheck(BaseCheck):
                 result_type=CheckResultType.UNKNOWN,
             )
 
-        # At least one registry must be matched for this ecosystem.
+        # Iterate over all registries to find one that matches the component ecosystem
+        # and can return a publish timestamp.  We skip registries that raise
+        # NotImplementedError e.g. Maven Central or InvalidHTTPResponseError.
         registry_infos: list[PackageRegistryInfo] = ctx.dynamic_data["package_registries"]
-        if not registry_infos:
+        matched_registry_info: PackageRegistryInfo | None = None
+        publish_dt: datetime | None = None
+
+        for _registry_info in registry_infos:
+            if _registry_info.ecosystem != ctx.component.type:
+                continue
+            try:
+                publish_dt = _registry_info.package_registry.find_publish_timestamp(
+                    ctx.component.purl
+                )
+                matched_registry_info = _registry_info
+                break
+            except InvalidHTTPResponseError as error:
+                logger.debug(
+                    "Could not retrieve publish timestamp for %s: %s",
+                    ctx.component.purl,
+                    error,
+                )
+            except NotImplementedError:
+                continue
+
+        if matched_registry_info is None or publish_dt is None:
             logger.debug(
-                "Skipping %s: no package registries found for PURL %s.",
+                "Skipping %s: no matching package registry found for PURL %s.",
                 self.check_info.check_id,
                 ctx.component.purl,
             )
             return CheckResultData(
                 result_tables=[
                     RegistryMaintainabilityFacts(
-                        remediation="No supported package registry found for this ecosystem.",
+                        remediation=(
+                            "No supported package registry found for this ecosystem "
+                            "or the registry API is currently unavailable."
+                        ),
                         confidence=Confidence.LOW,
                     )
                 ],
                 result_type=CheckResultType.UNKNOWN,
             )
 
-        registry_info = registry_infos[0]
+        registry_info = matched_registry_info
         pkg_registry = registry_info.package_registry
         registry_name: str = type(pkg_registry).__name__.replace("Registry", "")
 
-        # Confirm registry presence and retrieve last release date.
-        try:
-            publish_dt: datetime = registry_info.package_registry.find_publish_timestamp(
-                ctx.component.purl
-            )
-        except InvalidHTTPResponseError as error:
-            logger.debug(
-                "Could not retrieve publish timestamp for %s: %s",
-                ctx.component.purl,
-                error,
-            )
-            return CheckResultData(
-                result_tables=[
-                    RegistryMaintainabilityFacts(
-                        registry_name=registry_name,
-                        registry_url=_build_registry_url(
-                            registry_info, ctx.component.name, ctx.component.version
-                        ),
-                        remediation=(
-                            "The package could not be found on the registry or the registry "
-                            "API is currently unavailable."
-                        ),
-                        confidence=Confidence.LOW,
-                    )
-                ],
-                result_type=CheckResultType.UNKNOWN,
-            )
-
-        now = datetime.now(timezone.utc)
-        days_since_release: int = (now - publish_dt).days
-        last_release_date: str = publish_dt.strftime("%Y-%m-%d")
-
-        # Check for explicit deprecation / yanked flag.
+        # Extract namespace from the PURL once for reuse across signals.
         parsed_purl = PackageURL.from_string(ctx.component.purl)
         namespace: str | None = parsed_purl.namespace
 
+        now = datetime.now(timezone.utc)
+
+        # Use latest release date of the package for the recency signal.
+        latest_publish_dt = _get_latest_release_timestamp(
+            registry_info, ctx.component.name, namespace, ctx.component.version
+        )
+        recency_dt = latest_publish_dt if latest_publish_dt is not None else publish_dt
+        days_since_release: int = (now - recency_dt).days
+        last_release_date: str = recency_dt.strftime("%Y-%m-%d")
+
+        # Check for explicit deprecation/yanked flag.
         is_deprecated, deprecation_reason = _check_deprecated(
             registry_info,
             ctx.component.name,
@@ -400,7 +484,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
         )
 
         registry_url = _build_registry_url(
-            registry_info, ctx.component.name, ctx.component.version
+            registry_info, ctx.component.name, namespace, ctx.component.version
         )
 
         result_type: CheckResultType
