@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements a rich console handler for logging."""
@@ -306,6 +306,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         self.policies_table = Table(box=None)
         self.components_violates_table = Table(box=None)
         self.components_satisfy_table = Table(box=None)
+        self.policy_evidence_table = Table(box=None)
         self.policy_summary_table = Table(show_header=False, box=None)
         self.policy_summary: dict[str, str | Status] = {
             "Passed Policies": "None",
@@ -537,7 +538,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         components_violates_table.add_column("PURL", justify="left")
         components_violates_table.add_column("Policy Name", justify="left")
 
-        for values in results["component_violates_policy"]:
+        for values in results.get("component_violates_policy", []):
             components_violates_table.add_row(values[0], values[1], values[2])
 
         self.components_violates_table = components_violates_table
@@ -547,16 +548,37 @@ class RichConsoleHandler(RichHandler, TableBuilder):
         components_satisfy_table.add_column("PURL", justify="left")
         components_satisfy_table.add_column("Policy Name", justify="left")
 
-        for values in results["component_satisfies_policy"]:
+        for values in results.get("component_satisfies_policy", []):
             components_satisfy_table.add_row(values[0], values[1], values[2])
 
         self.components_satisfy_table = components_satisfy_table
 
+        standard_outputs = {
+            "passed_policies",
+            "failed_policies",
+            "component_satisfies_policy",
+            "component_violates_policy",
+        }
+        policy_evidence_table = Table(box=None)
+        policy_evidence_table.add_column("Relation", justify="left")
+        policy_evidence_table.add_column("Evidence", justify="left")
+        for relation, rows in sorted(results.items()):
+            if relation in standard_outputs:
+                continue
+            for values in rows:
+                policy_evidence_table.add_row(relation, " | ".join(values))
+
+        self.policy_evidence_table = policy_evidence_table
+
         self.policy_summary["Passed Policies"] = (
-            "\n".join(policy[0] for policy in results["passed_policies"]) if results["passed_policies"] else "None"
+            "\n".join(policy[0] for policy in results.get("passed_policies", []))
+            if results.get("passed_policies", [])
+            else "None"
         )
         self.policy_summary["Failed Policies"] = (
-            "\n".join(policy[0] for policy in results["failed_policies"]) if results["failed_policies"] else "None"
+            "\n".join(policy[0] for policy in results.get("failed_policies", []))
+            if results.get("failed_policies", [])
+            else "None"
         )
 
         self.generate_policy_summary_table()
@@ -756,6 +778,12 @@ class RichConsoleHandler(RichHandler, TableBuilder):
                         "[bold red] Components Violate Policy[/]   [white not italic]None[/]",
                     ]
                 layout = layout + ["", self.policy_summary_table]
+                if self.policy_evidence_table.row_count > 0:
+                    layout = layout + [
+                        "",
+                        "[bold yellow] Policy Evidence[/]",
+                        self.policy_evidence_table,
+                    ]
                 if self.verification_summary_attestation:
                     vsa_table = Table(show_header=False, box=None)
                     vsa_table.add_column("Detail", justify="left")

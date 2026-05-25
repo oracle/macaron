@@ -1,10 +1,11 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles invoking the souffle policy engine on a database."""
 
 import logging
 import os
+import re
 import sys
 
 from sqlalchemy import MetaData, create_engine, select
@@ -21,6 +22,134 @@ from macaron.policy_engine.souffle_code_generator import (
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+POLICY_REQUIREMENT_SENTINEL = 'policy_check_requirement("__macaron_no_policy__", "__macaron_no_check__").'
+
+STANDARD_POLICY_OUTPUTS = {
+    "passed_policies",
+    "failed_policies",
+    "component_satisfies_policy",
+    "component_violates_policy",
+}
+
+POLICY_RULE_RE = re.compile(r'Policy\s*\(\s*"(?P<policy_id>[^"]+)"[\s\S]*?:-(?P<body>[\s\S]*?)\.', re.MULTILINE)
+CHECK_REQUIREMENT_RE = re.compile(
+    r"check_(?:passed|failed)(?:_with_confidence)?\s*\([^,]+,\s*\"(?P<check_id>[^\"]+)\"",
+    re.MULTILINE,
+)
+
+
+def _souffle_string(value: str) -> str:
+    """Return a Souffle string literal for a Python string."""
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def policy_check_requirement_facts(policy_content: str) -> str:
+    """Build policy_check_requirement facts for literal checks used in Policy rules."""
+    requirements: set[tuple[str, str]] = set()
+    for policy_match in POLICY_RULE_RE.finditer(policy_content):
+        policy_id = policy_match.group("policy_id")
+        body = policy_match.group("body")
+        for check_match in CHECK_REQUIREMENT_RE.finditer(body):
+            requirements.add((policy_id, check_match.group("check_id")))
+
+    facts = [POLICY_REQUIREMENT_SENTINEL]
+    facts.extend(
+        f"policy_check_requirement({_souffle_string(policy_id)}, {_souffle_string(check_id)})."
+        for policy_id, check_id in sorted(requirements)
+    )
+    return "\n".join(facts)
+
+
+def add_policy_check_requirements(policy_content: str) -> str:
+    """Append policy check requirement facts to a policy program."""
+    return f"{policy_content.rstrip()}\n\n{policy_check_requirement_facts(policy_content)}\n"
+
+
+def _format_policy_row(values: list[str], labels: list[str] | None = None) -> str:
+    """Format a policy output row for console display."""
+    if labels and len(labels) == len(values):
+        return ", ".join(f"{label}: {value}" for label, value in zip(labels, values, strict=True))
+    return " | ".join(values)
+
+
+def _labels_for_evidence_relation(relation_name: str, values: list[str]) -> list[str] | None:
+    """Return friendly column labels for known policy evidence relations."""
+    labels_by_relation = {
+        "malware_detection_findings": ["component", "failed check"],
+        "malware_component_violations": ["component", "failed check"],
+        "malware_dependency_violations": ["component", "dependency", "failed check"],
+        "malware_policy_violations": ["component", "dependency"],
+        "policy_component_check_failures": ["policy", "component", "failed check"],
+        "policy_dependency_check_failures": ["policy", "component", "dependency", "failed check"],
+    }
+    labels = labels_by_relation.get(relation_name)
+    if labels and len(labels) == len(values):
+        return labels
+
+    lower_name = relation_name.lower()
+    if "dependency" in lower_name and len(values) == 3:
+        return ["component", "dependency", "evidence"]
+    if ("violation" in lower_name or "finding" in lower_name or "evidence" in lower_name) and len(values) == 2:
+        return ["component", "evidence"]
+    return None
+
+
+def format_policy_results(results: dict[str, list[list[str]]]) -> str:
+    """Return a human-readable policy evaluation summary."""
+    failed_policies = results.get("failed_policies", [])
+    passed_policies = results.get("passed_policies", [])
+    violating_components = results.get("component_violates_policy", [])
+    satisfying_components = results.get("component_satisfies_policy", [])
+    evidence_relations = {
+        relation: rows for relation, rows in results.items() if relation not in STANDARD_POLICY_OUTPUTS and rows
+    }
+
+    lines = ["Policy evaluation summary"]
+    if failed_policies:
+        lines.append("Result: FAILED")
+    elif passed_policies:
+        lines.append("Result: PASSED")
+    else:
+        lines.append("Result: NO MATCHING POLICIES")
+
+    lines.append("")
+    lines.append("Failed policies:")
+    if failed_policies:
+        lines.extend(f"  - {row[0]}" for row in failed_policies)
+    else:
+        lines.append("  - None")
+
+    lines.append("")
+    lines.append("Passed policies:")
+    if passed_policies:
+        lines.extend(f"  - {row[0]}" for row in passed_policies)
+    else:
+        lines.append("  - None")
+
+    lines.append("")
+    lines.append("Violating components:")
+    if violating_components:
+        for row in violating_components:
+            lines.append(f"  - {_format_policy_row(row, ['component id', 'component', 'policy'])}")
+    else:
+        lines.append("  - None")
+
+    if satisfying_components and not failed_policies:
+        lines.append("")
+        lines.append("Satisfying components:")
+        for row in satisfying_components:
+            lines.append(f"  - {_format_policy_row(row, ['component id', 'component', 'policy'])}")
+
+    if evidence_relations:
+        lines.append("")
+        lines.append("Evidence:")
+        for relation, rows in sorted(evidence_relations.items()):
+            lines.append(f"  {relation}:")
+            for row in rows:
+                lines.append(f"    - {_format_policy_row(row, _labels_for_evidence_relation(relation, row))}")
+
+    return "\n".join(lines)
 
 
 def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
@@ -174,15 +303,10 @@ def run_policy_engine(database_path: str, policy_content: str) -> dict:
     # TODO: uncomment the following line when the check is improved.
     # _check_version(database_path)
 
-    res = run_souffle(database_path, policy_content)
+    res = run_souffle(database_path, add_policy_check_requirements(policy_content))
 
-    output = []
-    for key, values in res.items():
-        output.append(str(key))
-        for value in values:
-            output.append(f"    {value}")
-
-    logger.info("Policy results:\n%s", "\n".join(output))
+    logger.info("%s", format_policy_results(res))
+    logger.debug("Raw policy results: %s", res)
 
     rich_handler = access_handler.get_handler()
     rich_handler.update_policy_engine(res)

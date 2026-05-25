@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the existing-policy flag supported by the policy engine."""
@@ -9,6 +9,22 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from macaron.__main__ import verify_policy
+
+
+def test_malware_dependency_policy_requires_no_failed_dependencies() -> None:
+    """Test malware dependency policy does not pass just because one dependency passes."""
+    policy_path = Path(
+        "src",
+        "macaron",
+        "resources",
+        "policies",
+        "datalog",
+        "malware-detection-dependencies.dl.template",
+    )
+    policy_content = policy_path.read_text(encoding="utf-8")
+
+    assert "!malware_failed_dependency(component_id)." in policy_content
+    assert "check_passed(dependency, \"mcn_detect_malicious_metadata_1\")" not in policy_content
 
 
 def test_verify_existing_policy_success(tmp_path: Path) -> None:

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The database_store module contains the methods to store analysis results to the database."""
@@ -11,6 +11,15 @@ from macaron.slsa_analyzer.analyze_context import AnalyzeContext
 from macaron.slsa_analyzer.checks.check_result import CheckResultType
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def get_policy_result_as_bool(check_result_type: CheckResultType) -> bool:
+    """Return the check result as a boolean for Datalog policy facts.
+
+    Unknown checks are treated as passing in policy facts so policies only fail
+    on explicit check failures.
+    """
+    return check_result_type in (CheckResultType.PASSED, CheckResultType.UNKNOWN)
 
 
 def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
@@ -35,7 +44,7 @@ def store_analyze_context_to_db(analyze_ctx: AnalyzeContext) -> None:
         check_result_row = MappedCheckResult(
             check_id=check_result.check.check_id,
             component=analyze_ctx.component,
-            passed=check_result.result.result_type == CheckResultType.PASSED,
+            passed=get_policy_result_as_bool(check_result.result.result_type),
         )
 
         for check_facts in check_result.result.result_tables:
