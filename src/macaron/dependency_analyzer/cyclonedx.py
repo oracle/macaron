@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains helper functions to process CycloneDX SBOM."""
@@ -357,10 +357,9 @@ class DependencyAnalyzer:
 
             # Start resolving dependencies.
             logger.info(
-                "Running %s version %s dependency analyzer on %s",
+                "Running %s version %s dependency analyzer.",
                 dep_analyzer.tool_name,
                 dep_analyzer.tool_version,
-                find_report_output_path(main_ctx.component.repository.fs_path),
             )
 
             log_path = os.path.join(
