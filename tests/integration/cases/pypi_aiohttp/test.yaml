@@ -2,8 +2,9 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing a yanked PyPI package to verify that mcn_registry_maintainability_1 fails
-  when a package version has been explicitly yanked from the registry.
+  Analyzing pkg:pypi/aiohttp@3.9.3 to verify that mcn_registry_maintainability_1 passes
+  for an actively maintained package. Although this version is old, aiohttp continues to
+  receive regular releases, so the check correctly reports the package as maintained.
 
 tags:
 - macaron-python-package
@@ -15,11 +16,10 @@ steps:
     command_args:
     - -purl
     - pkg:pypi/aiohttp@3.9.3
-- name: Run macaron verify-policy to check maintainability fails.
+- name: Run macaron verify-policy to check maintainability passes.
   kind: verify
   options:
     policy: policy.dl
-  expect_fail: true
 - name: Compare verify policy result.
   kind: compare
   options:

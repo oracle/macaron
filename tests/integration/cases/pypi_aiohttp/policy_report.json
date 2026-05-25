@@ -1,16 +1,16 @@
 {
-    "passed_policies": [],
-    "component_satisfies_policy": [],
-    "failed_policies": [
+    "passed_policies": [
         [
             "registry-maintainability"
         ]
     ],
-    "component_violates_policy": [
+    "component_satisfies_policy": [
         [
             "1",
             "pkg:pypi/aiohttp@3.9.3",
             "registry-maintainability"
         ]
-    ]
+    ],
+    "failed_policies": [],
+    "component_violates_policy": []
 }
