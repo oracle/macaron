@@ -71,6 +71,31 @@ Policy("malware_deps", component_id, "Malware Detection") :-
     assert 'policy_check_requirement("malware_deps", "mcn_detect_malicious_metadata_1").' in facts
 
 
+def test_policy_check_requirement_facts_follows_helper_relations() -> None:
+    """Test policy check requirement facts include checks in helper relations."""
+    policy_content = """
+#include "prelude.dl"
+
+Policy("custom-malware-policy", component_id, "Check malware dependencies.") :-
+    is_component(component_id, _),
+    !malware_flagged_dependency(component_id, _).
+
+.decl malware_flagged_dependency(parent: number, dependency_purl: symbol)
+malware_flagged_dependency(parent, dependency_purl) :-
+    transitive_dependency(parent, dependency),
+    is_component(dependency, dependency_purl),
+    match("pkg:pypi/.*", dependency_purl),
+    check_failed(dependency, "mcn_detect_malicious_metadata_1").
+"""
+
+    facts = policy_check_requirement_facts(policy_content)
+
+    assert (
+        'policy_check_requirement("custom-malware-policy", "mcn_detect_malicious_metadata_1").'
+        in facts
+    )
+
+
 @pytest.mark.usefixtures("database_setup")
 def test_policy_evidence_only_includes_policy_checks() -> None:
     """Test policy evidence includes only checks required by the violated policy."""

@@ -32,11 +32,30 @@ STANDARD_POLICY_OUTPUTS = {
     "component_violates_policy",
 }
 
-POLICY_RULE_RE = re.compile(r'Policy\s*\(\s*"(?P<policy_id>[^"]+)"[\s\S]*?:-(?P<body>[\s\S]*?)\.', re.MULTILINE)
+POLICY_HEAD_RE = re.compile(r'Policy\s*\(\s*"(?P<policy_id>[^"]+)"', re.MULTILINE)
 CHECK_REQUIREMENT_RE = re.compile(
     r"check_(?:passed|failed)(?:_with_confidence)?\s*\([^,]+,\s*\"(?P<check_id>[^\"]+)\"",
     re.MULTILINE,
 )
+RULE_HEAD_RE = re.compile(r"(?P<relation>[A-Za-z_][A-Za-z0-9_]*)\s*\(")
+RELATION_CALL_RE = re.compile(r"!?\s*(?P<relation>[A-Za-z_][A-Za-z0-9_]*)\s*\(")
+IGNORED_REQUIREMENT_RELATIONS = {
+    "Policy",
+    "apply_policy_to",
+    "cat",
+    "check_failed",
+    "check_failed_with_confidence",
+    "check_passed",
+    "check_passed_with_confidence",
+    "component_violates_policy",
+    "is_component",
+    "is_repo",
+    "match",
+    "policy_applies_to",
+    "policy_check_requirement",
+    "to_string",
+    "transitive_dependency",
+}
 
 
 def _souffle_string(value: str) -> str:
@@ -44,14 +63,141 @@ def _souffle_string(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def _souffle_statements(policy_content: str) -> list[str]:
+    """Split Souffle content into statements, ignoring periods in strings and comments."""
+    statements: list[str] = []
+    current: list[str] = []
+    in_string = False
+    escaped = False
+    in_line_comment = False
+    index = 0
+
+    rule_content = "\n".join(
+        line for line in policy_content.splitlines() if not line.lstrip().startswith((".", "#"))
+    )
+
+    while index < len(rule_content):
+        char = rule_content[index]
+
+        if in_line_comment:
+            if char == "\n":
+                in_line_comment = False
+                current.append(char)
+            index += 1
+            continue
+
+        if (
+            not in_string
+            and char == "/"
+            and index + 1 < len(rule_content)
+            and rule_content[index + 1] == "/"
+        ):
+            in_line_comment = True
+            index += 2
+            continue
+
+        if char == '"' and not escaped:
+            in_string = not in_string
+        escaped = in_string and char == "\\" and not escaped
+
+        if char == "." and not in_string:
+            statement = "".join(current).strip()
+            if statement:
+                statements.append(statement)
+            current = []
+            index += 1
+            continue
+
+        current.append(char)
+        index += 1
+
+    statement = "".join(current).strip()
+    if statement:
+        statements.append(statement)
+
+    return statements
+
+
+def _split_rule(statement: str) -> tuple[str, str] | None:
+    """Split a Souffle rule into head and body."""
+    in_string = False
+    escaped = False
+    index = 0
+    while index < len(statement) - 1:
+        char = statement[index]
+        if char == '"' and not escaped:
+            in_string = not in_string
+        escaped = in_string and char == "\\" and not escaped
+
+        if not in_string and statement[index : index + 2] == ":-":
+            return statement[:index].strip(), statement[index + 2 :].strip()
+        index += 1
+
+    return None
+
+
+def _build_rule_body_map(policy_content: str) -> dict[str, list[str]]:
+    """Build a map of relation names to their rule bodies."""
+    rule_body_map: dict[str, list[str]] = {}
+    for statement in _souffle_statements(policy_content):
+        rule = _split_rule(statement)
+        if not rule:
+            continue
+
+        head, body = rule
+        relation_match = RULE_HEAD_RE.match(head)
+        if not relation_match:
+            continue
+
+        relation = relation_match.group("relation")
+        if relation in IGNORED_REQUIREMENT_RELATIONS:
+            continue
+        rule_body_map.setdefault(relation, []).append(body)
+    return rule_body_map
+
+
+def _extract_check_requirements_from_body(
+    body: str,
+    rule_body_map: dict[str, list[str]],
+    visited_relations: set[str],
+) -> set[str]:
+    """Extract literal check requirements from a rule body and helper relations it calls."""
+    requirements = {check_match.group("check_id") for check_match in CHECK_REQUIREMENT_RE.finditer(body)}
+
+    for relation_match in RELATION_CALL_RE.finditer(body):
+        relation = relation_match.group("relation")
+        if relation in IGNORED_REQUIREMENT_RELATIONS or relation in visited_relations:
+            continue
+
+        helper_bodies = rule_body_map.get(relation)
+        if not helper_bodies:
+            continue
+
+        visited_relations.add(relation)
+        for helper_body in helper_bodies:
+            requirements.update(_extract_check_requirements_from_body(helper_body, rule_body_map, visited_relations))
+        visited_relations.remove(relation)
+
+    return requirements
+
+
 def policy_check_requirement_facts(policy_content: str) -> str:
     """Build policy_check_requirement facts for literal checks used in Policy rules."""
     requirements: set[tuple[str, str]] = set()
-    for policy_match in POLICY_RULE_RE.finditer(policy_content):
+    rule_body_map = _build_rule_body_map(policy_content)
+    for statement in _souffle_statements(policy_content):
+        rule = _split_rule(statement)
+        if not rule:
+            continue
+
+        head, body = rule
+        policy_match = POLICY_HEAD_RE.match(head)
+        if not policy_match:
+            continue
+
         policy_id = policy_match.group("policy_id")
-        body = policy_match.group("body")
-        for check_match in CHECK_REQUIREMENT_RE.finditer(body):
-            requirements.add((policy_id, check_match.group("check_id")))
+        for check_id in _extract_check_requirements_from_body(body, rule_body_map, set()):
+            requirements.add((policy_id, check_id))
 
     facts = [POLICY_REQUIREMENT_SENTINEL]
     facts.extend(
