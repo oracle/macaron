@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing pkg:pypi/aiohttp@3.9.3 to verify that mcn_registry_maintainability_1 passes
+  Analyzing PyPI package aiohttp to verify that mcn_registry_maintainability_1 passes
   for an actively maintained package. Although this version is old, aiohttp continues to
   receive regular releases, so the check correctly reports the package as maintained.
 
