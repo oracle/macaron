@@ -3,16 +3,8 @@
 
 #include "prelude.dl"
 
-Policy("has-hosted-build", component_id, "Require a hosted build and publishing service.") :-
-    check_passed(component_id, "mcn_build_as_code_1"),
-    check_passed(component_id, "mcn_license_1").
-
-apply_policy_to("has-hosted-build", component_id) :-
-    is_component(component_id, purl),
-    match("pkg:pypi/arrow.*", purl).
-
 Policy("registry-maintainability", component_id, "Require package to be actively maintained.") :-
     check_passed(component_id, "mcn_registry_maintainability_1").
 
 apply_policy_to("registry-maintainability", component_id) :-
-    is_component(component_id, "pkg:pypi/arrow@0.15.0").
+    is_component(component_id, "pkg:npm/request@2.88.2").
