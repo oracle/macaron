@@ -173,12 +173,12 @@ def openssl_install_commands(version: Version) -> str:
     # and 3.6 to 3.9 can be compiled with OpenSSL 1.1.1. Therefore, we compile as below:
     if version in SpecifierSet(">=3.6"):
         openssl_version = "1.1.1w"
-        source_url = "https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz"
+        source_url = "https://github.com/openssl/openssl/releases/download/OpenSSL_1_1_1w/openssl-1.1.1w.tar.gz"
     # From the same document, "Python versions 3.6 to 3.9 are compatible with OpenSSL 1.0.2,
     # 1.1.0, and 1.1.1". As an attempt to generalize for any >= 3.3, we use OpenSSL 1.0.2.
     else:
         openssl_version = "1.0.2u"
-        source_url = "https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz"
+        source_url = "https://github.com/openssl/openssl/releases/download/OpenSSL_1_0_2u/openssl-1.0.2u.tar.gz"
 
     return f"""# Build OpenSSL {openssl_version}
     RUN <<EOF
