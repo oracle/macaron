@@ -40,4 +40,4 @@ jobs:
         repo_path: ./
         policy_file: check-github-actions
         policy_purl: pkg:github.com/oracle/macaron@.*
-        reports_retention_days: 90
+        reports_retention_days: 3
