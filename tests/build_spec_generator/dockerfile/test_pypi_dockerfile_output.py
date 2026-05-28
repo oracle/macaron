@@ -8,6 +8,7 @@ Test the logic for dockerfile generation to rebuild PyPI packages.
 import pytest
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
+from macaron.build_spec_generator.dockerfile import pypi_dockerfile_output
 from macaron.build_spec_generator.dockerfile.pypi_dockerfile_output import gen_dockerfile
 
 
@@ -53,6 +54,9 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
     )
 
 
-def test_successful_generation(snapshot: str, pypi_build_spec: BaseBuildSpecDict) -> None:
+def test_successful_generation(
+    monkeypatch: pytest.MonkeyPatch, snapshot: str, pypi_build_spec: BaseBuildSpecDict
+) -> None:
     """Ensure that dockerfile is correctly generated for pypi_build_spec"""
+    monkeypatch.setattr(pypi_dockerfile_output, "get_latest_cpython_patch", lambda _major, _minor: "3.9.25")
     assert gen_dockerfile(pypi_build_spec) == snapshot
