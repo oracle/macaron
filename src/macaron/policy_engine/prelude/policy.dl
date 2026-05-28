@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved. */
+/* Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved. */
 /* Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/. */
 
 /**
@@ -75,7 +75,25 @@ component_violates_policy(component_id, purl, policy_id) :-
     is_component(component_id, purl),
     !Policy(policy_id, component_id, _).
 
+.decl policy_check_requirement(policy_id: symbol, check_id: symbol)
+.decl policy_component_check_failures(policy_id: symbol, component_purl: symbol, check_id: symbol)
+.decl policy_dependency_check_failures(policy_id: symbol, component_purl: symbol, dependency_purl: symbol, check_id: symbol)
+
+policy_component_check_failures(policy_id, component_purl, check_id) :-
+    component_violates_policy(component_id, component_purl, policy_id),
+    policy_check_requirement(policy_id, check_id),
+    check_failed(component_id, check_id).
+
+policy_dependency_check_failures(policy_id, component_purl, dependency_purl, check_id) :-
+    component_violates_policy(component_id, component_purl, policy_id),
+    policy_check_requirement(policy_id, check_id),
+    transitive_dependency(component_id, dependency_id),
+    is_component(dependency_id, dependency_purl),
+    check_failed(dependency_id, check_id).
+
 .output passed_policies
 .output failed_policies
 .output component_satisfies_policy
 .output component_violates_policy
+.output policy_component_check_failures
+.output policy_dependency_check_failures

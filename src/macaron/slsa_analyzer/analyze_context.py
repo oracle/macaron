@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Analyze Context class.
@@ -12,6 +12,7 @@ from collections import defaultdict
 from typing import Any, TypedDict
 
 from macaron.database.table_definitions import Component, Provenance, SLSALevel
+from macaron.output_reporter.malware_summary import build_malware_summary
 from macaron.repo_verifier.repo_verifier import RepositoryVerificationResult
 from macaron.slsa_analyzer.checks.check_result import CheckResult, CheckResultType
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
@@ -233,9 +234,12 @@ class AnalyzeContext:
         _sorted_on_id = sorted(self.check_results.values(), key=lambda item: item.check.check_id)
         # Remove result_tables since we don't have a good json representation for them.
         sorted_on_id = []
+        malware_summary = None
         for res in _sorted_on_id:
             # res is CheckResult
             res_dict: dict = dict(res.get_summary())
+            if malware_summary is None:
+                malware_summary = build_malware_summary(res)
             res_dict.pop("result_tables")
             sorted_on_id.append(res_dict)
         sorted_results = sorted(sorted_on_id, key=lambda item: item["result_type"], reverse=True)
@@ -262,6 +266,8 @@ class AnalyzeContext:
             },
             "checks": {"summary": check_summary_sorted, "results": sorted_results},
         }
+        if malware_summary:
+            result["malware_summary"] = malware_summary
         return result
 
     def get_check_summary(self) -> dict[CheckResultType, list[CheckResult]]:
