@@ -14,6 +14,7 @@ from macaron.slsa_analyzer.checks.check_result import CheckResultType
 from macaron.slsa_analyzer.checks.registry_maintainability_check import RegistryMaintainabilityCheck
 from macaron.slsa_analyzer.git_service.base_git_service import NoneGitService
 from macaron.slsa_analyzer.git_service.github import GitHub
+from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMRegistry
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -22,6 +23,8 @@ from tests.conftest import MockAnalyzeContext
 _PYPI_PURL = "pkg:pypi/requests@2.28.0"
 _NPM_PURL = "pkg:npm/express@4.18.2"
 _NO_VERSION_PURL = "pkg:pypi/requests"
+_MAVEN_PURL = "pkg:maven/com.intellectualsites.arkitektonika/Arkitektonika-Client@2.1.3"
+_MAVEN_PURL_NO_VERSION = "pkg:maven/com.intellectualsites.arkitektonika/Arkitektonika-Client"
 
 
 def _make_github_service() -> GitHub:
@@ -336,3 +339,147 @@ def test_skip_github_for_non_github(
 
     mock_api_client.get_repo_data.assert_not_called()
     assert result.result_type == CheckResultType.PASSED
+
+
+# ---------------------------------------------------------------------------
+# Maven-specific tests
+# ---------------------------------------------------------------------------
+
+
+def _make_maven_registry_info() -> PackageRegistryInfo:
+    """Build a minimal MavenCentral PackageRegistryInfo suitable for tests."""
+    maven_registry = MavenCentralRegistry()
+    maven_registry.load_defaults()
+    return PackageRegistryInfo(ecosystem="maven", package_registry=maven_registry)
+
+
+def _mock_maven_ctx(macaron_path: Path, purl: str = _MAVEN_PURL) -> MockAnalyzeContext:
+    """Return a MockAnalyzeContext wired up with a Maven Central registry."""
+    ctx = MockAnalyzeContext(macaron_path=macaron_path, output_dir="", purl=purl)
+    ctx.dynamic_data["package_registries"] = [_make_maven_registry_info()]
+    ctx.dynamic_data["git_service"] = NoneGitService()
+    return ctx
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp"
+)
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+def test_maven_pass_recent_release(
+    mock_latest: MagicMock,
+    mock_timestamp: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Maven check passes when the latest release is within the threshold."""
+    _load_registry_config(tmp_path, threshold_days=365)
+    recent = datetime.now(timezone.utc) - timedelta(days=30)
+    mock_timestamp.return_value = recent  # pinned version publish date (old)
+    mock_latest.return_value = recent     # latest release date (recent)
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path)
+    assert check.run_check(ctx).result_type == CheckResultType.PASSED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp"
+)
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+def test_maven_fail_stale_latest_release(
+    mock_latest: MagicMock,
+    mock_timestamp: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Maven check fails when the latest release exceeds the inactivity threshold."""
+    _load_registry_config(tmp_path, threshold_days=365)
+    pinned_date = datetime.now(timezone.utc) - timedelta(days=2000)
+    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    mock_timestamp.return_value = pinned_date  # pinned version (very old)
+    mock_latest.return_value = stale           # latest release is also stale
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path)
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp"
+)
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+def test_maven_pass_old_pinned_but_recent_latest(
+    mock_latest: MagicMock,
+    mock_timestamp: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Maven check passes even when the pinned version is old, as long as the latest release is recent.
+
+    This is the core bug fix: previously the check used the pinned version's
+    publish date and incorrectly failed for old but actively maintained packages.
+    """
+    _load_registry_config(tmp_path, threshold_days=365)
+    mock_timestamp.return_value = datetime.now(timezone.utc) - timedelta(days=2000)  # pinned very old
+    mock_latest.return_value = datetime.now(timezone.utc) - timedelta(days=10)       # latest is recent
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path)
+    assert check.run_check(ctx).result_type == CheckResultType.PASSED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+def test_maven_no_version_pass(
+    mock_latest: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Maven check passes for a no-version PURL when the latest release is recent."""
+    _load_registry_config(tmp_path, threshold_days=365)
+    mock_latest.return_value = datetime.now(timezone.utc) - timedelta(days=30)
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
+    assert check.run_check(ctx).result_type == CheckResultType.PASSED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+def test_maven_no_version_fail_stale(
+    mock_latest: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Maven check fails for a no-version PURL when the latest release is stale."""
+    _load_registry_config(tmp_path, threshold_days=365)
+    mock_latest.return_value = datetime.now(timezone.utc) - timedelta(days=500)
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+def test_maven_no_version_unknown_on_api_error(
+    mock_latest: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Maven check falls back to UNKNOWN for a no-version PURL when the Maven Central API fails."""
+    _load_registry_config(tmp_path)
+    mock_latest.side_effect = InvalidHTTPResponseError("API unavailable")
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
+    assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN

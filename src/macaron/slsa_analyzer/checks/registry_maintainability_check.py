@@ -24,6 +24,7 @@ from macaron.slsa_analyzer.checks.check_result import (
     JustificationType,
 )
 from macaron.slsa_analyzer.git_service.github import GitHub
+from macaron.slsa_analyzer.package_registry.maven_central_registry import MavenCentralRegistry
 from macaron.slsa_analyzer.package_registry.npm_registry import NPMRegistry, find_or_create_npm_asset
 from macaron.slsa_analyzer.package_registry.pypi_registry import PyPIRegistry, find_or_create_pypi_asset
 from macaron.slsa_analyzer.registry import registry
@@ -162,6 +163,9 @@ def _build_registry_url(
     if isinstance(pkg_registry, NPMRegistry):
         package_name = f"{namespace}/{name}" if namespace else name
         return f"https://www.npmjs.com/package/{package_name}/v/{version}"
+
+    if isinstance(pkg_registry, MavenCentralRegistry) and namespace:
+        return f"https://central.sonatype.com/artifact/{namespace}/{name}/{version}"
 
     return None
 
@@ -310,6 +314,107 @@ def _get_latest_release_timestamp(
             )
         return None
 
+    if isinstance(pkg_registry, MavenCentralRegistry) and namespace:
+        try:
+            return pkg_registry.find_latest_release_timestamp(namespace, name)
+        except InvalidHTTPResponseError as error:
+            logger.debug(
+                "Could not retrieve latest Maven release timestamp for %s:%s: %s",
+                namespace,
+                name,
+                error,
+            )
+        return None
+
+    return None
+
+
+def _check_maven_no_version(
+    ctx: AnalyzeContext,
+    registry_infos: list[PackageRegistryInfo],
+) -> CheckResultData | None:
+    """Attempt a release-recency check for a Maven PURL that has no pinned version.
+
+    Maven Central allows querying for the latest release without specifying a
+    version, so we can still evaluate release recency even when the caller did
+    not pin a specific version in the PURL.
+
+    Parameters
+    ----------
+    ctx : AnalyzeContext
+        The object containing processed data for the target component.
+    registry_infos : list[PackageRegistryInfo]
+        The package registries available for this analysis run.
+
+    Returns
+    -------
+    CheckResultData | None
+        A ``CheckResultData`` with ``PASSED`` or ``FAILED`` if the
+        latest release date can be determined from Maven Central, or ``None``
+        if the lookup fails (the caller should return ``UNKNOWN`` in that case).
+    """
+    if ctx.component.type != "maven":
+        return None
+
+    parsed_purl = PackageURL.from_string(ctx.component.purl)
+    namespace: str | None = parsed_purl.namespace
+    if not namespace:
+        logger.debug(
+            "Maven PURL %s has no namespace; cannot query Maven Central.",
+            ctx.component.purl,
+        )
+        return None
+
+    for _registry_info in registry_infos:
+        if _registry_info.ecosystem != "maven":
+            continue
+        pkg_registry = _registry_info.package_registry
+        if not isinstance(pkg_registry, MavenCentralRegistry):
+            continue
+
+        try:
+            latest_dt = pkg_registry.find_latest_release_timestamp(namespace, ctx.component.name)
+        except InvalidHTTPResponseError as error:
+            logger.debug(
+                "Could not retrieve latest Maven release for %s: %s",
+                ctx.component.purl,
+                error,
+            )
+            return None
+
+        now = datetime.now(timezone.utc)
+        threshold: int = defaults.getint(
+            "registry_maintainability", "inactivity_threshold_days", fallback=365
+        )
+        days_since_release = (now - latest_dt).days
+        last_release_date = latest_dt.strftime("%Y-%m-%d")
+        registry_name = type(pkg_registry).__name__.replace("Registry", "")
+
+        if days_since_release > threshold:
+            return CheckResultData(
+                result_tables=[
+                    RegistryMaintainabilityFacts(
+                        registry_name=registry_name,
+                        days_since_release=days_since_release,
+                        last_release_date=last_release_date,
+                        remediation=_REMEDIATION_GENERIC,
+                        confidence=Confidence.MEDIUM,
+                    )
+                ],
+                result_type=CheckResultType.FAILED,
+            )
+        return CheckResultData(
+            result_tables=[
+                RegistryMaintainabilityFacts(
+                    registry_name=registry_name,
+                    days_since_release=days_since_release,
+                    last_release_date=last_release_date,
+                    confidence=Confidence.MEDIUM,
+                )
+            ],
+            result_type=CheckResultType.PASSED,
+        )
+
     return None
 
 
@@ -354,13 +459,18 @@ class RegistryMaintainabilityCheck(BaseCheck):
         CheckResultData
             The result of the check.
         """
-        # A specific version is required to query the registry.
+        # A specific version is required for the full check.  For Maven we can
+        # still assess release recency by querying Maven Central for the latest
+        # release without a pinned version.
         if not ctx.component.version:
             logger.debug(
-                "Skipping %s: no version found in PURL %s.",
-                self.check_info.check_id,
+                "No version found in PURL %s; attempting Maven-specific recency check.",
                 ctx.component.purl,
             )
+            registry_infos_nv: list[PackageRegistryInfo] = ctx.dynamic_data["package_registries"]
+            maven_no_version_result = _check_maven_no_version(ctx, registry_infos_nv)
+            if maven_no_version_result is not None:
+                return maven_no_version_result
             return CheckResultData(
                 result_tables=[
                     RegistryMaintainabilityFacts(
