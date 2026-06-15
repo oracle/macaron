@@ -29,7 +29,7 @@ When you use this action, you can reference it directly in your workflow. For a 
             repo_path: ./
             policy_file: check-github-actions
             policy_purl: 'pkg:github.com/example/project@.*'
-            reports_retention_days: 90
+            reports_retention_days: 3
 
 By default, the action posts a human-friendly results summary to the GitHub Actions run page (job summary). If you upload the results like in this `workflow <https://github.com/oracle/macaron/blob/main/.github/workflows/macaron-analysis.yaml>`_, check this :ref:`documentation <detect-vuln-gh-actions-results>` to see how to read and understand them.
 
