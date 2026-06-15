@@ -310,10 +310,10 @@ def _extract_statement_words(statement_node: bash.BashStatementNode) -> list[str
 
 def _extract_call_words(call_expr: CallExpr) -> list[str]:
     """Extract literal word values from a call expression."""
-    args = call_expr["Args"]
+    args = call_expr.get("Args", [])
     words: list[str] = []
     for arg in args:
-        parts = arg["Parts"]
+        parts = arg.get("Parts", [])
         word = "".join(part.get("Value", "") for part in parts if is_lit(part)).strip()
         if not word:
             return []
