@@ -59,7 +59,7 @@ def url_is_safe(url: str, allow_list: list[str] | None = None, allow_login: bool
     False
     >>> url_is_safe("https://username:attacker.com\\@allowlist.com", ["allowlist.com"])
     False
-    >>> url_is_safe("https://username:test@allowlist.com", ["allowlist.com"], allow_login = True)
+    >>> url_is_safe("https://username:test@allowlist.com", ["allowlist.com"], allow_login=True)
     True
     """
     try:
@@ -509,7 +509,7 @@ def construct_query(params: dict) -> str:
 
     Examples
     --------
-    >>> construct_query({"bar":1,"foo":2})
+    >>> construct_query({"bar": 1, "foo": 2})
     'bar=1&foo=2'
     """
     return urllib.parse.urlencode(params)
@@ -531,9 +531,7 @@ def download_github_build_log(url: str, headers: dict) -> str:
         The content of the downloaded build log or empty if error.
     """
     logger.debug("Downloading content at link %s", url)
-    response = requests.get(
-        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
-    )  # nosec B113:request_without_timeout
+    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
 
     return response.content.decode("utf-8")
 

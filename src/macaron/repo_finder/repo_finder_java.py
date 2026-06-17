@@ -6,7 +6,7 @@
 import logging
 import re
 import urllib.parse
-from xml.etree.ElementTree import Element  # nosec B405
+from xml.etree.ElementTree import Element
 
 from packageurl import PackageURL
 
@@ -337,7 +337,7 @@ class JavaRepoFinder(BaseRepoFinder):
             # ->
             # git@github.com:owner/project1.8-2023.git
             for replacement in reversed(replacements):
-                value = f"{value[:replacement[0]]}{replacement[1]}{value[replacement[2]:]}"
+                value = f"{value[: replacement[0]]}{replacement[1]}{value[replacement[2] :]}"
 
             resolved_values.append(value)
 

@@ -67,9 +67,7 @@ class Pip(BaseBuildTool):
         if not repo_path:
             return []
 
-        results: list[BuildToolConfig] = (
-            []
-        )
+        results: list[BuildToolConfig] = []
 
         confidence_score = 1.0
 

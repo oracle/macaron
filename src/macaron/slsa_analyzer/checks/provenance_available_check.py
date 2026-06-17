@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -20,7 +20,7 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class ProvenanceAvailableException(MacaronError):
+class ProvenanceAvailableError(MacaronError):
     """When there is an error while checking if a provenance is available."""
 
 

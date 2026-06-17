@@ -260,7 +260,8 @@ def test_extract_folder_names_from_folder_info_payload(
     ("args", "expected_file_names"),
     [
         pytest.param(
-            {"folder_info_payload": """
+            {
+                "folder_info_payload": """
                     {
                         "children": [
                             {
@@ -273,7 +274,8 @@ def test_extract_folder_names_from_folder_info_payload(
                             }
                         ]
                     }
-                """},
+                """
+            },
             ["child2"],
             id="Payload with both files and folders",
         ),

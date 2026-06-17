@@ -106,7 +106,6 @@ class PyPIBuildSpec(
 
         if pypi_package_json is not None:
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
-
                 # Get the Python constraints from the PyPI JSON response.
                 json_releases = pypi_package_json.get_releases()
                 if json_releases:

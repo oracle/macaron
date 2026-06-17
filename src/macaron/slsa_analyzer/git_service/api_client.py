@@ -559,7 +559,9 @@ class GhAPIClient(BaseAPIClient):
         Examples
         --------
         >>> api_client = GhAPIClient(profile={"headers": "", "query": []})
-        >>> api_client.get_file_link("owner/repo", "5aaaaa43caabbdbc26c254df8f3aaa7bb3f4ec01", ".travis_ci.yml")
+        >>> api_client.get_file_link(
+        ...     "owner/repo", "5aaaaa43caabbdbc26c254df8f3aaa7bb3f4ec01", ".travis_ci.yml"
+        ... )
         'https://github.com/owner/repo/blob/5aaaaa43caabbdbc26c254df8f3aaa7bb3f4ec01/.travis_ci.yml'
         """
         return f"https://github.com/{full_name}/blob/{commit_sha}/{file_path}"

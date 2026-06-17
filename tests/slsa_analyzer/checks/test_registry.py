@@ -162,7 +162,11 @@ class TestRegistry(TestCase):
     def test_exit_on_invalid_status_on_skipped(self, status_on_skipped: SearchStrategy) -> None:
         """Test registering a check with invalid status_on_skipped instance variable."""
         check = MockCheck(
-            "mcn_invalid_eval_reqs_1", "Invalid_status_on_skipped", [], [], status_on_skipped  # type: ignore
+            "mcn_invalid_eval_reqs_1",
+            "Invalid_status_on_skipped",
+            [],
+            [],
+            status_on_skipped,  # type: ignore
         )
         with pytest.raises(SystemExit):
             self.REGISTRY.register(check)

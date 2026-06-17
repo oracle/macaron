@@ -8,7 +8,7 @@ import hashlib
 import logging
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import tarfile
 import zipfile
 from functools import partial
@@ -289,14 +289,14 @@ def _extract_archive(file_path: str, temp_path: str) -> bool:
         if zipfile.is_zipfile(file_path):
             with zipfile.ZipFile(file_path, "r") as zip_file:
                 members = (path for path in zip_file.namelist() if _validate_path_traversal(path))
-                zip_file.extractall(temp_path, members=members)  # nosec B202:tarfile_unsafe_members
+                zip_file.extractall(temp_path, members=members)  # noqa: S202
                 return True
         elif tarfile.is_tarfile(file_path):
             with tarfile.open(file_path, mode="r:gz") as tar_file:
                 members_tarinfo = (
                     tarinfo for tarinfo in tar_file.getmembers() if _validate_path_traversal(tarinfo.name)
                 )
-                tar_file.extractall(temp_path, members=members_tarinfo)  # nosec B202:tarfile_unsafe_members
+                tar_file.extractall(temp_path, members=members_tarinfo)  # noqa: S202
                 return True
     except (tarfile.TarError, zipfile.BadZipFile, zipfile.LargeZipFile, OSError, ValueError) as error:
         logger.info(error)
@@ -349,7 +349,7 @@ def _verify_slsa(download_path: str, prov_asset: AssetLocator, asset_name: str, 
     ]
 
     try:
-        verifier_output = subprocess.run(  # nosec B603
+        verifier_output = subprocess.run(  # noqa: S603
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

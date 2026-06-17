@@ -10,7 +10,7 @@ import re
 import sys
 import tempfile
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import NamedTuple
 
@@ -195,7 +195,7 @@ class Analyzer:
                 # Note that the changes will be committed to the DB when the
                 # current Session context terminates.
                 analysis = Analysis(
-                    analysis_time=datetime.now(tz=timezone.utc),
+                    analysis_time=datetime.now(tz=UTC),
                     macaron_version=__version__,
                 )
 
@@ -453,7 +453,7 @@ class Analyzer:
                 analysis_target.branch,
                 analysis_target.digest,
                 analysis_target.parsed_purl,
-                provenance_commit_digest=provenance_commit_digest
+                provenance_commit_digest=provenance_commit_digest,
             )
             if git_obj:
                 final_digest = git_obj.get_head().hash

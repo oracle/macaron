@@ -67,9 +67,7 @@ class Hatch(BaseBuildTool):
         if not repo_path:
             return []
 
-        results: list[BuildToolConfig] = (
-            []
-        )
+        results: list[BuildToolConfig] = []
         confidence_score = 1.0
         for config_name in self.build_configs:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):

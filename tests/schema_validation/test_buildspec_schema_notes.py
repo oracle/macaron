@@ -62,15 +62,11 @@ def test_buildspec_schema_notes_document_schema_fields() -> None:
     with open(BUILDSPEC_SCHEMA_NOTES, encoding="utf-8") as file:
         notes = file.read()
 
-    missing_top_level_fields = [
-        field for field in schema["properties"] if f"`{field}`" not in notes
-    ]
+    missing_top_level_fields = [field for field in schema["properties"] if f"`{field}`" not in notes]
     assert not missing_top_level_fields
 
     build_command_fields = schema["properties"]["build_commands"]["items"]["properties"]
-    missing_build_command_fields = [
-        field for field in build_command_fields if f"`{field}`" not in notes
-    ]
+    missing_build_command_fields = [field for field in build_command_fields if f"`{field}`" not in notes]
     assert not missing_build_command_fields
 
 

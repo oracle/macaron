@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains helper functions to process CycloneDX SBOM."""
@@ -6,7 +6,7 @@
 import json
 import logging
 import os
-import subprocess  # nosec B404
+import subprocess
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, TypedDict
@@ -340,7 +340,6 @@ class DependencyAnalyzer:
 
         # Grab dependencies for each build tool, collate all into the deps_resolved.
         for build_tool in build_tools:
-
             try:
                 # We allow dependency analysis if SBOM is provided but no repository is found.
                 dep_analyzer = build_tool.get_dep_analyzer()
@@ -371,7 +370,7 @@ class DependencyAnalyzer:
             commands = dep_analyzer.get_cmd()
             try:
                 # Suppressing Bandit's B603 report because the repo paths are validated.
-                analyzer_output = subprocess.run(  # nosec B603
+                analyzer_output = subprocess.run(  # noqa: S603
                     commands,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,

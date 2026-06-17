@@ -12,7 +12,7 @@ See Also https://github.com/mvdan/sh.
 import json
 import logging
 import os
-import subprocess  # nosec B404
+import subprocess
 from typing import cast
 
 from macaron.config.defaults import defaults
@@ -84,7 +84,7 @@ def parse(bash_content: str, macaron_path: str | None = None) -> dict:
     ]
 
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             check=True,
@@ -138,7 +138,7 @@ def parse_raw(bash_content: str, macaron_path: str | None = None) -> File:
     ]
 
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             check=True,
@@ -194,7 +194,7 @@ def parse_raw_with_gha_mapping(bash_content: str, macaron_path: str | None = Non
     ]
 
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             check=True,
@@ -258,7 +258,7 @@ def parse_expr(bash_expr_content: str, macaron_path: str | None = None) -> list[
         bash_expr_content,
     ]
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             check=True,

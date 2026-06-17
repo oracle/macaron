@@ -313,12 +313,10 @@ audit:
 	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw
 
 # Run some or all checks over the package code base.
-.PHONY: check check-code check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
-check-code: check-bandit check-flake8 check-lint check-mypy check-go check-actionlint
-check-bandit:
-	pre-commit run bandit --all-files
-check-flake8:
-	pre-commit run flake8 --all-files
+.PHONY: check check-code check-ruff check-lint check-mypy check-go check-actionlint
+check-code: check-ruff check-lint check-mypy check-go check-actionlint
+check-ruff:
+	pre-commit run ruff-check --all-files
 check-lint:
 	pre-commit run pylint --all-files
 check-mypy:

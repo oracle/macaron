@@ -6,7 +6,7 @@
 import logging
 import os
 from pathlib import Path
-from xml.etree.ElementTree import Element  # nosec B405
+from xml.etree.ElementTree import Element
 
 import defusedxml.ElementTree
 from defusedxml import DefusedXmlException

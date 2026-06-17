@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import string
-import subprocess  # nosec B404
+import subprocess
 from urllib.parse import urlparse
 
 from packageurl import PackageURL
@@ -218,7 +218,7 @@ def get_repo_tags(git_obj: Git) -> dict[str, str]:
         logger.debug("")
         return {}
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             args=["git", "show-ref", "--tags", "-d"],
             capture_output=True,
             cwd=repository_path,

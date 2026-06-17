@@ -1,15 +1,21 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the ``run_macaron.sh`` script."""
 
 import os
-import subprocess  # nosec B404
+import subprocess
 import sys
 import tempfile
-from collections import namedtuple
+import typing
 
-TestCase = namedtuple("TestCase", ["name", "script_args", "expected_macaron_args"])
+
+class TestCase(typing.NamedTuple):
+    "Wrap arguments for test script calls into objects of this class."
+
+    name: str
+    script_args: list[str]
+    expected_macaron_args: list[str]
 
 
 def run_test_case(
@@ -22,8 +28,8 @@ def run_test_case(
     name, script_args, expected_macaron_args = test_case
     print(f"test_macaron_command[{name}]:", end=" ")
 
-    result = subprocess.run(
-        [  # nosec B603
+    result = subprocess.run(  # noqa: S603
+        [
             "./output/run_macaron.sh",
             *script_args,
         ],

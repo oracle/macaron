@@ -4,7 +4,7 @@
 """This module contains the logic to generate a build spec in the Reproducible Central format."""
 
 import logging
-from enum import Enum
+from enum import StrEnum
 
 import importlib_metadata
 
@@ -46,7 +46,7 @@ buildinfo={buildinfo}
 """
 
 
-class ReproducibleCentralBuildTool(str, Enum):
+class ReproducibleCentralBuildTool(StrEnum):
     """Represent the name of the build tool used in the Reproducible Central's Buildspec.
 
     https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/doc/BUILDSPEC.md

@@ -111,7 +111,7 @@ class PackageURLMixin:
     qualifiers: Mapped[str] = mapped_column(
         String(1024),
         nullable=True,
-        comment=("Extra qualifying data for a package such as the name of an OS, " "architecture, distro, etc."),
+        comment=("Extra qualifying data for a package such as the name of an OS, architecture, distro, etc."),
     )
 
     #: Extra subpath within a package, relative to the package root.
@@ -168,8 +168,8 @@ class Component(PackageURLMixin, ORMBase):
     #: The bidirectional many-to-many relationship for component dependencies.
     dependencies: Mapped[list["Component"]] = relationship(
         secondary=components_association_table,
-        primaryjoin=components_association_table.c.parent_component == id,
-        secondaryjoin=components_association_table.c.child_component == id,
+        primaryjoin=components_association_table.c.parent_component == id,  # noqa: A003
+        secondaryjoin=components_association_table.c.child_component == id,  # noqa: A003
     )
 
     #: The optional one-to-one relationship with a provenance subject in case this
@@ -381,7 +381,8 @@ class SLSARequirement(ORMBase):
 
     #: The unique SLSA requirement name.
     requirement_name: Mapped[Enum] = mapped_column(
-        Enum(*ReqName._member_names_), nullable=False  # pylint: disable=protected-access,no-member
+        Enum(*ReqName._member_names_),  # pylint: disable=protected-access,no-member
+        nullable=False,
     )
 
     #: The short description of the SLSA requirement.
@@ -647,12 +648,14 @@ class RepoFinderMetadata(ORMBase):
 
     #: The outcome of the Repo Finder.
     repo_finder_outcome: Mapped[Enum] = mapped_column(
-        Enum(RepoFinderInfo), nullable=False  # pylint: disable=protected-access,no-member
+        Enum(RepoFinderInfo),
+        nullable=False,
     )
 
     #: The outcome of the Commit Finder.
     commit_finder_outcome: Mapped[Enum] = mapped_column(
-        Enum(CommitFinderInfo), nullable=False  # pylint: disable=protected-access,no-member
+        Enum(CommitFinderInfo),
+        nullable=False,
     )
 
     #: The URL found by the Repo Finder (if applicable).

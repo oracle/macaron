@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the Maven Central registry."""
@@ -240,7 +240,9 @@ def test_find_publish_timestamp_errors(
 
 @pytest.mark.parametrize("purl_string", ["pkg:maven/example", "pkg:maven/example/test", "pkg:maven/example/test@1"])
 def test_get_artifact_hash_failures(
-    httpserver: HTTPServer, maven_service: dict, purl_string: str  # pylint: disable=unused-argument
+    httpserver: HTTPServer,
+    maven_service: dict,  # pylint: disable=unused-argument
+    purl_string: str,
 ) -> None:
     """Test failures of get artifact hash."""
     purl = PackageURL.from_string(purl_string)
@@ -262,7 +264,8 @@ def test_get_artifact_hash_failures(
 
 
 def test_get_artifact_hash_success(
-    httpserver: HTTPServer, maven_service: dict  # pylint: disable=unused-argument
+    httpserver: HTTPServer,
+    maven_service: dict,  # pylint: disable=unused-argument
 ) -> None:
     """Test success of get artifact hash."""
     purl = PackageURL.from_string("pkg:maven/example/test@1")

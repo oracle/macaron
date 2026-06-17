@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This check examines a witness provenance (https://github.com/testifysec/witness)."""
@@ -28,7 +28,7 @@ from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInf
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class WitnessProvenanceException(MacaronError):
+class WitnessProvenanceError(MacaronError):
     """When there is an error while processing a Witness provenance."""
 
 
@@ -74,7 +74,7 @@ def verify_artifact_assets(
 
     Raises
     ------
-    WitnessProvenanceException
+    WitnessProvenanceError
         If a subject is not a file attested by the Witness product attestor.
     """
     # A look-up table to verify:
@@ -84,9 +84,7 @@ def verify_artifact_assets(
 
     for subject in subjects:
         if not subject["name"].startswith("https://witness.dev/attestations/product/v0.1/file:"):
-            raise WitnessProvenanceException(
-                f"{subject['name']} is not a file attested by the Witness product attestor."
-            )
+            raise WitnessProvenanceError(f"{subject['name']} is not a file attested by the Witness product attestor.")
 
         # Get the artifact name, which should be the last part of the artifact subject value.
         _, _, artifact_filename = subject["name"].rpartition("/")
@@ -188,7 +186,7 @@ class ProvenanceWitnessL1Check(BaseCheck):
 
                         try:
                             verify_status = verify_artifact_assets(artifact_assets, subjects)
-                        except WitnessProvenanceException as err:
+                        except WitnessProvenanceError as err:
                             logger.error(err)
                             return CheckResultData(
                                 result_tables=result_tables,

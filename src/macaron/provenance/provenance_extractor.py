@@ -13,7 +13,7 @@ from macaron.errors import ProvenanceError
 from macaron.json_tools import JsonType, json_extract
 from macaron.repo_finder import to_domain_from_known_purl_types
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstract_purl_type
-from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV1Payload, InTotoV01Payload
+from macaron.slsa_analyzer.provenance.intoto import InTotoPayload, InTotoV01Payload, InTotoV1Payload
 from macaron.slsa_analyzer.provenance.intoto.v01 import InTotoV01Statement
 from macaron.slsa_analyzer.provenance.intoto.v1 import InTotoV1Statement
 
@@ -463,7 +463,7 @@ class SLSAGithubGenericBuildDefinitionV01(ProvenanceBuildDefinition):
             repo = _clean_spdx(repo_uri)
         if repo is None:
             return gha_workflow, repo
-        invocation_url = f"{repo}/" f"actions/runs/{gh_run_id}"
+        invocation_url = f"{repo}/actions/runs/{gh_run_id}"
         return gha_workflow, invocation_url
 
 
@@ -541,7 +541,7 @@ class SLSANPMCLIBuildDefinitionV2(ProvenanceBuildDefinition):
             repo = _clean_spdx(repo_uri)
         if repo is None:
             return gha_workflow, repo
-        invocation_url = f"{repo}/" f"actions/runs/{gh_run_id}"
+        invocation_url = f"{repo}/actions/runs/{gh_run_id}"
         return gha_workflow, invocation_url
 
 

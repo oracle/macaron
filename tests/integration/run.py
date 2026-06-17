@@ -11,7 +11,7 @@ import logging
 import logging.config
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import sys
 import time
 from abc import abstractmethod
@@ -157,12 +157,12 @@ class Step(Generic[T]):
         logger.info("Command: '%s'", " ".join(args))
 
         start_time = time.monotonic_ns()
-        res = subprocess.run(
+        res = subprocess.run(  # noqa: S603
             args=args,
             cwd=cwd,
             env=patch_env(self.env),
             check=False,
-        )  # nosec: B603
+        )
         end_time = time.monotonic_ns()
 
         if self.expect_fail:
@@ -353,7 +353,7 @@ class CompareStep(Step[CompareStepOptions]):
         result_file = os.path.join(cwd, self.options["result"])
         expected_file = os.path.join(cwd, self.options["expected"])
         if kind == "vsa":
-            proc = subprocess.run(
+            proc = subprocess.run(  # noqa: S603
                 args=[
                     "python",
                     os.path.abspath(os.path.join(*COMPARE_SCRIPTS[kind])),
@@ -361,7 +361,7 @@ class CompareStep(Step[CompareStepOptions]):
                     *[result_file, expected_file],
                 ],
                 check=False,
-            )  # nosec: B603
+            )
             if proc.returncode != 0:
                 logger.error("Failed to update %s.", expected_file)
                 return 1

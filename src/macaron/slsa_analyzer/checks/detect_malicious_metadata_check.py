@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This check examines the metadata of pypi packages with seven heuristics."""
@@ -294,10 +294,12 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
                 # Currently, only PyPI packages are supported.
-                case PackageRegistryInfo(
-                    ecosystem="pypi",
-                    package_registry=PyPIRegistry(),
-                ) as pypi_registry_info:
+                case (
+                    PackageRegistryInfo(
+                        ecosystem="pypi",
+                        package_registry=PyPIRegistry(),
+                    ) as pypi_registry_info
+                ):
                     # Retrieve the pre-existing asset, or create a new one.
                     pypi_package_json = find_or_create_pypi_asset(
                         ctx.component.name, ctx.component.version, pypi_registry_info

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
@@ -117,7 +117,6 @@ class TrustedBuilderL3Check(BaseCheck):
             for root in ci_info["callgraph"].root_nodes:
                 for callee in traverse_bfs(root):
                     if isinstance(callee, (GitHubActionsReusableWorkflowCallNode, GitHubActionsActionStepNode)):
-
                         workflow_name = callee.uses_name
 
                         if workflow_name in trusted_builders:

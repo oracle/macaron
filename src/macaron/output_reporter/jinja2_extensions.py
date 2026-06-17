@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Jinja2 extension filters and tests.
@@ -118,12 +118,13 @@ def j2_filter_get_flatten_dict(data: Any, has_key: bool = False) -> dict | Any:
     Examples
     --------
     >>> j2_filter_get_flatten_dict(
-    ... {
-    ...     "A": [1, 2, 3],
-    ...     "B": {
-    ...         "C": ["blah", "bar", "foo"],
-    ...     },
-    ... })
+    ...     {
+    ...         "A": [1, 2, 3],
+    ...         "B": {
+    ...             "C": ["blah", "bar", "foo"],
+    ...         },
+    ...     }
+    ... )
     {'A': {0: 1, 1: 2, 2: 3}, 'B': {'C': {0: 'blah', 1: 'bar', 2: 'foo'}}}
     """
     if isinstance(data, (str, int, bool, float)):

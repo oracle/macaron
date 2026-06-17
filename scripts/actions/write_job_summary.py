@@ -90,7 +90,7 @@ def _write_header(
         vsa_path = _env("VSA_PATH", f"{output_dir}/vsa.intoto.jsonl")
         policy_succeeded = bool(vsa_path) and Path(vsa_path).is_file()
 
-    _append_line(summary_path, "<h2 id=\"macaron-analysis-summary\">Macaron Analysis Results</h2>")
+    _append_line(summary_path, '<h2 id="macaron-analysis-summary">Macaron Analysis Results</h2>')
     _append_line(summary_path)
     if upload_reports:
         _append_line(summary_path, "Download reports from this artifact link:")
@@ -157,7 +157,7 @@ def _query_selected_columns(
     if not selected:
         return [], []
 
-    sql = f"SELECT {', '.join(selected)} FROM {table_name}"
+    sql = f"SELECT {', '.join(selected)} FROM {table_name}"  # noqa: S608
     if where_clause:
         sql = f"{sql} WHERE {where_clause}"
     sql = f"{sql} ORDER BY 1"
@@ -373,7 +373,7 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
     _append_line(summary_path)
     _append_line(
         summary_path,
-        "<h2 id=\"macaron-full-findings-remediation-details\">Full Findings and Remediation Details</h2>",
+        '<h2 id="macaron-full-findings-remediation-details">Full Findings and Remediation Details</h2>',
     )
     _append_line(summary_path)
     _append_line(summary_path, "<details>")
@@ -498,7 +498,7 @@ def _write_existing_policy_failure_diagnostics(
             cols, rows = _query_sql(conn, sql_query)
         if cols and rows:
             _append_line(summary_path)
-            _append_line(summary_path, f"#### Results")
+            _append_line(summary_path, "#### Results")
             if policy_name == "check-github-actions":
                 rendered = write_compact_gha_vuln_diagnostics(summary_path, cols, rows)
             else:

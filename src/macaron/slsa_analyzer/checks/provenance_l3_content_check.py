@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks if a SLSA provenance conforms to a given expectation."""
@@ -77,9 +77,11 @@ class ProvenanceL3ContentCheck(BaseCheck):
         # Check the provenances in package registries.
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
-                case PackageRegistryInfo(
-                    package_registry=JFrogMavenRegistry(),
-                ) as info_entry:
+                case (
+                    PackageRegistryInfo(
+                        package_registry=JFrogMavenRegistry(),
+                    ) as info_entry
+                ):
                     for provenance in info_entry.provenances:
                         try:
                             logger.info(

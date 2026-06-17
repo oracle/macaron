@@ -7,7 +7,7 @@ import logging
 import os
 import re
 import string
-import subprocess  # nosec B404
+import subprocess
 import urllib.parse
 from configparser import ConfigParser
 from pathlib import Path
@@ -325,7 +325,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
                     # ``git clone`` from prompting for login credentials.
                     "GIT_TERMINAL_PROMPT": "0",
                 }
-                subprocess.run(  # nosec B603
+                subprocess.run(  # noqa: S603
                     args=["git", "fetch", "origin", "--force", "--tags", "--prune", "--prune-tags"],
                     capture_output=True,
                     cwd=clone_dir,
@@ -350,7 +350,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
             # ``git clone`` from prompting for login credentials.
             "GIT_TERMINAL_PROMPT": "0",
         }
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             args=["git", "clone", "--filter=tree:0", url],
             capture_output=True,
             cwd=parent_dir,
@@ -390,7 +390,7 @@ def list_remote_references(arguments: list[str], repo: str) -> str | None:
         The result of the command.
     """
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             args=["git", "ls-remote"] + arguments + [repo],
             capture_output=True,
             # By setting stdin to /dev/null and using a new session, we prevent all possible user input prompts.
@@ -929,15 +929,15 @@ def is_commit_hash(value: str) -> bool:
 
     Example
     -------
-    >>> is_commit_hash('e3a1b6c')
+    >>> is_commit_hash("e3a1b6c")
     True
-    >>> is_commit_hash('e3a1b6c8d9b2ff0c9f5f8a0a5d8f4cf2e19b1db3')
+    >>> is_commit_hash("e3a1b6c8d9b2ff0c9f5f8a0a5d8f4cf2e19b1db3")
     True
-    >>> is_commit_hash('invalid_hash123')
+    >>> is_commit_hash("invalid_hash123")
     False
-    >>> is_commit_hash('master')
+    >>> is_commit_hash("master")
     False
-    >>> is_commit_hash('main')
+    >>> is_commit_hash("main")
     False
     """
     pattern = r"^[a-f0-9]{7,40}$"

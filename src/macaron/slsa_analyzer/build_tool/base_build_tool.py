@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeAlias, TypedDict
 
@@ -37,7 +37,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 BuildToolConfig: TypeAlias = tuple[str, float, str | None, str | None]
 
 
-class BuildEcosystem(str, Enum):
+class BuildEcosystem(StrEnum):
     """The supported build ecosystems."""
 
     MAVEN = "maven"
@@ -332,9 +332,7 @@ class BaseBuildTool(ABC):
         """
         return NoneDependencyAnalyzer()
 
-    def set_build_tool_configurations(
-        self, build_tool_configs: list[BuildToolConfig]
-    ) -> None:
+    def set_build_tool_configurations(self, build_tool_configs: list[BuildToolConfig]) -> None:
         """Set the build tool configurations for the instance.
 
         Parameters

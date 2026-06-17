@@ -5,14 +5,14 @@
 
 import json
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import TypedDict
 
 from macaron.database.table_definitions import CheckFacts
 from macaron.slsa_analyzer.slsa_req import BUILD_REQ_DESC, ReqName
 
 
-class CheckResultType(str, Enum):
+class CheckResultType(StrEnum):
     """This class contains the types of a check result."""
 
     PASSED = "PASSED"
@@ -157,7 +157,7 @@ class Confidence(float, Enum):
         return min(cls, key=lambda c: abs(c.value - normalized_score))
 
 
-class JustificationType(str, Enum):
+class JustificationType(StrEnum):
     """This class contains the type of a justification that will be used in creating the HTML report."""
 
     #: If a justification has a text type, it will be added as a plain text.

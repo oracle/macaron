@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCIService class to be inherited by a CI service."""
@@ -63,7 +63,9 @@ class BaseCIService:
         raise NotImplementedError
 
     def is_detected(
-        self, repo_path: str, git_service: BaseGitService | None = None  # pylint: disable=unused-argument
+        self,
+        repo_path: str,
+        git_service: BaseGitService | None = None,  # pylint: disable=unused-argument
     ) -> bool:
         """Return True if this CI service is used in the target repo.
 
