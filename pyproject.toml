@@ -289,6 +289,9 @@ filterwarnings = [
 line-length = 120
 
 [tool.ruff.format]
+exclude = [
+    "tests/malware_analyzer/pypi/resources/sourcecode_samples/**/*.py",
+]
 docstring-code-format = true
 docstring-code-line-length = 88
 
