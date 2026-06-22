@@ -128,6 +128,120 @@
 {% endcall %}
 {% endmacro %}
 
+{% macro render_malware_summary(malware_summary) %}
+{% set confidence_percent = (malware_summary.confidence * 100) | round | int if malware_summary.confidence is not none else none %}
+<section class="malware-summary" aria-label="Malware finding summary">
+    <div class="malware-summary-header">
+        <div>
+            <div class="malware-summary-title">Malware finding summary</div>
+            <div class="malware-summary-reason">{{ malware_summary.primary_reason }}</div>
+        </div>
+        <div class="malware-verdict-badge">{{ malware_summary.verdict | replace("_", " ") | capitalize }}</div>
+    </div>
+
+    <div class="malware-summary-grid">
+        <div class="malware-panel">
+            <div class="malware-panel-title">Risk snapshot</div>
+            <div class="malware-panel-body">
+                <div class="malware-stat">
+                    <span>Confidence</span>
+                    <strong>
+                        {% if confidence_percent is not none %}
+                        {{ confidence_percent }}%
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="malware-meter" aria-label="Malware confidence">
+                    {% if confidence_percent is not none %}
+                    <div class="malware-meter-fill" style="width: {{ confidence_percent }}%;"></div>
+                    {% else %}
+                    <div class="malware-meter-fill" style="width: 0%;"></div>
+                    {% endif %}
+                </div>
+                <div class="malware-stat">
+                    <span>Behavior groups</span>
+                    <strong>{{ malware_summary.behavioral_findings | length }}</strong>
+                </div>
+                <div class="malware-stat">
+                    <span>Failed heuristics</span>
+                    <strong>{{ malware_summary.failed_heuristics | length }}</strong>
+                </div>
+                {% if malware_summary.known_malware %}
+                {{ render_hyperlink(href=malware_summary.known_malware, display_text="Open malware advisory", class="malware-link") }}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if malware_summary.behavioral_findings %}
+        <div class="malware-panel">
+            <div class="malware-panel-title">Static analysis evidence</div>
+            <div class="malware-panel-body">
+                <div class="malware-card-grid">
+                {% for finding in malware_summary.behavioral_findings %}
+                    <div class="malware-card">
+                        <div class="malware-card-heading">
+                            <span>{{ finding.category }}</span>
+                            <span class="malware-rule-count">{{ finding.rules | length }} rule{{ "s" if finding.rules | length != 1 else "" }}</span>
+                        </div>
+                        <p>{{ finding.reason }}</p>
+                        <ul class="malware-evidence-list">
+                        {% for detection in finding.evidence[:5] %}
+                            <li>{{ detection["file"] }}:{{ detection["start"] }}</li>
+                        {% endfor %}
+                        {% if finding.evidence | length > 5 %}
+                            <li class="malware-evidence-more">
+                                <details>
+                                    <summary>{{ finding.evidence | length - 5 }} more finding{{ "s" if finding.evidence | length - 5 != 1 else "" }}</summary>
+                                    <ul class="malware-evidence-list malware-evidence-list-extra">
+                                    {% for detection in finding.evidence[5:] %}
+                                        <li>{{ detection["file"] }}:{{ detection["start"] }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                </details>
+                            </li>
+                        {% endif %}
+                        </ul>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if malware_summary.failed_heuristics %}
+    <div class="malware-panel malware-panel-wide">
+        <div class="malware-panel-title">Why Macaron flagged this package</div>
+        <div class="malware-panel-body">
+            <ul class="malware-heuristic-list">
+            {% for heuristic in malware_summary.failed_heuristics %}
+                <li>
+                    <strong>{{ heuristic.name }}</strong>
+                    {{ heuristic.reason }}
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if malware_summary.recommended_actions %}
+    <div class="malware-panel malware-panel-wide">
+        <div class="malware-panel-title">Recommended actions</div>
+        <div class="malware-panel-body">
+            <ul class="malware-action-list">
+            {% for action in malware_summary.recommended_actions %}
+                <li>{{ action }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endmacro %}
+
 {% macro render_dep_summary(dep_summary_data) %}
 {%- set headers = dep_summary_data | get_headers -%}
 {% call render_table(header_names=headers, has_header=true, class="dep_summary") %}
@@ -210,6 +324,7 @@
 {% endblock %}
 
 {% block content %}
+<section class="report-section">
     <div class="table_caption">Target information</div>
     {% if not target.info.remote_path %}
     {#
@@ -222,9 +337,11 @@
     {% endif %}
 
     {{ render_target_info_table(target.info) | indent(4) }}
+</section>
 
     <div class='space_divider'></div>
 
+<section class="report-section">
     <div class="table_caption">Provenance summary</div>
     <div id= "prov_justification">
         {% if target.provenances.is_inferred == true %}
@@ -234,11 +351,20 @@
         {% endif %}
     </div>
 
+    <div class="report-actions">
     <button class="fancy-button" onclick="expandAll()">Expand All</button>
     <button class="fancy-button" onclick="collapseAll()">Collapse All</button>
+    </div>
     {{ render_tree_view_nested_list(target.provenances.content) | indent(4) }}
+</section>
 
     <div class='space_divider'></div>
+
+    {% if target.malware_summary %}
+    {{ render_malware_summary(target.malware_summary) | indent(4) }}
+
+    <div class='space_divider'></div>
+    {% endif %}
 
     {#
         When there is no passing check for this software component, we hide the check report table when the viewer
@@ -248,6 +374,7 @@
         If ``toggler-extend`` is not set, the toggler will be in the Collapsed state.
         - The ``check_report_content`` div, which contains the check report table: The HTML class ``hidden`` will set ``display: none`` to this div and hide the check report table.
     #}
+<section class="report-section">
     {% if metadata.has_passing_check %}
     {#
         Set the default state to Extend if there is a passing check.
@@ -270,6 +397,7 @@
 
         {{ render_checks_report(target.checks.results) | indent(8) }}
     </div>
+</section>
 
     <div class='space_divider'></div>
 
@@ -280,6 +408,7 @@
             - The status for each dependency
     #}
     {% if dependencies.analyzed_deps != 0 %}
+<section class="report-section">
     <div class="table_caption" id="deps_result_title">Dependency results</div>
     <div class="table_sub_caption">
     {{ dependencies.analyzed_deps }} dependencies that map to {{ dependencies.unique_dep_repos }} unique repositories have been successfully analyzed.
@@ -287,5 +416,6 @@
     {{ render_dep_summary(dependencies.checks_summary) | indent(4) }}
     <div class="space_divider"></div>
     {{ render_dep_status(dependencies.dep_status) | indent(4) }}
+</section>
     {% endif %}
 {% endblock %}

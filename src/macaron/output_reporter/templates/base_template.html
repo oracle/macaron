@@ -22,12 +22,21 @@
 
         body {
             margin-bottom: 20px;
+            background:
+                linear-gradient(180deg, #f8fafc 0, #ffffff 360px),
+                #ffffff;
+            color: #22302f;
         }
 
         a {
-            color: #045fab;
+            color: #0f766e;
             line-height: inherit;
             text-decoration: none;
+        }
+
+        a:hover {
+            color: #0b5f59;
+            text-decoration: underline;
         }
 
         pre {
@@ -38,37 +47,61 @@
 
         button {
             border: 0;
-            padding: 0;
-            padding-top: 10px;
-            padding-bottom: 10px;
-            background: lightgrey;
+            padding: 10px 14px;
+            background: #e2e8f0;
             box-shadow: none;
-            border-radius: 0px;
+            border-radius: 8px;
         }
 
         button:hover:enabled,
         .tablebutton_current {
-            background: grey;
+            background: #0f766e;
             color: white;
         }
 
         table,
         th,
         td {
-            padding: 10px;
-            border: 1px black solid;
+            padding: 11px 12px;
+            border: 1px solid #dbe5e3;
             border-collapse: collapse;
             box-sizing: border-box;
+        }
+
+        table {
+            background: #ffffff;
+            color: #22302f;
+        }
+
+        thead th {
+            background: #0f3f3d;
+            border-color: #0f3f3d;
+            color: #f8fafc;
+            font-size: 13px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
         }
 
         th {
             min-width: fit-content;
             text-align: left;
+            background: #f8fafc;
+            color: #26403e;
+            font-weight: 800;
         }
 
         td {
             word-wrap: break-word;
             word-break: keep-all;
+            line-height: 1.45;
+        }
+
+        tbody tr:nth-child(even) td {
+            background: #fbfdfc;
+        }
+
+        tbody tr:hover td {
+            background: #f0fdfa;
         }
 
         th a:active {
@@ -88,6 +121,8 @@
         footer {
             margin-top: 20px;
             text-align: center;
+            color: #64748b;
+            font-size: 13px;
         }
 
         .raw {
@@ -110,22 +145,37 @@
 
         #scroll_to_top {
             position: fixed;
-            padding: 20px;
+            width: auto;
+            padding: 14px 16px;
             bottom: 20px;
             right: 30px;
             font-size: 20px;
             z-index: 99;
+            border: 1px solid rgba(15, 118, 110, 0.24);
+            border-radius: 999px;
+            background: #0f766e;
+            color: white;
+            box-shadow: 0 10px 26px rgba(15, 118, 110, 0.28);
         }
 
         .space_divider {
-            height: 20px;
+            height: 16px;
         }
 
         #report_title {
-            padding: 10px 10px;
+            width: auto;
+            margin: 16px;
+            padding: 24px 20px;
+            border: 1px solid #cfe7e3;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, rgba(15, 63, 61, 0.97), rgba(15, 118, 110, 0.94) 55%, rgba(127, 29, 29, 0.94)),
+                #0f3f3d;
+            box-shadow: 0 14px 36px rgba(15, 63, 61, 0.16);
+            color: white;
             font-weight: bold;
             text-align: center;
-            font-size: 40px;
+            font-size: 38px;
             display: flex;
             flex-direction: column;
         }
@@ -133,64 +183,81 @@
         #macaron-svg {
             align-self: center;
             padding: 10px;
+            filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
         }
 
         .red_bg {
-            background-color: red;
+            background-color: #dc2626;
             color: white;
             text-align: center;
             font-weight: bold;
         }
 
         .green_bg {
-            background-color: forestgreen;
+            background-color: #16a34a;
             color: white;
             text-align: center;
             font-weight: bold;
         }
 
         .lightgreen_bg {
-            background-color: lightgreen;
-            color: grey;
+            background-color: #dcfce7;
+            color: #166534;
             text-align: center;
             font-weight: bold;
         }
 
         .grey_bg {
-            background-color: grey;
-            color: black;
+            background-color: #e2e8f0;
+            color: #475569;
             text-align: center;
             font-weight: bold;
         }
 
         .black_bg {
-            background-color: black;
-            color: slategray;
+            background-color: #0f172a;
+            color: #cbd5e1;
             text-align: center;
             font-weight: bold;
         }
 
         .timestamps {
+            width: auto;
             padding-top: 10px;
             padding-bottom: 10px;
             border: 0;
-            font-size: small;
-            font-weight: lighter;
+            color: #d9fff9;
+            font-size: 13px;
+            font-weight: 500;
             text-align: center;
         }
 
         .table_caption {
-            text-align: center;
-            font-weight: bold;
-            padding: 10px 10px;
-            font-size: 25px;
+            box-sizing: border-box;
+            width: auto;
+            margin-bottom: 14px;
+            padding: 14px 16px;
+            border-left: 5px solid #0f766e;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #ecfdf5, #ffffff);
+            color: #0f3f3d;
+            text-align: left;
+            font-weight: 800;
+            font-size: 23px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
         .table_sub_caption {
-            text-align: center;
-            font-weight: bold;
-            padding: 10px 10px;
-            font-size: 18px;
+            box-sizing: border-box;
+            width: auto;
+            margin: 14px 0 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #334155;
+            text-align: left;
+            font-weight: 800;
+            font-size: 16px;
         }
 
         #mcn_prov_sum {
@@ -198,9 +265,18 @@
         }
 
         #prov_justification {
-            text-align: center;
-            font-style: italic;
-            font-size: 18px;
+            box-sizing: border-box;
+            width: auto;
+            margin: 0 0 14px;
+            padding: 12px 14px;
+            border: 1px solid #d9e5e2;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #475569;
+            text-align: left;
+            font-style: normal;
+            font-size: 15px;
+            line-height: 1.45;
         }
 
         /* Format the Slsa requirements column.
@@ -210,33 +286,99 @@
             white-space: nowrap;
         }
 
+        .report-section {
+            box-sizing: border-box;
+            width: calc(100% - 32px);
+            margin: 16px;
+            padding: 16px;
+            border: 1px solid #d9e5e2;
+            border-radius: 8px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96)),
+                #ffffff;
+            box-shadow: 0 10px 28px rgba(15, 63, 61, 0.08);
+            overflow-x: auto;
+        }
+
+        .report-section table {
+            width: 100%;
+            margin: 0;
+            border: 1px solid #dbe5e3;
+            border-radius: 8px;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+        }
+
+        .report-section table th:first-child,
+        .report-section table td:first-child {
+            border-left: 0;
+        }
+
+        .report-section table th:last-child,
+        .report-section table td:last-child {
+            border-right: 0;
+        }
+
+        .report-section table tr:first-child th,
+        .report-section table tr:first-child td {
+            border-top: 0;
+        }
+
+        .report-section table tr:last-child th,
+        .report-section table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .target_info th {
+            width: 220px;
+            background: #f0fdfa;
+            color: #0f3f3d;
+        }
+
+        .checks_report td:first-child,
+        .dep_summary td:first-child,
+        .dep_status td:first-child {
+            font-weight: 700;
+            color: #0f3f3d;
+        }
+
+        .report-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: auto;
+            margin-bottom: 12px;
+        }
+
         /* Customize the jquery-bonsai expand-all/collapse-all buttons. */
         .fancy-button {
-            border-radius: 6px;
             box-sizing: border-box;
-            color: black;
+            width: auto;
+            color: #0f3f3d;
             cursor: pointer;
             display: inline-block;
-            font-weight: 500;
+            font-weight: 800;
             line-height: 20px;
             list-style: none;
-            padding: 6px 16px;
+            padding: 9px 14px;
             position: relative;
             user-select: none;
             vertical-align: middle;
             white-space: nowrap;
             word-wrap: break-word;
-            font-weight: bold;
-            border: 2px solid #d5d3d3;
-            border-radius: 10px;
+            border: 1px solid #99d5cd;
+            border-radius: 8px;
+            background: #ecfdf5;
             vertical-align: middle;
             white-space: nowrap;
             word-wrap: break-word;
-            margin: 10px;
+            margin: 0;
         }
 
         .fancy-button:hover {
-            background-color: grey;
+            background-color: #0f766e;
+            color: white;
             text-decoration: none;
             transition-duration: 0.1s;
         }
@@ -248,11 +390,26 @@
         .tree-view-nested-list, .tree-view-nested-list ul {
             /* Remove default bullets. This will be replaced with a caret. */
             list-style-type: none;
-            padding: 0
+            box-sizing: border-box;
+            width: auto;
+            padding: 0;
         }
 
         .tree-view-nested-list li {
-            padding-left: 2em
+            padding-left: 1.4em;
+            line-height: 1.65;
+        }
+
+        .report-section > .tree-view-nested-list,
+        #run-checks-tree > .tree-view-nested-list {
+            padding: 14px;
+            border: 1px solid #d9e5e2;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
+        .tree-view-nested-list div {
+            width: auto;
         }
 
         /*
@@ -267,7 +424,7 @@
         /* Create the caret using a unicode symbol, and style it. */
         .caret::before, .toggler::before {
             content: "\25B8";
-            color: black;
+            color: #0f766e;
             display: inline-block;
             margin-right: 6px;
         }
@@ -289,9 +446,339 @@
 
         .check-tree-node::before {
             content: "\2514";
-            color: black;
+            color: #94a3b8;
             display: inline-block;
             margin-right: 6px;
+        }
+
+        .malware-summary {
+            box-sizing: border-box;
+            width: calc(100% - 32px);
+            margin: 16px;
+            border: 1px solid #f2b6a6;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, rgba(255, 244, 239, 0.98), rgba(255, 255, 255, 0.98) 46%, rgba(240, 250, 248, 0.98)),
+                repeating-linear-gradient(135deg, rgba(190, 18, 60, 0.05) 0 2px, transparent 2px 12px);
+            box-shadow: 0 10px 28px rgba(108, 35, 28, 0.13);
+            color: #2f201f;
+            overflow: hidden;
+        }
+
+        .malware-summary * {
+            box-sizing: border-box;
+        }
+
+        .malware-summary-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            background: linear-gradient(90deg, #7f1d1d, #b91c1c 48%, #0f766e);
+            color: white;
+        }
+
+        .malware-summary-header > div:first-child {
+            width: auto;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .malware-summary-title {
+            width: auto;
+            font-size: 23px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .malware-summary-reason {
+            width: auto;
+            max-width: 920px;
+            margin-top: 6px;
+            color: #ffe7df;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        .malware-verdict-badge {
+            width: auto;
+            flex: 0 0 auto;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.17);
+            color: #fff7ed;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .malware-summary-grid {
+            display: grid;
+            grid-template-columns: minmax(240px, 0.9fr) minmax(360px, 1.6fr);
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .malware-panel {
+            width: auto;
+            border: 1px solid #f2d1c5;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.86);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+            overflow: hidden;
+        }
+
+        .malware-summary-grid > .malware-panel:only-child {
+            grid-column: 1 / -1;
+        }
+
+        .malware-panel-wide {
+            margin: 0 16px 16px;
+        }
+
+        .malware-panel-title {
+            width: auto;
+            padding: 12px 14px;
+            background: #fff7ed;
+            color: #7f1d1d;
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .malware-panel-body {
+            padding: 14px;
+        }
+
+        .malware-stat {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: auto;
+            margin-bottom: 12px;
+            color: #4b2c28;
+            font-size: 14px;
+        }
+
+        .malware-stat strong {
+            width: auto;
+            font-size: 22px;
+            color: #991b1b;
+        }
+
+        .malware-meter {
+            width: 100%;
+            height: 13px;
+            border-radius: 999px;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            overflow: hidden;
+        }
+
+        .malware-meter-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #f97316, #dc2626);
+        }
+
+        .malware-link {
+            display: block;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #075985;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .malware-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+        }
+
+        .malware-card {
+            width: auto;
+            min-height: 132px;
+            padding: 14px;
+            border: 1px solid #fde2d2;
+            border-left: 5px solid #dc2626;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #ffffff, #fff7ed);
+        }
+
+        .malware-card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: auto;
+            margin-bottom: 8px;
+            color: #7f1d1d;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .malware-rule-count {
+            width: auto;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .malware-card p {
+            width: auto;
+            margin-bottom: 10px;
+            color: #51302a;
+            line-height: 1.4;
+        }
+
+        .malware-evidence-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            width: auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .malware-evidence-list li {
+            max-width: 100%;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .malware-evidence-list li.malware-evidence-more {
+            width: 100%;
+            padding: 0;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            flex-basis: 100%;
+        }
+
+        .malware-evidence-more details {
+            width: auto;
+        }
+
+        .malware-evidence-more summary {
+            display: inline-block;
+            width: auto;
+            padding: 5px 9px;
+            border: 1px solid #99d5cd;
+            border-radius: 999px;
+            background: #ecfdf5;
+            color: #0f766e;
+            cursor: pointer;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            font-weight: 800;
+            list-style: none;
+        }
+
+        .malware-evidence-more summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .malware-evidence-more summary::before {
+            content: "\25B8";
+            display: inline-block;
+            margin-right: 5px;
+            transition: transform 0.12s ease-in-out;
+        }
+
+        .malware-evidence-more details[open] summary {
+            margin-bottom: 8px;
+            background: #0f766e;
+            color: white;
+        }
+
+        .malware-evidence-more details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .malware-evidence-list-extra {
+            margin-top: 0;
+        }
+
+        .malware-heuristic-list,
+        .malware-action-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
+            width: auto;
+            padding: 0;
+            list-style: none;
+        }
+
+        .malware-heuristic-list li,
+        .malware-action-list li {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d9e5e2;
+            background: #ffffff;
+            color: #2f3b3a;
+            line-height: 1.4;
+        }
+
+        .malware-heuristic-list strong {
+            display: block;
+            width: auto;
+            margin-bottom: 4px;
+            color: #0f766e;
+        }
+
+        .malware-action-list li {
+            border-left: 5px solid #0f766e;
+            background: linear-gradient(90deg, #ecfdf5, #ffffff);
+        }
+
+        @media (max-width: 850px) {
+            #report_title,
+            .report-section,
+            .malware-summary {
+                width: calc(100% - 20px);
+                margin: 10px;
+            }
+
+            .report-section {
+                padding: 12px;
+            }
+
+            .table_caption {
+                font-size: 20px;
+            }
+
+            .malware-summary-header,
+            .malware-summary-grid {
+                display: block;
+            }
+
+            .malware-verdict-badge {
+                display: inline-block;
+                margin-top: 12px;
+            }
+
+            .malware-panel {
+                margin-top: 12px;
+            }
         }
     </style>
 </head>
