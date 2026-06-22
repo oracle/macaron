@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Core dataflow analysis framework definitions and algorithm."""
@@ -680,7 +680,7 @@ class SimpleAlternatives(InterpretationNode):
         def get_alt(index: int) -> Node:
             return self.alts[index]
 
-        return {i: functools.partial(get_alt, i) for i in range(0, len(self.alts))}
+        return {i: functools.partial(get_alt, i) for i in range(len(self.alts))}
 
 
 def get_owned_scopes(context: ContextRef[Context]) -> set[facts.Scope]:

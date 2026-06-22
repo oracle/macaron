@@ -260,8 +260,8 @@ def _extract_from_witness_provenance(payload: InTotoV01Payload) -> tuple[str | N
             continue
         if entry_type.startswith("https://witness.dev/attestations/git/"):
             commit = json_extract(entry, ["attestation", "commithash"], str)
-        elif entry_type.startswith("https://witness.dev/attestations/gitlab/") or entry_type.startswith(
-            "https://witness.dev/attestations/github/"
+        elif entry_type.startswith(
+            ("https://witness.dev/attestations/gitlab/", "https://witness.dev/attestations/github/")
         ):
             repo = json_extract(entry, ["attestation", "projecturl"], str)
 
