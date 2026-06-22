@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements SQLAlchemy types for Python data types that cannot be automatically stored."""
@@ -17,7 +17,7 @@ from macaron.slsa_analyzer.provenance.intoto import (
 )
 
 
-class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
+class RFC3339DateTime(TypeDecorator):  # pylint: disable=abstract-method
     """
     SQLAlchemy column type to serialise datetime objects for SQLite in consistent format matching in-toto.
 
@@ -70,7 +70,7 @@ class RFC3339DateTime(TypeDecorator):  # pylint: disable=W0223
         return result.astimezone(RFC3339DateTime._host_tzinfo)
 
 
-class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
+class DBJsonDict(TypeDecorator):  # pylint: disable=abstract-method
     """SQLAlchemy column type to serialize dictionaries."""
 
     # It is stored in the database as a json value.
@@ -131,7 +131,7 @@ class DBJsonDict(TypeDecorator):  # pylint: disable=W0223
         return value
 
 
-class DBJsonList(TypeDecorator):  # pylint: disable=W0223
+class DBJsonList(TypeDecorator):  # pylint: disable=abstract-method
     """SQLAlchemy column type to serialize lists."""
 
     # It is stored in the database as a json value.
@@ -192,7 +192,7 @@ class DBJsonList(TypeDecorator):  # pylint: disable=W0223
         return value
 
 
-class ProvenancePayload(TypeDecorator):  # pylint: disable=W0223
+class ProvenancePayload(TypeDecorator):  # pylint: disable=abstract-method
     """SQLAlchemy column type to serialize InTotoProvenance."""
 
     # It is stored in the database as a String value.
