@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BaseCheck class to be inherited by other concrete Checks."""
@@ -52,7 +52,7 @@ class BaseCheck:
         self._check_info = CheckInfo(
             check_id=check_id,
             check_description=description,
-            eval_reqs=eval_reqs if eval_reqs else [],
+            eval_reqs=eval_reqs or [],
         )
 
         if not depends_on:

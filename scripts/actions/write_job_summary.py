@@ -379,7 +379,7 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
     _append_line(summary_path, "<details>")
     _append_line(summary_path, "<summary>Show full findings</summary>")
     _append_line(summary_path)
-    detail_groups = groups_in_rows if groups_in_rows else ["all_findings"]
+    detail_groups = groups_in_rows or ["all_findings"]
     row_counter = 1
     for group in detail_groups:
         if group_idx is None:

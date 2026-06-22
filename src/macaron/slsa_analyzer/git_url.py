@@ -615,7 +615,7 @@ def clean_up_repo_path(repo_path: str) -> str:
         The cleaned up repo path.
     """
     cleaned_path = repo_path.strip(" ").rstrip("/")
-    return cleaned_path[:-4] if cleaned_path.endswith(".git") else cleaned_path
+    return cleaned_path.removesuffix(".git")
 
 
 def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:

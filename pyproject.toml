@@ -307,6 +307,7 @@ select = [
     "DOC",  # pydoclint
     "E",  # pycodestyle
     "F",  # pyflakes
+    "FURB",  # refurb
     "I",  # isort
     "LOG",  # flake8-logging
     "N",  # pep8-naming

@@ -705,13 +705,9 @@ class Analyzer:
             commit_date_str,
         )
 
-        self.rich_handler.add_description_table_content("Branch:", res_branch if res_branch else "None")
-        self.rich_handler.add_description_table_content(
-            "Commit Hash:", commit_sha if commit_sha else "[red]Not Found[/]"
-        )
-        self.rich_handler.add_description_table_content(
-            "Commit Date:", commit_date_str if commit_date_str else "[red]Not Found[/]"
-        )
+        self.rich_handler.add_description_table_content("Branch:", res_branch or "None")
+        self.rich_handler.add_description_table_content("Commit Hash:", commit_sha or "[red]Not Found[/]")
+        self.rich_handler.add_description_table_content("Commit Date:", commit_date_str or "[red]Not Found[/]")
 
         return repository
 

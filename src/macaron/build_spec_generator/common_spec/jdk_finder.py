@@ -57,8 +57,7 @@ def download_file(url: str, dest: str) -> None:
 
     with open(dest, "wb") as fd:
         try:
-            for chunk in response.iter_content(chunk_size=128, decode_unicode=False):
-                fd.write(chunk)
+            fd.writelines(response.iter_content(chunk_size=128, decode_unicode=False))
         except requests.RequestException as error:
             response.close()
             raise InvalidHTTPResponseError(f"Error while streaming java artifact file from {url}") from error

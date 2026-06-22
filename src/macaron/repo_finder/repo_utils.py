@@ -125,10 +125,8 @@ def get_local_repos_path() -> str:
 
     If the directory does not exist, it is created.
     """
-    local_repos_path = (
-        global_config.local_repos_path
-        if global_config.local_repos_path
-        else os.path.join(global_config.output_path, GIT_REPOS_DIR, "local_repos")
+    local_repos_path = global_config.local_repos_path or os.path.join(
+        global_config.output_path, GIT_REPOS_DIR, "local_repos"
     )
     if not os.path.exists(local_repos_path):
         os.makedirs(local_repos_path, exist_ok=True)

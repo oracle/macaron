@@ -30,7 +30,7 @@ def find_valid_repository_url(urls: Iterable[str]) -> str:
             # URLs that fail to parse can be rejected here.
             continue
         redirect_url = resolve_redirects(parsed_url)
-        checked_url = get_remote_vcs_url(redirect_url if redirect_url else parsed_url.geturl())
+        checked_url = get_remote_vcs_url(redirect_url or parsed_url.geturl())
         if checked_url:
             return checked_url
 

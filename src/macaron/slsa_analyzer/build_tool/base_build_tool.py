@@ -597,7 +597,7 @@ class BaseBuildTool(ABC):
         if cmd["language"] is not self.language:
             return False, Confidence.HIGH
         # Some projects use a publisher tool and some use the build tool with deploy arguments.
-        deploy_tool = self.publisher if self.publisher else self.builder
+        deploy_tool = self.publisher or self.builder
 
         if not self.match_cmd_args(cmd=cmd["command"], tools=deploy_tool, args=self.deploy_arg):
             return False, Confidence.HIGH
@@ -633,7 +633,7 @@ class BaseBuildTool(ABC):
         if cmd["language"] is not self.language:
             return False, Confidence.HIGH
 
-        builder = self.packager if self.packager else self.builder
+        builder = self.packager or self.builder
 
         if not self.match_cmd_args(cmd=cmd["command"], tools=builder, args=self.build_arg):
             return False, Confidence.HIGH

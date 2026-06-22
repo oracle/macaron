@@ -425,7 +425,7 @@ def determine_provenance_slsa_level(
     if predicate:
         build_type = ProvenancePredicate.get_build_type(provenance_payload.statement)
 
-    if build_type in {SLSAGithubGenericBuildDefinitionV01.expected_build_type} and verified_l3:
+    if build_type == SLSAGithubGenericBuildDefinitionV01.expected_build_type and verified_l3:
         # 3. Provenance is created by the SLSA GitHub generator and verified.
         return 3
 
