@@ -1,9 +1,7 @@
 # Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This module tests the GhAPIClient module
-"""
+"""This module tests the GhAPIClient module."""
 
 from unittest import TestCase
 
@@ -13,9 +11,7 @@ from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 
 
 class TestGhAPIClient(TestCase):
-    """
-    This test provide tests for the GhAPIClient class
-    """
+    """This test provide tests for the GhAPIClient class."""
 
     mock_profile = {
         "headers": {
@@ -30,9 +26,7 @@ class TestGhAPIClient(TestCase):
     mock_query_list = ["java+language:java"]
 
     def test_init(self) -> None:
-        """
-        Test if the search client is initiated correctly.
-        """
+        """Test if the search client is initiated correctly."""
         client = GhAPIClient(self.mock_profile)
         assert client.headers == {
             "Authorization": "sample_token",

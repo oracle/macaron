@@ -303,6 +303,8 @@ select = [
     "A",  # flake8-builtins
     "B",  # flake8-bugbear
     "C4",  # flake8-comprehensions
+    "D",  # pydocstyle
+    "DOC",  # pydoclint
     "E",  # pycodestyle
     "F",  # pyflakes
     "I",  # isort
@@ -315,6 +317,9 @@ select = [
     "UP",  # pyupgrade
 ]
 ignore = [
+    "D104",  # D104: Missing docstring in public package
+    "D105",  # D105: Missing docstring in magic method
+    "D404",  # D404: First word of the docstring should not be "This"
     "E203",  # E203: whitespace before ‘,’, ‘;’, or ‘:’ (not Black compliant)
     "E501",  # E501: line too long (managed better by Bugbear's B950)
 ]
@@ -322,13 +327,19 @@ ignore = [
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = true
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
+    "D102",  # D102: Missing docstring in public method
+    "D104",  # D104: Missing docstring in public package
     "S101",  # S101 Use of `assert` detected
     "T201",  # T201 `print` found
 ]
 "tests/malware_analyzer/pypi/resources/sourcecode_samples/**/*" = [
     "A",  # flake8-builtins
+    "D",  # pydocstyle
     "E",  # pycodestyle
     "F",  # pyflakes
     "N",  # pep8-naming

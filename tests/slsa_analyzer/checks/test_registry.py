@@ -20,7 +20,7 @@ from macaron.slsa_analyzer.registry import Registry
 
 
 class MockCheck(BaseCheck):
-    """BaseCheck with no-op impl for abstract method"""
+    """BaseCheck with no-op impl for abstract method."""
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)

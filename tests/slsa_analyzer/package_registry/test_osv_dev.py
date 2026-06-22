@@ -53,7 +53,7 @@ def test_load_defaults_query_api(tmp_path: Path, user_config_input: str) -> None
 
 
 def test_is_affected_version_invalid_commit() -> None:
-    """Test if the function can handle invalid commits"""
+    """Test if the function can handle invalid commits."""
     with pytest.raises(APIAccessError, match="^Failed to find a tag for"):
         OSVDevService.is_version_affected(
             vuln={},

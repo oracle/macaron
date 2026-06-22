@@ -510,7 +510,7 @@ def _write_existing_policy_failure_diagnostics(
         _append_line(summary_path, "- Additional check-level details are unavailable for this failure.")
 
 
-def main() -> None:
+def _main() -> None:
     output_dir = Path(_env("OUTPUT_DIR", "output"))
     db_path = Path(_env("DB_PATH", os.path.join(str(output_dir), "macaron.db")))
     policy_report = _env("POLICY_REPORT", os.path.join(str(output_dir), "policy_report.json"))
@@ -547,4 +547,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    _main()

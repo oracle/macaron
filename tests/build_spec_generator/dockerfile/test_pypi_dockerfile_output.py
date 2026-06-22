@@ -1,9 +1,7 @@
 # Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-Test the logic for dockerfile generation to rebuild PyPI packages.
-"""
+"""Test the logic for dockerfile generation to rebuild PyPI packages."""
 
 import pytest
 
@@ -57,6 +55,6 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
 def test_successful_generation(
     monkeypatch: pytest.MonkeyPatch, snapshot: str, pypi_build_spec: BaseBuildSpecDict
 ) -> None:
-    """Ensure that dockerfile is correctly generated for pypi_build_spec"""
+    """Ensure that dockerfile is correctly generated for pypi_build_spec."""
     monkeypatch.setattr(pypi_dockerfile_output, "get_latest_cpython_patch", lambda _major, _minor: "3.9.25")
     assert gen_dockerfile(pypi_build_spec) == snapshot

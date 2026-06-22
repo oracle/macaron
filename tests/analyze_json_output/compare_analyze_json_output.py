@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module checks the result JSON files against the expected outputs."""
@@ -83,7 +83,7 @@ def compare_check_results(result: dict, expected: dict) -> int:
 
 
 def compare_target_info(result: dict, expected: dict) -> int:
-    """Compare the content of the target.info section"""
+    """Compare the content of the target.info section."""
     # Remove nondeterministic fields
     result["local_cloned_path"] = expected["local_cloned_path"] = ""
     result["commit_date"] = expected["commit_date"] = ""

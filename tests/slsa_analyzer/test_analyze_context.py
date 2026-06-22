@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains tests for the AnalyzeContext module."""
@@ -19,9 +19,7 @@ from tests.conftest import MockAnalyzeContext
 
 
 class TestAnalyzeContext(TestCase):
-    """
-    This class tests the AnalyzeContext module
-    """
+    """This class tests the AnalyzeContext module."""
 
     MOCK_CTX_DATA = {
         ReqName.BUILD_SERVICE: SLSAReqStatus(),
@@ -37,9 +35,7 @@ class TestAnalyzeContext(TestCase):
     MOCK_DATE = "2021-04-5"
 
     def setUp(self) -> None:
-        """
-        Set up the sample AnalyzeContext instance
-        """
+        """Set up the sample AnalyzeContext instance."""
         self.analyze_ctx = MockAnalyzeContext(macaron_path="", output_dir="")
         self.analyze_ctx.component.repository.full_name = "owner/repo_name"
         self.analyze_ctx.component.repository.fs_path = self.MOCK_REPO_PATH
@@ -48,9 +44,7 @@ class TestAnalyzeContext(TestCase):
         self.analyze_ctx.ctx_data = self.MOCK_CTX_DATA
 
     def test_update_req_status(self) -> None:
-        """
-        Test updating one requirement in the context
-        """
+        """Test updating one requirement in the context."""
         self.analyze_ctx.update_req_status(ReqName.BUILD_SERVICE, True, "sample_fb")
         assert self.analyze_ctx.ctx_data[ReqName.BUILD_SERVICE].get_tuple() == (
             True,

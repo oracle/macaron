@@ -11,7 +11,7 @@ import typing
 
 
 class TestCase(typing.NamedTuple):
-    "Wrap arguments for test script calls into objects of this class."
+    """Wrap arguments for test script calls into objects of this class."""
 
     name: str
     script_args: list[str]

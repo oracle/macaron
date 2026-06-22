@@ -1,7 +1,7 @@
 # Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""This module contains the tests for build spec generation"""
+"""This module contains the tests for build spec generation."""
 
 import pytest
 from packageurl import PackageURL

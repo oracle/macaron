@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Script to compare a generated dockerfile buildspec."""
@@ -67,7 +67,7 @@ def main() -> int:
 
 
 def normalize(contents: str) -> list[str]:
-    """Convert string of file contents to list of its non-empty lines"""
+    """Convert string of file contents to list of its non-empty lines."""
     return [line.strip() for line in contents.splitlines() if line.strip()]
 
 
