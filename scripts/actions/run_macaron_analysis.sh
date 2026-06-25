@@ -11,53 +11,53 @@ if [ -z "${MACARON:-}" ]; then
   exit 1
 fi
 
-CMD=""
+CMD=("$MACARON")
 if [ -n "${DEFAULTS_PATH:-}" ]; then
-  CMD="$MACARON --defaults-path ${DEFAULTS_PATH}"
-else
-  CMD="$MACARON"
+  CMD+=(--defaults-path "$DEFAULTS_PATH")
 fi
 
 OUTPUT_DIR=${OUTPUT_DIR:-output}
-CMD="$CMD --output ${OUTPUT_DIR} -lr . analyze"
+CMD+=(--output "$OUTPUT_DIR" -lr . analyze)
 
 if [ -n "${REPO_PATH:-}" ]; then
-  CMD="$CMD -rp ${REPO_PATH}"
+  CMD+=(-rp "$REPO_PATH")
 elif [ -n "${PACKAGE_URL:-}" ]; then
-  CMD="$CMD -purl ${PACKAGE_URL}"
+  CMD+=(-purl "$PACKAGE_URL")
 fi
 
 if [ -n "${BRANCH:-}" ]; then
-  CMD="$CMD --branch ${BRANCH}"
+  CMD+=(--branch "$BRANCH")
 fi
 
 if [ -n "${DIGEST:-}" ]; then
-  CMD="$CMD --digest ${DIGEST}"
+  CMD+=(--digest "$DIGEST")
 fi
 
-CMD="$CMD --deps-depth ${DEPS_DEPTH:-0}"
+CMD+=(--deps-depth "${DEPS_DEPTH:-0}")
 
 if [ -n "${SBOM_PATH:-}" ]; then
-  CMD="$CMD --sbom-path ${SBOM_PATH}"
+  CMD+=(--sbom-path "$SBOM_PATH")
 fi
 
 if [ -n "${PYTHON_VENV:-}" ]; then
-  CMD="$CMD --python-venv ${PYTHON_VENV}"
+  CMD+=(--python-venv "$PYTHON_VENV")
 fi
 
 if [ -n "${PROVENANCE_FILE:-}" ]; then
-  CMD="$CMD --provenance-file ${PROVENANCE_FILE}"
+  CMD+=(--provenance-file "$PROVENANCE_FILE")
 fi
 
 if [ -n "${PROVENANCE_EXPECTATION:-}" ]; then
-  CMD="$CMD --provenance-expectation ${PROVENANCE_EXPECTATION}"
+  CMD+=(--provenance-expectation "$PROVENANCE_EXPECTATION")
 fi
 
-echo "Executing: $CMD"
+printf 'Executing:'
+printf ' %q' "${CMD[@]}"
+printf '\n'
 
 output_file="$(mktemp)"
 set +e
-eval "$CMD" 2>&1 | tee "$output_file"
+"${CMD[@]}" 2>&1 | tee "$output_file"
 # Capture analyze command's exit code from the pipeline (index 0), then restore fail-fast mode.
 status=${PIPESTATUS[0]}
 set -e
