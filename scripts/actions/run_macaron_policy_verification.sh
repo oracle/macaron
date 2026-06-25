@@ -44,7 +44,7 @@ if [ -n "$FILE" ] && [ -f "$FILE" ]; then
       echo "vsa_report=VSA Not Generated." >> "$GITHUB_OUTPUT"
     fi
   fi
-elif [ -n "$PURL" ]; then
+elif [ -n "$FILE" ] && [ -n "$PURL" ]; then
   CMD+=(--existing-policy "$FILE" --package-url "$PURL")
 
   if run_macaron "${CMD[@]}"; then
@@ -56,5 +56,5 @@ elif [ -n "$PURL" ]; then
     fi
   fi
 else
-  echo "No file or pre-defined policy found for ${FILE} and policy_purl ${PURL}"
+  echo "No valid policy inputs found"
 fi
