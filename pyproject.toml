@@ -309,6 +309,7 @@ select = [
     "F",  # pyflakes
     "FURB",  # refurb
     "I",  # isort
+    "ICN",  # flake8-import-conventions
     "LOG",  # flake8-logging
     "N",  # pep8-naming
     "PIE",  # flake8-pie
@@ -316,6 +317,7 @@ select = [
     "PYI",  # flake8-pyi
     "RUF",  # ruff-specific rules
     "S",  # flake8-bandit
+    "SLOT",  # flake8-slots
     "T20",  # flake8-print
     "UP",  # pyupgrade
 ]
