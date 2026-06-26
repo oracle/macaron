@@ -157,7 +157,7 @@ class Step(Generic[T]):
         logger.info("Command: '%s'", " ".join(args))
 
         start_time = time.monotonic_ns()
-        res = subprocess.run(  # noqa: S603
+        res = subprocess.run(
             args=args,
             cwd=cwd,
             env=patch_env(self.env),
@@ -353,7 +353,7 @@ class CompareStep(Step[CompareStepOptions]):
         result_file = os.path.join(cwd, self.options["result"])
         expected_file = os.path.join(cwd, self.options["expected"])
         if kind == "vsa":
-            proc = subprocess.run(  # noqa: S603
+            proc = subprocess.run(
                 args=[
                     "python",
                     os.path.abspath(os.path.join(*COMPARE_SCRIPTS[kind])),

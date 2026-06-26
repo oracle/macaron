@@ -34,7 +34,7 @@ class TrustedBuilderFacts(CheckFacts):
     __tablename__ = "_trusted_builder_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The name of the tool used to build.
     build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
@@ -45,7 +45,7 @@ class TrustedBuilderFacts(CheckFacts):
     #: The entrypoint script that triggers the build.
     build_trigger: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_trusted_builder_check",
     }
 

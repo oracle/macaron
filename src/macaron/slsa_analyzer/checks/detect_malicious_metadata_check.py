@@ -56,7 +56,7 @@ class MaliciousMetadataFacts(CheckFacts):
     __tablename__ = "_detect_malicious_metadata_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: Known malware.
     known_malware: Mapped[str | None] = mapped_column(
@@ -71,7 +71,7 @@ class MaliciousMetadataFacts(CheckFacts):
         DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_detect_malicious_metadata_check",
     }
 
@@ -358,9 +358,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # Return UNKNOWN result for unsupported ecosystems.
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-    # This list contains the heuristic analyzer classes
-    # When implementing new analyzer, appending the classes to this list
-    analyzers: list = [
+    # This list contains the heuristic analyzer classes. When implementing a new analyzer,
+    # append its classes to this list.
+    analyzers = (
         EmptyProjectLinkAnalyzer,
         SourceCodeRepoAnalyzer,
         OneReleaseAnalyzer,
@@ -375,9 +375,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SimilarProjectAnalyzer,
         PackageDescriptionIntentAnalyzer,
         TypeStubFileAnalyzer,
-    ]
+    )
 
-    # name used to query the result of all problog rules, so it can be accessed outside the model.
+    # Name used to query the result of all problog rules, so it can be accessed outside the model.
     problog_result_access = "result"
 
     malware_rules_problog_model = f"""

@@ -549,7 +549,7 @@ class GitHubActionsNormalJobNode(core.ControlFlowGraphNode):
         self.context = context
 
         self._cfg = core.ControlFlowGraph.create_from_sequence(
-            list(filter(core.node_is_not_none, [self.matrix_block, self.env_block] + self.steps + [self.output_block]))
+            list(filter(core.node_is_not_none, [self.matrix_block, self.env_block, *self.steps, self.output_block]))
         )
 
     def children(self) -> Iterator[core.Node]:

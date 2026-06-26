@@ -90,7 +90,7 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
     for build_command in build_spec["build_commands"]:
         command = build_command["command"]
         if command and ReproducibleCentralBuildTool.MAVEN.name.lower() == build_command["build_tool"]:
-            adapted_build_commands.append(command[:1] + ["-Dmaven.test.skip=true"] + command[1:])
+            adapted_build_commands.append([*command[:1], "-Dmaven.test.skip=true", *command[1:]])
         else:
             adapted_build_commands.append(command)
 

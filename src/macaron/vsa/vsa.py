@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """VSA schema and generation."""
@@ -38,7 +38,7 @@ class Vsa(TypedDict):
     """
 
     #: The payload type. Following in-toto, this is always ``application/vnd.in-toto+json``.
-    payloadType: str  # noqa: N815
+    payloadType: str
 
     #: The payload of the VSA, base64 encoded.
     payload: str
@@ -66,7 +66,7 @@ class VsaStatement(TypedDict):
 
     #: Identifier for the type of the Predicate.
     #: For Macaron-generated VSAs, this is always ``https://slsa.dev/verification_summary/v1``.
-    predicateType: str  # noqa: N815
+    predicateType: str
 
     #: The Predicate of the attestation, providing information about the verification.
     predicate: VsaPredicate
@@ -89,14 +89,14 @@ class VsaPredicate(TypedDict):
     #: The timestamp when the verification occurred.
     #: The field is a
     #: `Timestamp <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#Timestamp>`_.
-    timeVerified: str  # noqa: N815
+    timeVerified: str
 
     #: URI that identifies the resource associated with the software component being verified.
     #: This field is a
     #: `ResourceURI <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#ResourceURI>`_.
     #: Currently, this has the same value as the subject of the VSA, i.e. the PURL of
     #: the software component being verified against.
-    resourceUri: str  # noqa: N815
+    resourceUri: str
 
     #: The policy that the subject software component was verified against.
     #: This field is a
@@ -104,12 +104,12 @@ class VsaPredicate(TypedDict):
     policy: Policy
 
     #: The verification result.
-    verificationResult: VerificationResult  # noqa: N815
+    verificationResult: VerificationResult
 
     #: According to SLSA, this field "indicates the highest level of each track verified
     #: for the artifact (and not its dependencies), or ``FAILED`` if policy verification failed".
     #: We currently leave this list empty.
-    verifiedLevels: list  # noqa: N815
+    verifiedLevels: list
 
 
 class Verifier(TypedDict):
@@ -120,7 +120,7 @@ class Verifier(TypedDict):
 
     #: The identity of the verifier as a
     #:   `TypeURI <https://github.com/in-toto/attestation/blob/main/spec/v1/field_types.md#TypeURI>`_.
-    id: str  # noqa: A003
+    id: str
 
     #: A mapping from components of the verifier and their corresponding versions.
     #: At the moment, this field only includes Macaron itself.

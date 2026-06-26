@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for validation of in-toto attestation version 0.1."""
@@ -38,7 +38,7 @@ from macaron.slsa_analyzer.provenance.intoto.v01 import validate_intoto_statemen
                 "predicateType": "https://slsa.dev/provenance/v0.2",
                 "predicate": {
                     "builder": {
-                        "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.5.0"  # noqa: B950
+                        "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@refs/tags/v1.5.0"
                     },
                     "buildType": "https://github.com/slsa-framework/slsa-github-generator/go@v1",
                 },

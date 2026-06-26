@@ -54,7 +54,7 @@ def deserialize_bom_json(file_path: Path) -> Bom:
         If the bom.json file cannot be located or deserialized.
     """
     if not os.path.exists(file_path):
-        raise CycloneDXParserError(f"Unable to locate any BOM files at: {str(file_path.parent)}.")
+        raise CycloneDXParserError(f"Unable to locate any BOM files at: {file_path.parent!s}.")
 
     # We use the `cyclonedx-python-library` library for deserialization following the example here:
     # https://cyclonedx-python-library.readthedocs.io/en/v7.3.4/examples.html
@@ -76,7 +76,7 @@ def deserialize_bom_json(file_path: Path) -> Bom:
 
             if validation_errors:
                 logger.debug("BOM file is invalid: %s", repr(validation_errors))
-                raise CycloneDXParserError(f"BOM file is invalid: {repr(validation_errors)}")
+                raise CycloneDXParserError(f"BOM file is invalid: {validation_errors!r}")
 
             logger.debug("Successfully validated the BOM file at %s", file_path)
 

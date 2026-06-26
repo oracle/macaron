@@ -128,7 +128,7 @@ class BaseCheck:
         # refactoring.
         justification_str = ""
         for _, ele in check_result_data.justification_report:
-            justification_str += f"{str(ele)}. "
+            justification_str += f"{ele!s}. "
 
         target.bulk_update_req_status(
             self.check_info.eval_reqs,

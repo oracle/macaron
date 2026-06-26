@@ -61,7 +61,7 @@ class Analysis(ORMBase):
     __tablename__ = "_analysis"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The analysis start time.
     analysis_time: Mapped[datetime] = mapped_column(RFC3339DateTime, nullable=False)
@@ -83,7 +83,7 @@ class PackageURLMixin:
     """
 
     #: A short code to identify the type of the package.
-    type: Mapped[str] = mapped_column(  # noqa: A003
+    type: Mapped[str] = mapped_column(
         String(16),
         nullable=False,
         comment=(
@@ -135,7 +135,7 @@ class Component(PackageURLMixin, ORMBase):
     __tablename__ = "_component"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # TODO: The unique constraint on PURL is set to False for now and we be turned on in future.
     #: The PURL column is for the benefit of Souffle to make it easy to query based on a PURL string.
@@ -270,7 +270,7 @@ class Repository(ORMBase):
     __tablename__ = "_repository"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # Because component is the parent table, we should define the foreign key here in the child table.
     #: The foreign key to the software component.
@@ -286,7 +286,7 @@ class Repository(ORMBase):
     full_name: Mapped[str] = mapped_column(String, nullable=False)
 
     #: The PURL type.
-    type: Mapped[str] = mapped_column(String, nullable=False)  # noqa: A003
+    type: Mapped[str] = mapped_column(String, nullable=False)
 
     # TODO: for locally cloned repos, do we have both type and owner, or can they be null?
     #: The PURL namespace, which is the owner in pkg:github.com/owner/name@commit-sha.
@@ -374,7 +374,7 @@ class SLSARequirement(ORMBase):
     # See https://alembic.sqlalchemy.org/en/latest/naming.html
     __table_args__ = (UniqueConstraint("component_id", "requirement_name", name="uq__slsa_requirement_component_id"),)
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The software component ID.
     component_id: Mapped[int] = mapped_column(Integer, ForeignKey("_component.id"), nullable=False)
@@ -408,7 +408,7 @@ class MappedCheckResult(ORMBase):
     __table_args__ = (UniqueConstraint("component_id", "check_id", name="uq__check_result_component_id"),)
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(  # noqa: A003 # pylint: disable=invalid-name
+    id: Mapped[int] = mapped_column(  # pylint: disable=invalid-name
         Integer, primary_key=True, autoincrement=True
     )
 
@@ -440,7 +440,7 @@ class CheckFacts(ORMBase):
     __tablename__ = "_check_facts"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The confidence score to estimate the accuracy of the check fact. This value should be in the range [0.0, 1.0] with
     #: a lower value depicting a lower confidence. Because some analyses used in checks may use
@@ -468,7 +468,7 @@ class CheckFacts(ORMBase):
     checkresult: Mapped["MappedCheckResult"] = relationship(back_populates="checkfacts")
 
     #: The polymorphic inheritance configuration.
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "CheckFacts",
         "polymorphic_on": "check_type",
     }
@@ -480,7 +480,7 @@ class Provenance(ORMBase):
     __tablename__ = "_provenance"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The foreign key to the software component.
     component_id: Mapped[int] = mapped_column(Integer, ForeignKey(Component.id), nullable=False)
@@ -525,7 +525,7 @@ class ReleaseArtifact(ORMBase):
     __tablename__ = "_release_artifact"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The name of the artifact.
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -549,7 +549,7 @@ class HashDigest(ORMBase):
     __tablename__ = "_hash_digest"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The hash digest value.
     digest: Mapped[str] = mapped_column(String, nullable=False)
@@ -573,7 +573,7 @@ class ProvenanceSubject(ORMBase):
     __tablename__ = "_provenance_subject"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The component id of the provenance subject.
     component_id: Mapped[int] = mapped_column(
@@ -638,7 +638,7 @@ class RepoFinderMetadata(ORMBase):
     __tablename__ = "_repo_finder_metadata"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     #: The foreign key to the software component.
     component_id: Mapped[int] = mapped_column(Integer, ForeignKey(Component.id), nullable=False)

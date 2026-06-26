@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles in-toto version 1 attestations."""
@@ -21,7 +21,7 @@ class InTotoV1Statement(TypedDict):
 
     _type: str
     subject: list[InTotoV1ResourceDescriptor]
-    predicateType: str  # noqa: N815
+    predicateType: str
     predicate: dict[str, JsonType] | None
 
 

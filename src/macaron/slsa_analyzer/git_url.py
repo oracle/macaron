@@ -325,7 +325,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
                     # ``git clone`` from prompting for login credentials.
                     "GIT_TERMINAL_PROMPT": "0",
                 }
-                subprocess.run(  # noqa: S603
+                subprocess.run(
                     args=["git", "fetch", "origin", "--force", "--tags", "--prune", "--prune-tags"],
                     capture_output=True,
                     cwd=clone_dir,
@@ -350,7 +350,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
             # ``git clone`` from prompting for login credentials.
             "GIT_TERMINAL_PROMPT": "0",
         }
-        result = subprocess.run(  # noqa: S603
+        result = subprocess.run(
             args=["git", "clone", "--filter=tree:0", url],
             capture_output=True,
             cwd=parent_dir,
@@ -390,8 +390,8 @@ def list_remote_references(arguments: list[str], repo: str) -> str | None:
         The result of the command.
     """
     try:
-        result = subprocess.run(  # noqa: S603
-            args=["git", "ls-remote"] + arguments + [repo],
+        result = subprocess.run(
+            args=["git", "ls-remote", *arguments, repo],
             capture_output=True,
             # By setting stdin to /dev/null and using a new session, we prevent all possible user input prompts.
             stdin=subprocess.DEVNULL,

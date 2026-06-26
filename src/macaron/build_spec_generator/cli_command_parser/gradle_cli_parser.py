@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Gradle CLI Command parser."""
@@ -58,7 +58,7 @@ class GradleOptionalFlag(OptionDef[bool]):
 
         if self.short_names:
             arg_parse.add_argument(
-                *(self.short_names + [self.long_name]),
+                *([*self.short_names, self.long_name]),
                 **kwargs,
             )
         else:
@@ -445,7 +445,7 @@ GRADLE_OPTION_DEF: list[OptionDef] = [
 class GradleCLICommandParser:
     """A Gradle CLI Command Parser."""
 
-    ACCEPTABLE_EXECUTABLE = {"gradle", "gradlew"}
+    ACCEPTABLE_EXECUTABLE = frozenset(("gradle", "gradlew"))
 
     def __init__(self) -> None:
         """Initialize the instance."""

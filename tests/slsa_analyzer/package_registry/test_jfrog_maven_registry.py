@@ -454,11 +454,11 @@ def test_extract_file_names_from_folder_info_payload(
                 },
                 "downloadUri": "https://registry.jfrog.com/repo/com/fasterxml/jackson/core/jackson-annotations/2.9.9/jackson-annotations-2.9.9.jar"
             }
-            """,  # noqa: B950
+            """,
             JFrogMavenAssetMetadata(
                 size_in_bytes=66897,
                 sha256_digest="17918b3097285da88371fac925922902a9fe60f075237e76f406c09234c8d614",
-                download_uri="https://registry.jfrog.com/repo/com/fasterxml/jackson/core/jackson-annotations/2.9.9/jackson-annotations-2.9.9.jar",  # noqa: B950
+                download_uri="https://registry.jfrog.com/repo/com/fasterxml/jackson/core/jackson-annotations/2.9.9/jackson-annotations-2.9.9.jar",
             ),
             id="Valid",
         ),

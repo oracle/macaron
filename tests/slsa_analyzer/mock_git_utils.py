@@ -66,7 +66,7 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         # Store the index object as recommended by the documentation.
         current_index = git_wrapper.repo.index
         current_index.add(file_names)
-        current_index.commit(f"Add files: {str(file_names)}")
+        current_index.commit(f"Add files: {file_names!s}")
         return True
     except GitError:
         return False

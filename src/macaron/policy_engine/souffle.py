@@ -120,7 +120,8 @@ class SouffleWrapper:
             f"--output-dir={self.output_dir}",
             f"--fact-dir={self.fact_dir}",
             f"--library-dir={self.library_dir}",
-        ] + additional_args
+            *additional_args,
+        ]
         logger.debug("Executing souffle: %s", " ".join(cmd))
         result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # noqa: S603
         # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway.

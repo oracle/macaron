@@ -3,6 +3,7 @@
 
 """This module tests the GhAPIClient module."""
 
+from typing import ClassVar
 from unittest import TestCase
 
 import pytest
@@ -13,7 +14,7 @@ from macaron.slsa_analyzer.git_service.api_client import GhAPIClient
 class TestGhAPIClient(TestCase):
     """This test provide tests for the GhAPIClient class."""
 
-    mock_profile = {
+    mock_profile: ClassVar[dict] = {
         "headers": {
             "Authorization": "sample_token",
             "Accept": "application/vnd.github.v3+json",
@@ -21,9 +22,7 @@ class TestGhAPIClient(TestCase):
         "query": ["java+language:java"],
     }
 
-    error_mock_profile = {"wrong_field": "Wrong data"}
-
-    mock_query_list = ["java+language:java"]
+    error_mock_profile: ClassVar[dict] = {"wrong_field": "Wrong data"}
 
     def test_init(self) -> None:
         """Test if the search client is initiated correctly."""
@@ -32,7 +31,7 @@ class TestGhAPIClient(TestCase):
             "Authorization": "sample_token",
             "Accept": "application/vnd.github.v3+json",
         }
-        assert client.query_list == self.mock_query_list
+        assert client.query_list == ["java+language:java"]
 
         # Invalid profile
         with pytest.raises(KeyError):

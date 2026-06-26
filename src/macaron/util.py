@@ -619,7 +619,7 @@ class BytesDecoder:
     """
 
     # Taken from https://w3techs.com/technologies/overview/character_encoding.
-    COMMON_ENCODINGS = [
+    COMMON_ENCODINGS = (
         "ISO-8859-1",
         "cp1252",
         "cp1251",
@@ -630,7 +630,7 @@ class BytesDecoder:
         "cp1250",
         "ISO-8859-2",
         "big5",
-    ]
+    )
 
     @staticmethod
     def decode(data: bytes) -> str | None:

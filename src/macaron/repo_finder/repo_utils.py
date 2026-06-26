@@ -216,7 +216,7 @@ def get_repo_tags(git_obj: Git) -> dict[str, str]:
         logger.debug("")
         return {}
     try:
-        result = subprocess.run(  # noqa: S603
+        result = subprocess.run(
             args=["git", "show-ref", "--tags", "-d"],
             capture_output=True,
             cwd=repository_path,

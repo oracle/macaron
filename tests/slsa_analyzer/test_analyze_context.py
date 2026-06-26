@@ -3,8 +3,8 @@
 
 """This module contains tests for the AnalyzeContext module."""
 
+from types import MappingProxyType
 from unittest import TestCase
-from unittest.mock import MagicMock
 
 from macaron.code_analyzer.dataflow_analysis.core import NodeForest
 from macaron.json_tools import JsonType
@@ -21,12 +21,12 @@ from tests.conftest import MockAnalyzeContext
 class TestAnalyzeContext(TestCase):
     """This class tests the AnalyzeContext module."""
 
-    MOCK_CTX_DATA = {
-        ReqName.BUILD_SERVICE: SLSAReqStatus(),
-        ReqName.VCS: SLSAReqStatus(),
-    }
-
-    MOCK_GIT_OBJ = MagicMock()
+    MOCK_CTX_DATA = MappingProxyType(
+        {
+            ReqName.BUILD_SERVICE: SLSAReqStatus(),
+            ReqName.VCS: SLSAReqStatus(),
+        }
+    )
 
     MOCK_REPO_PATH = "/home/repo_name"
 
@@ -41,7 +41,7 @@ class TestAnalyzeContext(TestCase):
         self.analyze_ctx.component.repository.fs_path = self.MOCK_REPO_PATH
         self.analyze_ctx.component.repository.commit_sha = self.MOCK_COMMIT_HASH
         self.analyze_ctx.component.repository.commit_date = self.MOCK_DATE
-        self.analyze_ctx.ctx_data = self.MOCK_CTX_DATA
+        self.analyze_ctx.ctx_data = {**self.MOCK_CTX_DATA}
 
     def test_update_req_status(self) -> None:
         """Test updating one requirement in the context."""

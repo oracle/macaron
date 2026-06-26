@@ -132,7 +132,7 @@ def verify_npm_provenance(purl: PackageURL, provenance_assets: list[ProvenanceAs
         logger.debug("Signed and unsigned digests do not match.")
         return False
 
-    key = list(signed_digest.keys())[0]
+    key = next(iter(signed_digest.keys()))
     logger.debug(
         "Verified provenance against signed companion. Signed: %s, Unsigned: %s.",
         signed_digest[key][:7],

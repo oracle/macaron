@@ -25,7 +25,7 @@ class ORMMappedTable(Base):
 
     __tablename__ = "_test_orm_table"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003 pylint # ignore=invalid-name
+    id = Column(Integer, primary_key=True, autoincrement=True)
     value = Column(String)
 
 

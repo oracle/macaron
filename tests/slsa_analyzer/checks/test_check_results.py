@@ -24,7 +24,7 @@ class MockFacts(CheckFacts):
     __tablename__ = "_test_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(  # noqa: A003 # pylint: disable=unsubscriptable-object
+    id: Mapped[int] = mapped_column(  # pylint: disable=unsubscriptable-object
         ForeignKey("_check_facts.id"), primary_key=True
     )
 
@@ -33,7 +33,7 @@ class MockFacts(CheckFacts):
         String, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_test_check",
     }
 

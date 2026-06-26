@@ -60,7 +60,7 @@ def extract_repo_and_commit_from_provenance(payload: InTotoPayload) -> tuple[str
 
     msg = (
         f"Extraction from provenance not supported for versions: "
-        f"predicate_type {payload.statement.get('predicateType')}, in-toto {str(type(payload))}."
+        f"predicate_type {payload.statement.get('predicateType')}, in-toto {type(payload)!s}."
     )
     logger.debug(msg)
     raise ProvenanceError(msg)

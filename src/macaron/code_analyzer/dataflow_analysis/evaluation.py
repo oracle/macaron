@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Functions for evaluating and resolving dataflow analysis expressions."""
@@ -766,7 +766,9 @@ def parse_str_expr_split(str_expr: facts.Value, delimiter_char: str, maxsplit: i
             )
             if len(split_lhs) == 1 and len(split_rhs) == 1:
                 return [str_expr]
-            return (
-                split_lhs[:-1] + [facts.BinaryStringOp.get_string_concat(split_lhs[-1], split_rhs[0])] + split_rhs[1:]
-            )
+            return [
+                *split_lhs[:-1],
+                facts.BinaryStringOp.get_string_concat(split_lhs[-1], split_rhs[0]),
+                *split_rhs[1:],
+            ]
     return [str_expr]

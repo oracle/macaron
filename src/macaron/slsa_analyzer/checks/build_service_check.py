@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the BuildServiceCheck class."""
@@ -32,7 +32,7 @@ class BuildServiceFacts(CheckFacts):
     __tablename__ = "_build_service_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The name of the tool used to build.
     build_tool_name: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
@@ -64,7 +64,7 @@ class BuildServiceFacts(CheckFacts):
         String, nullable=True, info={"justification": JustificationType.HREF}
     )
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_build_service_check",
     }
 
