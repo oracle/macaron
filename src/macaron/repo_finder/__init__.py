@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This package contains the repository and commit finding tools for software components."""
@@ -23,4 +23,4 @@ def to_domain_from_known_purl_types(purl_type: str) -> str | None:
         The git service domain corresponding to the purl type or None if the purl type is unknown.
     """
     known_types = {"github": "github.com", "bitbucket": "bitbucket.org"}
-    return known_types.get(purl_type, None)
+    return known_types.get(purl_type)

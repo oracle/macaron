@@ -171,10 +171,7 @@ def check_repo_urls_are_equivalent(repo_1: str, repo_2: str) -> bool:
     """
     repo_url_1 = urlparse(repo_1)
     repo_url_2 = urlparse(repo_2)
-    if repo_url_1.hostname != repo_url_2.hostname or repo_url_1.path != repo_url_2.path:
-        return False
-
-    return True
+    return not (repo_url_1.hostname != repo_url_2.hostname or repo_url_1.path != repo_url_2.path)
 
 
 def get_repo_tags(git_obj: Git) -> dict[str, str]:

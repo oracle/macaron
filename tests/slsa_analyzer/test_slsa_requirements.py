@@ -9,7 +9,7 @@ from macaron.slsa_analyzer.slsa_req import SLSAReqStatus
 def test_slsa_requirements_status() -> None:
     """Test requirement status."""
     req_status = SLSAReqStatus()
-    assert (False, False, "") == req_status.get_tuple()
+    assert req_status.get_tuple() == (False, False, "")
 
     feedback = "This repo passes this requirement"
     req_status.set_status(True, feedback)

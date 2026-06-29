@@ -164,7 +164,7 @@ def get_fact_input_statements(db_name: os.PathLike | str, metadata: MetaData) ->
     return SouffleProgram(
         directives={
             f'.input {table_name[1:]} (IO=sqlite, filename="{db_name}")'
-            for table_name in metadata.tables.keys()
+            for table_name in metadata.tables
             if table_name[0] == "_"
         }
     )

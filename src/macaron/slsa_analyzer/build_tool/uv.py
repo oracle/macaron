@@ -75,9 +75,7 @@ class Uv(BaseBuildTool):
         file_paths = (file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
         for config_path in file_paths:
             if config_path and os.path.basename(config_path) == "pyproject.toml":
-                if package_lock_exists:
-                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
-                elif pyproject.contains_build_tool("uv", config_path):
+                if package_lock_exists or pyproject.contains_build_tool("uv", config_path):
                     results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
                 else:
                     for tool in self.build_requires + self.build_backend:

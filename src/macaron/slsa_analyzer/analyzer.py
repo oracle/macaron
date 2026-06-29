@@ -279,9 +279,8 @@ class Analyzer:
                     dup_record.context = find_ctx
 
                 for record in report.get_records():
-                    if not record.status == SCMStatus.DUPLICATED_SCM:
-                        if record.context:
-                            store_analyze_context_to_db(record.context)
+                    if record.status != SCMStatus.DUPLICATED_SCM and record.context:
+                        store_analyze_context_to_db(record.context)
 
                 # Store dependency relations.
                 for parent, child in report.get_dependencies():
@@ -466,18 +465,17 @@ class Analyzer:
         )
 
         # Check if repo came from direct input.
-        if parsed_purl:
-            if check_if_input_purl_provenance_conflict(
-                bool(repo_path_input),
-                provenance_repo_url,
-                parsed_purl,
-            ):
-                return Record(
-                    record_id=repo_id,
-                    description="Input mismatch between repo (purl) and provenance.",
-                    pre_config=config,
-                    status=SCMStatus.ANALYSIS_FAILED,
-                )
+        if parsed_purl and check_if_input_purl_provenance_conflict(
+            bool(repo_path_input),
+            provenance_repo_url,
+            parsed_purl,
+        ):
+            return Record(
+                record_id=repo_id,
+                description="Input mismatch between repo (purl) and provenance.",
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
 
         # Create the component.
         try:
@@ -1143,7 +1141,7 @@ class Analyzer:
         """Determine the package registries used by the software component."""
         relevant_package_registries = []
         for package_registry in package_registries_info:
-            if not package_registry.ecosystem == analyze_ctx.component.type:
+            if package_registry.ecosystem != analyze_ctx.component.type:
                 continue
             relevant_package_registries.append(package_registry)
 

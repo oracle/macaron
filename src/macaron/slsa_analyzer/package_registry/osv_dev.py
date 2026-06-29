@@ -261,11 +261,10 @@ class OSVDevService:
         results = res_obj.get("results") if res_obj else None
 
         if isinstance(results, list):
-            if expected_size:
-                if len(results) != expected_size:
-                    raise APIAccessError(
-                        f"Failed to retrieve a valid result from {url}: result count does not match the expected count."
-                    )
+            if expected_size and len(results) != expected_size:
+                raise APIAccessError(
+                    f"Failed to retrieve a valid result from {url}: result count does not match the expected count."
+                )
 
             return results
 

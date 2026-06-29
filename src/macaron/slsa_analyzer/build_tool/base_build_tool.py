@@ -149,9 +149,8 @@ def file_exists(
         )
 
     # Check for file directly at root.
-    if target_path := find_first_matching_file(root_dir, file_name):
-        if _accepted(target_path):
-            return target_path
+    if (target_path := find_first_matching_file(root_dir, file_name)) and _accepted(target_path):
+        return target_path
 
     def _enqueue_subdirs(directory: Path, queue: deque[Path]) -> None:
         """Add non-symlink subdirectories to the search queue."""
@@ -170,9 +169,8 @@ def file_exists(
         if filters and any(keyword in current_dir.name.lower() for keyword in filters):
             continue
 
-        if candidate_path := find_first_matching_file(current_dir, file_name):
-            if _accepted(candidate_path):
-                return candidate_path
+        if (candidate_path := find_first_matching_file(current_dir, file_name)) and _accepted(candidate_path):
+            return candidate_path
 
         _enqueue_subdirs(current_dir, search_queue)
 
@@ -317,10 +315,9 @@ class BaseBuildTool(ABC):
         bool
             True if the type matches or is not restricted; False otherwise.
         """
-        if component_purl_type.upper() in [b.name for b in BuildEcosystem] and component_purl_type != self.purl_type:
-            return False
-        # Otherwise return True because the component PURL type can repositories, like github.
-        return True
+        return not (
+            component_purl_type.upper() in (b.name for b in BuildEcosystem) and component_purl_type != self.purl_type
+        )
 
     def get_dep_analyzer(self) -> DependencyAnalyzer:
         """Create a DependencyAnalyzer for the build tool.
@@ -427,10 +424,7 @@ class BaseBuildTool(ABC):
             return False
 
         build_tools = set(itertools.chain(self.builder, self.packager, self.publisher, self.interpreter))
-        if any(tool for tool in build_tools if tool == cmd_program_name):
-            return True
-
-        return False
+        return bool(any(tool for tool in build_tools if tool == cmd_program_name))
 
     def match_cmd_args(self, cmd: list[str], tools: list[str], args: list[str]) -> bool:
         """

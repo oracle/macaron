@@ -79,7 +79,7 @@ def test_comparing_gradle_cli_command_unequal(
     """Test comparing two unequal GradleCLICommand objects."""
     this_command = gradle_cli_parser.parse(this.split())
     that_command = gradle_cli_parser.parse(that.split())
-    assert not this_command == that_command
+    assert this_command != that_command
 
 
 @pytest.mark.parametrize(

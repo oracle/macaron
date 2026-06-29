@@ -572,7 +572,7 @@ class PyPIRegistry(PackageRegistry):
             if releases:
                 # Find smallest requirement satisfying parsed_requirement.name
                 version_tuples: list[tuple[str, Version]] = []
-                for version in releases.keys():
+                for version in releases:
                     try:
                         version_name = str(version)
                         parsed_version = Version(version_name)
@@ -652,9 +652,7 @@ class PyPIInspectorAsset:
 
     def __bool__(self) -> bool:
         """Determine if this inspector object is empty."""
-        if (self.package_sdist_link or self.package_whl_links) and self.package_link_reachability:
-            return True
-        return False
+        return bool((self.package_sdist_link or self.package_whl_links) and self.package_link_reachability)
 
     @staticmethod
     def get_structure(pypi_inspector_url: str) -> list[str] | None:
@@ -1125,11 +1123,7 @@ class PyPIPackageJsonAsset:
         if not os.path.isabs(path):
             path = os.path.join(self.package_sourcecode_path, path)
 
-        if not os.path.exists(path):
-            # Could not find a file at that path
-            return False
-
-        return True
+        return os.path.exists(path)
 
     def iter_sourcecode(self) -> Iterator[tuple[str, bytes]]:
         """
@@ -1152,10 +1146,7 @@ class PyPIPackageJsonAsset:
 
         for root, _directories, files in os.walk(self.package_sourcecode_path):
             for file in files:
-                if root == ".":
-                    root_path = os.getcwd() + os.linesep
-                else:
-                    root_path = root
+                root_path = os.getcwd() + os.linesep if root == "." else root
                 filepath = os.path.join(root_path, file)
 
                 with open(filepath, "rb") as handle:

@@ -397,10 +397,7 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
             priority = row[col_index["finding_priority"]]
             finding_type = str(row[col_index["finding_type"]])
             workflow = str(row[col_index["vulnerable_workflow"]])
-            if group == "workflow_security_issue":
-                subject = workflow
-            else:
-                subject = f"{action}@{version}" if version else action
+            subject = workflow if group == "workflow_security_issue" else f"{action}@{version}" if version else action
             _append_line(summary_path, f"{row_counter}. **`{subject}`** (`{finding_type}`, priority `{priority}`)")
             _append_line(summary_path, f"- Workflow: `{workflow}`")
 

@@ -52,10 +52,9 @@ class TestUtil(TestCase):
         # Testing copy behaviors.
         with patch("os.makedirs") as mock_make_dirs:
             # Test ignoring existed files.
-            with patch("os.path.exists", return_value=True):
-                with patch("macaron.util.copy_file") as mock_copy_file:
-                    assert util.copy_file_bulk(["file"], src_path, target_path)
-                    mock_copy_file.assert_not_called()
+            with patch("os.path.exists", return_value=True), patch("macaron.util.copy_file") as mock_copy_file:
+                assert util.copy_file_bulk(["file"], src_path, target_path)
+                mock_copy_file.assert_not_called()
 
             # Files do not exist, perform the copy operation.
             with patch("os.path.exists", return_value=False):

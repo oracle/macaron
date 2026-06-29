@@ -169,29 +169,28 @@ class BuildServiceCheck(BaseCheck):
                 # We currently don't parse these CI configuration files.
                 # We just look for a keyword for now.
                 for unparsed_ci in (Travis, CircleCI, GitLabCI):
-                    if isinstance(ci_service, unparsed_ci):
-                        if tool.ci_build_kws[ci_service.name]:
-                            build_kw, config_name = ci_service.has_kws_in_config(
-                                tool.ci_build_kws[ci_service.name],
-                                build_tool_name=tool.name,
-                                repo_path=ctx.component.repository.fs_path,
-                            )
-                            if not config_name:
-                                break
+                    if isinstance(ci_service, unparsed_ci) and tool.ci_build_kws[ci_service.name]:
+                        build_kw, config_name = ci_service.has_kws_in_config(
+                            tool.ci_build_kws[ci_service.name],
+                            build_tool_name=tool.name,
+                            repo_path=ctx.component.repository.fs_path,
+                        )
+                        if not config_name:
+                            break
 
-                            store_inferred_build_info_results(
-                                ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=config_name
+                        store_inferred_build_info_results(
+                            ctx=ctx, ci_info=ci_info, ci_service=ci_service, trigger_link=config_name
+                        )
+                        result_tables.append(
+                            BuildServiceFacts(
+                                build_tool_name=tool.name,
+                                language=tool.language.value,
+                                ci_service_name=ci_service.name,
+                                build_command=build_kw,
+                                confidence=Confidence.LOW,
                             )
-                            result_tables.append(
-                                BuildServiceFacts(
-                                    build_tool_name=tool.name,
-                                    language=tool.language.value,
-                                    ci_service_name=ci_service.name,
-                                    build_command=build_kw,
-                                    confidence=Confidence.LOW,
-                                )
-                            )
-                            overall_res = CheckResultType.PASSED
+                        )
+                        overall_res = CheckResultType.PASSED
 
         # The check passing is contingent on at least one passing, if
         # one passes treat whole check as passing. We do still need to

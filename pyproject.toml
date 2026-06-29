@@ -317,6 +317,7 @@ select = [
     "PYI",  # flake8-pyi
     "RUF",  # ruff-specific rules
     "S",  # flake8-bandit
+    "SIM",  # flake8-simplify
     "SLOT",  # flake8-slots
     "T20",  # flake8-print
     "UP",  # pyupgrade
@@ -327,6 +328,7 @@ ignore = [
     "D404",  # D404: First word of the docstring should not be "This"
     "E203",  # E203: whitespace before ‘,’, ‘;’, or ‘:’ (not Black compliant)
     "E501",  # E501: line too long (managed better by Bugbear's B950)
+    "SIM102",  # Use a single `if` statement instead of nested `if` statements
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
@@ -349,4 +351,5 @@ convention = "numpy"
     "F",  # pyflakes
     "N",  # pep8-naming
     "S",  # flake8-bandit
+    "SIM",  # flake8-simplify
 ]

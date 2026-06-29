@@ -293,7 +293,4 @@ def get_result_as_bool(check_result_type: CheckResultType) -> bool:
     -------
     bool
     """
-    if check_result_type in (CheckResultType.FAILED, CheckResultType.UNKNOWN):
-        return False
-
-    return True
+    return check_result_type not in (CheckResultType.FAILED, CheckResultType.UNKNOWN)

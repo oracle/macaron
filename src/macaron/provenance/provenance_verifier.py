@@ -150,9 +150,7 @@ def check_purls_equivalent(original_purl: PackageURL, new_purl: PackageURL) -> b
         or original_purl.namespace != new_purl.namespace
     ):
         return False
-    if original_purl.version and original_purl.version != new_purl.version:
-        return False
-    return True
+    return not (original_purl.version and original_purl.version != new_purl.version)
 
 
 def verify_ci_provenance(analyze_ctx: AnalyzeContext, ci_info: CIInfo, download_path: str) -> bool:

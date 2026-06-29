@@ -237,10 +237,7 @@ class ValidateSchemaStep(Step[ValidateSchemaStepOptions]):
     @staticmethod
     def options_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
         """Generate the schema of a schema validation step."""
-        if check_expected_result_files:
-            check_file = check_required_file(cwd)
-        else:
-            check_file = cfgv.check_string
+        check_file = check_required_file(cwd) if check_expected_result_files else cfgv.check_string
 
         return cfgv.Map(
             "schema options",
@@ -302,10 +299,7 @@ class CompareStep(Step[CompareStepOptions]):
     @staticmethod
     def options_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
         """Generate the schema of a compare step."""
-        if check_expected_result_files:
-            check_file = check_required_file(cwd)
-        else:
-            check_file = cfgv.check_string
+        check_file = check_required_file(cwd) if check_expected_result_files else cfgv.check_string
 
         return cfgv.Map(
             "compare options",

@@ -82,7 +82,7 @@ def view_exists(
     bool
         Returns `True` if the view exists in the database, `False` otherwise.
     """
-    if isinstance(ddl, CreateView) or isinstance(ddl, DropView):
+    if isinstance(ddl, (CreateView, DropView)):
         assert isinstance(bind, Connection)  # noqa: S101
         return ddl.name in sa.inspect(bind).get_view_names()
     return False

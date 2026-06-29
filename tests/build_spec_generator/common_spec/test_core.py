@@ -24,14 +24,14 @@ from macaron.slsa_analyzer.checks.build_tool_check import BuildToolFacts
     [
         pytest.param(
             [
-                "make clean".split(),
-                "mvn clean package".split(),
+                ["make", "clean"],
+                ["mvn", "clean", "package"],
             ],
             "make clean && mvn clean package",
         ),
         pytest.param(
             [
-                "mvn clean package".split(),
+                ["mvn", "clean", "package"],
             ],
             "mvn clean package",
         ),

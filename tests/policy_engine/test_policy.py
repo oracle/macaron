@@ -19,9 +19,8 @@ DATABASE_FILE = os.path.join(Path(__file__).parent.joinpath("resources", "facts"
 @pytest.fixture()
 def database_setup() -> None:
     """Prepare the database file."""
-    if not os.path.exists(DATABASE_FILE):
-        if os.path.exists(DATABASE_FILE + ".gz"):
-            subprocess.run(["gunzip", "-k", DATABASE_FILE + ".gz"], check=True, shell=False)  # noqa: S603 S607
+    if not os.path.exists(DATABASE_FILE) and os.path.exists(DATABASE_FILE + ".gz"):
+        subprocess.run(["gunzip", "-k", DATABASE_FILE + ".gz"], check=True, shell=False)  # noqa: S603 S607
 
 
 def test_dump_prelude(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name

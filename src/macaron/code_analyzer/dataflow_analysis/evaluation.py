@@ -382,9 +382,8 @@ class ReadBindings:
             return bindings
 
         for read, val in bindings.bindings.items():
-            if read in self.bindings:
-                if self.bindings[read] != val:
-                    return None
+            if read in self.bindings and self.bindings[read] != val:
+                return None
 
         combined_bindings = frozendict({**self.bindings, **bindings.bindings})
         return ReadBindings(combined_bindings)

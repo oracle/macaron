@@ -736,7 +736,7 @@ def parse_remote_url(
             return None
 
         path = ""
-        if not port.isdecimal():
+        if not port.isdecimal():  # noqa: SIM108
             # Happen for ssh://git@github.com:owner/project.git
             # where parsed_url.netloc="git@github.com:owner", port="owner"
             # and parsed_url.path="project.git".
@@ -763,16 +763,8 @@ def parse_remote_url(
         if not user or host not in allowed_git_service_hostnames:
             return None
 
-        path = ""
         port_num, _, path_remain = port_path.strip("/").partition("/")
-        if not port_num.isdecimal():
-            # port_path doesn't have any port number (e.g. port_path == /org/name).
-            # We use all of port_path as the path.
-            path = port_path
-        else:
-            # port_path have valid port number (e.g. port_path == 7999/org/name).
-            # We only use the rest of the path.
-            path = path_remain
+        path = path_remain if port_num.isdecimal() else port_path
 
         path_params = path.strip("/").split("/")
         if len(path_params) < 2:
@@ -902,10 +894,7 @@ def is_empty_repo(git_obj: Git) -> bool:
     # https://stackoverflow.com/questions/5491832/how-can-i-check-whether-a-git-repository-has-any-commits-in-it
     try:
         head_commit_hash = git_obj.repo.git.rev_parse("HEAD")
-        if not head_commit_hash:
-            return True
-
-        return False
+        return bool(not head_commit_hash)
     except GitCommandError:
         return True
 

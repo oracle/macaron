@@ -400,7 +400,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         if count == 1:
             this_version_pattern = this_version_pattern + INFIX_1
         elif count > 1:
-            if multi_sep:
+            if multi_sep:  # noqa: SIM108
                 # Allow for a change in separator type.
                 this_version_pattern = this_version_pattern + INFIX_3
             else:

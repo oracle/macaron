@@ -707,9 +707,8 @@ class RichConsoleHandler(RichHandler, TableBuilder):
             dump_defaults_table.add_column("Value", justify="left")
             dump_defaults_table.add_row("Dump Defaults", self.dump_defaults)
             layout = [*layout, dump_defaults_table]
-        elif self.command == "gen-build-spec":
-            if self.gen_build_spec_table.row_count > 0:
-                layout = [*layout, self.gen_build_spec_table]
+        elif self.command == "gen-build-spec" and self.gen_build_spec_table.row_count > 0:
+            layout = [*layout, self.gen_build_spec_table]
         if self.verbose:
             layout = [*layout, "", self.verbose_panel]
         if self.error_message:

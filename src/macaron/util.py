@@ -66,10 +66,9 @@ def url_is_safe(url: str, allow_list: list[str] | None = None, allow_login: bool
         parsed_url = urllib.parse.urlparse(url)
     except ValueError:
         return False
-    if not allow_login:
-        if parsed_url.username or parsed_url.password:
-            logger.debug("Potential attempt to redirect to an invalid URL: hostname %s", parsed_url.hostname)
-            return False
+    if not allow_login and (parsed_url.username or parsed_url.password):
+        logger.debug("Potential attempt to redirect to an invalid URL: hostname %s", parsed_url.hostname)
+        return False
 
     hostname = parsed_url.hostname
     if hostname is None or hostname == "":
@@ -371,9 +370,7 @@ def can_download_file(url: str, size_limit: int, timeout: int | None = None) -> 
         return False
 
     size = response.headers.get("Content-Length")
-    if size and int(size) <= size_limit:
-        return True
-    return False
+    return bool(size and int(size) <= size_limit)
 
 
 def download_file_with_size_limit(
@@ -471,10 +468,7 @@ def check_rate_limit(response: Response) -> None:
     response : Response
         The latest response from GitHub API.
     """
-    if "X-RateLimit-Remaining" in response.headers:
-        remains = int(response.headers["X-RateLimit-Remaining"])
-    else:
-        remains = 2
+    remains = int(response.headers["X-RateLimit-Remaining"]) if "X-RateLimit-Remaining" in response.headers else 2
 
     if remains <= 1:
         rate_limit_reset = response.headers.get("X-RateLimit-Reset", default="")

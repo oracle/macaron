@@ -254,10 +254,7 @@ class Registry:
         >>> Registry._validate_check_id_format("Some_Thing', '', '%(*$)")
         False
         """
-        if (not isinstance(check_id, str)) or (not Registry._id_format.match(check_id)):
-            return False
-
-        return True
+        return not (not isinstance(check_id, str) or not Registry._id_format.match(check_id))
 
     @staticmethod
     def _validate_check_relationship(relationship: Any) -> bool:
@@ -277,16 +274,13 @@ class Registry:
         bool
             True if valid, else False.
         """
-        if (
+        return bool(
             relationship
             and isinstance(relationship, tuple)
             and len(relationship) == 2
             and isinstance(relationship[0], str)
             and isinstance(relationship[1], CheckResultType)
-        ):
-            return True
-
-        return False
+        )
 
     def get_parents(self, check_id: str) -> set[str]:
         """Return the ids of all direct parent checks.
