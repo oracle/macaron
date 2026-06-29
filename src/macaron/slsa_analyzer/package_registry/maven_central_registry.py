@@ -243,8 +243,8 @@ class MavenCentralRegistry(PackageRegistry):
         """Return the timestamp of the most recent release of the package on Maven Central.
 
         Uses the same Maven Central Search REST API as ``find_publish_timestamp``
-        but omits the version filter and sorts by timestamp descending so the
-        first result is always the newest release.  This allows the registry
+        but omits the version filter. All releases are fetched and sorted in
+        Python by timestamp to find the most recent one. This allows the registry
         maintainability check to evaluate release recency without requiring a
         pinned version in the PURL.
 
@@ -279,9 +279,8 @@ class MavenCentralRegistry(PackageRegistry):
                         [
                             "+AND+".join(query_params),
                             "core=gav",
-                            "rows=1",
+                            "rows=100",
                             "wt=json",
-                            "sort=timestamp+desc",
                         ]
                     ),
                     fragment="",
@@ -311,11 +310,17 @@ class MavenCentralRegistry(PackageRegistry):
                     f"No releases found for {namespace}:{name} on Maven Central."
                 )
 
-            timestamp = res_obj["response"]["docs"][0].get("timestamp")
-            if not timestamp:
+            # The Maven Central search API does not support server-side sorting,
+            # so we sort the returned releases by timestamp in Python to find the newest.
+            docs = res_obj["response"]["docs"]
+            docs_with_timestamp = [d for d in docs if d.get("timestamp")]
+            if not docs_with_timestamp:
                 raise InvalidHTTPResponseError(
                     f"The timestamp is missing in the response returned by {url}."
                 )
+
+            latest_doc = max(docs_with_timestamp, key=lambda d: d["timestamp"])
+            timestamp = latest_doc["timestamp"]
 
             logger.debug(
                 "Found latest release timestamp for %s:%s: %s.", namespace, name, timestamp
