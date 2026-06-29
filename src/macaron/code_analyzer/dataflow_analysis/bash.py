@@ -212,6 +212,27 @@ class BashScriptContext(core.Context):
             self.gha_expr_map_items,
         )
 
+    def with_stdout_stderr(
+        self, stdout_scope: core.ContextRef[facts.Scope], stdout_loc: facts.LocationSpecifier
+    ) -> BashScriptContext:
+        """Return a modified bash script context with the given stdout and stderr.
+
+        TODO currently stderr is not defined in BashScriptContext, so we cannot support here neither.
+        Add stderr to BashScriptContext to be able to support it here as well.
+        """
+        return BashScriptContext(
+            self.outer_context,
+            self.filesystem,
+            self.env,
+            self.func_decls,
+            self.stdin_scope,
+            self.stdin_loc,
+            stdout_scope,
+            stdout_loc,
+            self.source_filepath,
+            self.gha_expr_map_items,
+        )
+
     def with_gha_expr_map(self, gha_expr_map: dict[str, str]) -> BashScriptContext:
         """Return a modified bash script context with GitHub-expression placeholder mappings.
 
@@ -772,7 +793,11 @@ class BashStatementNode(core.InterpretationNode):
 
                     return {"default": build_pipe}
                 case bashparser_model.BinCmdOperators.PipeAll.value:
-                    pass
+
+                    def build_pipeall() -> core.Node:
+                        return BashPipeAllNode.create(cmd, self.context.get_non_owned())
+
+                    return {"default": build_pipeall}
                 case bashparser_model.BinCmdOperators.AndStmt.value:
 
                     def build_and() -> core.Node:
@@ -1270,6 +1295,113 @@ class BashPipeNode(core.ControlFlowGraphNode):
         lhs = BashStatementNode(pipe_cmd["X"], piped_from_context)
         rhs = BashStatementNode(pipe_cmd["Y"], piped_to_context)
         return BashPipeNode(definition=pipe_cmd, lhs=lhs, rhs=rhs, context=pipe_context)
+
+
+class BashPipeAllNode(core.ControlFlowGraphNode):
+    """Control flow node representing a Bash pipe (``|&``) binary command.
+
+    Control flow structure consists of executing the left-hand side, followed by the right-hand side.
+    A pipe scope and location is introduced to model the piping of the
+    output from the first command to the input of the second command. Compared to
+    a normal pipe (``|``), ``|&`` pipes both stdout and stderr (file descriptors 1 and 2)
+    of the left command into stdin of the right.
+    """
+
+    #: Parsed pipe all binary command AST.
+    definition: bashparser_model.BinaryCmd
+    #: Left-hand side (first) command.
+    lhs: BashStatementNode
+    #: Right-hand side (second) command.
+    rhs: BashStatementNode
+    #: Pipe context.
+    context: core.ContextRef[BashPipeContext]
+    #: Control flow graph.
+    _cfg: core.ControlFlowGraph
+
+    def __init__(
+        self,
+        definition: bashparser_model.BinaryCmd,
+        lhs: BashStatementNode,
+        rhs: BashStatementNode,
+        context: core.ContextRef[BashPipeContext],
+    ) -> None:
+        """Initialize Bash pipe all node.
+
+        Typically, construction should be done via the create function rather than using this constructor directly.
+
+        Parameters
+        ----------
+        definition: bashparser_model.BinaryCmd
+            Parsed pipe all binary command AST.
+        lhs: BashStatementNode
+            Left-hand side (first) command.
+        rhs: BashStatementNode
+            Right-hand side (second) command.
+        context: core.ContextRef[BashPipeContext]
+            Pipe context.
+        """
+        super().__init__()
+        self.definition = definition
+        self.lhs = lhs
+        self.rhs = rhs
+        self.context = context
+
+        self._cfg = core.ControlFlowGraph(self.lhs)
+        self._cfg.add_successor(self.lhs, core.DEFAULT_EXIT, self.rhs)
+        self._cfg.add_successor(self.rhs, core.DEFAULT_EXIT, core.DEFAULT_EXIT)
+
+    def children(self) -> Iterator[core.Node]:
+        """Yield the subcommands."""
+        yield self.lhs
+        yield self.rhs
+
+    def get_entry(self) -> core.Node:
+        """Return the entry node (the lhs node)."""
+        return self._cfg.get_entry()
+
+    def get_successors(self, node: core.Node, exit_type: core.ExitType) -> set[core.Node | core.ExitType]:
+        """Return the successor for a given node.
+
+        Returns a propagated early exit of the same type in the case of a BashExit or BashReturn exit type.
+        """
+        if isinstance(exit_type, (BashExit, BashReturn)):
+            return {exit_type}
+        return self._cfg.get_successors(node, core.DEFAULT_EXIT)
+
+    def get_exit_state_transfer_filter(self) -> core.StateTransferFilter:
+        """Return state transfer filter to clear scopes owned by this node after this node exits."""
+        return core.ExcludedScopesStateTransferFilter(core.get_owned_scopes(self.context))
+
+    def get_printable_properties_table(self) -> dict[str, set[tuple[str | None, str]]]:
+        """Return a properties table containing the line number and scopes."""
+        result: dict[str, set[tuple[str | None, str]]] = {}
+        result["line num (in script)"] = {(None, str(self.definition["Pos"]["Line"]))}
+        printing.add_context_owned_scopes_to_properties_table(result, self.context)
+        return result
+
+    @staticmethod
+    def create(
+        pipe_cmd: bashparser_model.BinaryCmd, context: core.NonOwningContextRef[BashScriptContext]
+    ) -> BashPipeAllNode:
+        """Create Bash pipe all node from pipe binary command AST.
+
+        Parameters
+        ----------
+        pipe_cmd: bashparser_model.BinaryCmd
+            Parsed pipe binary command AST.
+        context: core.NonOwningContextRef[BashScriptContext]
+            Bash script context.
+        """
+        pipe_context = core.OwningContextRef(BashPipeContext.create(context))
+        piped_from_context = core.NonOwningContextRef(
+            context.ref.with_stdout_stderr(pipe_context.ref.pipe_scope.get_non_owned(), pipe_context.ref.pipe_loc)
+        )
+        piped_to_context = core.NonOwningContextRef(
+            context.ref.with_stdin(pipe_context.ref.pipe_scope.get_non_owned(), pipe_context.ref.pipe_loc)
+        )
+        lhs = BashStatementNode(pipe_cmd["X"], piped_from_context)
+        rhs = BashStatementNode(pipe_cmd["Y"], piped_to_context)
+        return BashPipeAllNode(definition=pipe_cmd, lhs=lhs, rhs=rhs, context=pipe_context)
 
 
 class BashAndNode(core.ControlFlowGraphNode):
