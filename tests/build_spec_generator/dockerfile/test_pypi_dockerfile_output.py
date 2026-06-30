@@ -36,7 +36,10 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
                     confidence_score=1.0,
                 )
             ],
-            "build_requires": {"setuptools": "==80.9.0", "wheel": ""},
+            "build_requires": [
+                {"name": "setuptools", "version": "==80.9.0", "installer": "pip"},
+                {"name": "wheel", "installer": "pip"},
+            ],
             "build_backends": ["setuptools.build_meta"],
             "upstream_artifacts": {
                 "wheels": [
@@ -57,4 +60,18 @@ def test_successful_generation(
 ) -> None:
     """Ensure that dockerfile is correctly generated for pypi_build_spec."""
     monkeypatch.setattr(pypi_dockerfile_output, "get_latest_cpython_patch", lambda _major, _minor: "3.9.25")
+    assert gen_dockerfile(pypi_build_spec) == snapshot
+
+
+def test_maturin_binary_package_generation(snapshot: str, pypi_build_spec: BaseBuildSpecDict) -> None:
+    """Ensure a Dockerfile is generated for a Maturin-backed binary package."""
+    pypi_build_spec["has_binaries"] = True
+    pypi_build_spec["build_backends"] = ["maturin"]
+    pypi_build_spec["build_requires"] = [
+        {"name": "maturin", "version": ">=1,<2", "installer": "pip"},
+        {"name": "rustup", "installer": "bootstrap"},
+        {"name": "rust", "installer": "rustup"},
+        {"name": "pyo3", "version": "==0.24.0", "installer": "cargo"},
+    ]
+
     assert gen_dockerfile(pypi_build_spec) == snapshot
