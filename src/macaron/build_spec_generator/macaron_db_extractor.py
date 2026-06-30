@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the logic to extract build relation information for a PURL from the Macaron database."""
@@ -137,7 +137,7 @@ def compile_sqlite_select_statement(select_statement: Select) -> str:
         dialect=sqlite.dialect(),
         compile_kwargs={"literal_binds": True},
     )
-    return f"\n----- Begin SQLite query \n{str(compiled_sqlite)}\n----- End SQLite query\n"
+    return f"\n----- Begin SQLite query \n{compiled_sqlite!s}\n----- End SQLite query\n"
 
 
 def get_sql_stmt_latest_component_for_purl(purl: PackageURL) -> Select[tuple[Component]]:

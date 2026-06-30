@@ -90,7 +90,7 @@ def _write_header(
         vsa_path = _env("VSA_PATH", f"{output_dir}/vsa.intoto.jsonl")
         policy_succeeded = bool(vsa_path) and Path(vsa_path).is_file()
 
-    _append_line(summary_path, "<h2 id=\"macaron-analysis-summary\">Macaron Analysis Results</h2>")
+    _append_line(summary_path, '<h2 id="macaron-analysis-summary">Macaron Analysis Results</h2>')
     _append_line(summary_path)
     if upload_reports:
         _append_line(summary_path, "Download reports from this artifact link:")
@@ -157,7 +157,7 @@ def _query_selected_columns(
     if not selected:
         return [], []
 
-    sql = f"SELECT {', '.join(selected)} FROM {table_name}"
+    sql = f"SELECT {', '.join(selected)} FROM {table_name}"  # noqa: S608
     if where_clause:
         sql = f"{sql} WHERE {where_clause}"
     sql = f"{sql} ORDER BY 1"
@@ -373,13 +373,13 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
     _append_line(summary_path)
     _append_line(
         summary_path,
-        "<h2 id=\"macaron-full-findings-remediation-details\">Full Findings and Remediation Details</h2>",
+        '<h2 id="macaron-full-findings-remediation-details">Full Findings and Remediation Details</h2>',
     )
     _append_line(summary_path)
     _append_line(summary_path, "<details>")
     _append_line(summary_path, "<summary>Show full findings</summary>")
     _append_line(summary_path)
-    detail_groups = groups_in_rows if groups_in_rows else ["all_findings"]
+    detail_groups = groups_in_rows or ["all_findings"]
     row_counter = 1
     for group in detail_groups:
         if group_idx is None:
@@ -397,10 +397,7 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
             priority = row[col_index["finding_priority"]]
             finding_type = str(row[col_index["finding_type"]])
             workflow = str(row[col_index["vulnerable_workflow"]])
-            if group == "workflow_security_issue":
-                subject = workflow
-            else:
-                subject = f"{action}@{version}" if version else action
+            subject = workflow if group == "workflow_security_issue" else f"{action}@{version}" if version else action
             _append_line(summary_path, f"{row_counter}. **`{subject}`** (`{finding_type}`, priority `{priority}`)")
             _append_line(summary_path, f"- Workflow: `{workflow}`")
 
@@ -498,7 +495,7 @@ def _write_existing_policy_failure_diagnostics(
             cols, rows = _query_sql(conn, sql_query)
         if cols and rows:
             _append_line(summary_path)
-            _append_line(summary_path, f"#### Results")
+            _append_line(summary_path, "#### Results")
             if policy_name == "check-github-actions":
                 rendered = write_compact_gha_vuln_diagnostics(summary_path, cols, rows)
             else:
@@ -510,7 +507,7 @@ def _write_existing_policy_failure_diagnostics(
         _append_line(summary_path, "- Additional check-level details are unavailable for this failure.")
 
 
-def main() -> None:
+def _main() -> None:
     output_dir = Path(_env("OUTPUT_DIR", "output"))
     db_path = Path(_env("DB_PATH", os.path.join(str(output_dir), "macaron.db")))
     policy_report = _env("POLICY_REPORT", os.path.join(str(output_dir), "policy_report.json"))
@@ -547,4 +544,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    _main()

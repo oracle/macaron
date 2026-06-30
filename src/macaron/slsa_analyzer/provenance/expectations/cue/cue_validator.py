@@ -1,10 +1,10 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """The cue module invokes the CUE schema validator."""
 
 import os
-import subprocess  # nosec B404
+import subprocess
 
 from macaron import MACARON_PATH
 from macaron.config.defaults import defaults
@@ -39,7 +39,7 @@ def get_target(expectation_path: str | None) -> str:
     ]
 
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             check=True,
@@ -88,7 +88,7 @@ def validate_expectation(expectation_path: str, prov_stmt_path: str) -> bool:
     ]
 
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             check=True,

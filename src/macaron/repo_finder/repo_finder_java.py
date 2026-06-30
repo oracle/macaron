@@ -6,7 +6,7 @@
 import logging
 import re
 import urllib.parse
-from xml.etree.ElementTree import Element  # nosec B405
+from xml.etree.ElementTree import Element
 
 from packageurl import PackageURL
 
@@ -240,7 +240,7 @@ class JavaRepoFinder(BaseRepoFinder):
         for tag in tags:
             element: Element | None = pom
 
-            if tag.startswith("properties."):
+            if tag.startswith("properties."):  # noqa: SIM108
                 # Tags under properties are often "." separated.
                 # These can be safely split into two resulting tags as nested tags are not allowed here.
                 tag_parts = ["properties", tag[11:]]
@@ -319,10 +319,7 @@ class JavaRepoFinder(BaseRepoFinder):
             # Calculate replacements - matches any number of ${...} entries in the current value.
             for match in re.finditer("\\$\\{[^}]+}", value):
                 text = match.group().replace("$", "").replace("{", "").replace("}", "")
-                if text.startswith("project."):
-                    text = text.replace("project.", "")
-                else:
-                    text = f"properties.{text}"
+                text = text.replace("project.", "") if text.startswith("project.") else f"properties.{text}"
                 # Call find_scm with property resolution flag as False to prevent the possibility of endless looping.
                 result = self._find_scm(pom, [text], False)
                 if not result:
@@ -337,7 +334,7 @@ class JavaRepoFinder(BaseRepoFinder):
             # ->
             # git@github.com:owner/project1.8-2023.git
             for replacement in reversed(replacements):
-                value = f"{value[:replacement[0]]}{replacement[1]}{value[replacement[2]:]}"
+                value = f"{value[: replacement[0]]}{replacement[1]}{value[replacement[2] :]}"
 
             resolved_values.append(value)
 

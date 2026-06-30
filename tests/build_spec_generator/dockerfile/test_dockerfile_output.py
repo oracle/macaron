@@ -1,9 +1,7 @@
 # Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-Test the logic to dispatch dockerfile generation
-"""
+"""Test the logic to dispatch dockerfile generation."""
 
 import pytest
 
@@ -42,6 +40,6 @@ def fixture_base_build_spec() -> BaseBuildSpecDict:
 
 
 def test_dispatch_error(maven_build_spec: BaseBuildSpecDict) -> None:
-    """Ensure that dispatching for unsupported ecosystem fails"""
+    """Ensure that dispatching for unsupported ecosystem fails."""
     with pytest.raises(GenerateBuildSpecError):
         dockerfile_output.gen_dockerfile(maven_build_spec)

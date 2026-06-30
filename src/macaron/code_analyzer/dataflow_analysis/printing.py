@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Functions for printing/displaying dataflow analysis nodes in the form of graphviz (dot) output.
@@ -389,8 +389,10 @@ def print_interpretation_node_as_dot_string(
         )
         + "\n"
     )
-    for child_node in node.interpretations.values():
-        out.write("n" + str(id(node)) + " -> " + "n" + str(id(child_node)) + ' [label="interpretation"]\n')
+    out.writelines(
+        "n" + str(id(node)) + " -> " + "n" + str(id(child_node)) + ' [label="interpretation"]\n'
+        for child_node in node.interpretations.values()
+    )
     for child_node in node.interpretations.values():
         print_as_dot_string(child_node, out, include_properties=include_properties, include_states=include_states)
 

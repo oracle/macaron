@@ -162,8 +162,7 @@ class Record(Generic[RecordNode]):
             analyzed_deps=0,
             unique_dep_repos=0,
             checks_summary=[
-                {"check_id": check_id, "num_deps_pass": 0}  # nosec B105
-                for check_id in registry.get_all_checks_mapping()
+                {"check_id": check_id, "num_deps_pass": 0} for check_id in registry.get_all_checks_mapping()
             ],
             dep_status=[dep.get_summary() for dep in self.dependencies],
         )

@@ -6,14 +6,14 @@
 import abc
 import logging
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 from macaron.slsa_analyzer.build_tool import BaseBuildTool
 
 logger = logging.getLogger(__name__)
 
 
-class RepositoryVerificationStatus(str, Enum):
+class RepositoryVerificationStatus(StrEnum):
     """A class to store the status of the repo verification."""
 
     #: We found evidence to prove that the repository can be linked back to the publisher of the artifact.

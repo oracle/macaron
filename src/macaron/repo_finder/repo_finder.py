@@ -311,7 +311,6 @@ def find_source(purl_string: str, input_repo: str | None, latest_version_fallbac
 
         if not digest:
             if latest_version_fallback and not checked_latest_purl:
-
                 # When not cloning the latest version must be checked here.
                 if latest_version_purl := get_latest_purl_if_different(purl):
                     if latest_repo := get_latest_repo_if_different(latest_version_purl, found_repo):
@@ -419,7 +418,7 @@ def prepare_repo(
     digest: str = "",
     purl: PackageURL | None = None,
     latest_version_fallback: bool = True,
-    provenance_commit_digest: str | None = None
+    provenance_commit_digest: str | None = None,
 ) -> tuple[Git | None, CommitFinderInfo]:
     """Prepare the target repository for analysis.
 

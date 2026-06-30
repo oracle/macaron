@@ -1,9 +1,7 @@
-# Copyright (c) 2022 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This module test DatabaseManager.
-"""
+"""This module test DatabaseManager."""
 
 import os
 import sqlite3
@@ -27,7 +25,7 @@ class ORMMappedTable(Base):
 
     __tablename__ = "_test_orm_table"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)  # noqa: A003 pylint # ignore=invalid-name
+    id = Column(Integer, primary_key=True, autoincrement=True)
     value = Column(String)
 
 
@@ -55,7 +53,10 @@ def db_man() -> Iterable:
     ],
 )
 def test_orm_mapping(
-    db_man: DatabaseManager, identifier: int, test_value: str, expect: bool  # pylint: disable=redefined-outer-name
+    db_man: DatabaseManager,  # pylint: disable=redefined-outer-name
+    identifier: int,
+    test_value: str,
+    expect: bool,
 ) -> None:
     """Create a table and add rows."""
     db_man.create_tables()

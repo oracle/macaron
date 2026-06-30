@@ -1,10 +1,10 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module tests the policies supported by the policy engine."""
 
 import os
-import subprocess  # nosec B404
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -19,9 +19,8 @@ DATABASE_FILE = os.path.join(Path(__file__).parent.joinpath("resources", "facts"
 @pytest.fixture()
 def database_setup() -> None:
     """Prepare the database file."""
-    if not os.path.exists(DATABASE_FILE):
-        if os.path.exists(DATABASE_FILE + ".gz"):
-            subprocess.run(["gunzip", "-k", DATABASE_FILE + ".gz"], check=True, shell=False)  # nosec B603 B607
+    if not os.path.exists(DATABASE_FILE) and os.path.exists(DATABASE_FILE + ".gz"):
+        subprocess.run(["gunzip", "-k", DATABASE_FILE + ".gz"], check=True, shell=False)  # noqa: S603 S607
 
 
 def test_dump_prelude(database_setup) -> None:  # type: ignore # pylint: disable=unused-argument,redefined-outer-name

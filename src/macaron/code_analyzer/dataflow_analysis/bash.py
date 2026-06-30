@@ -623,17 +623,20 @@ def get_stdout_redirects(stmt: bashparser_model.Stmt, context: BashScriptContext
     """Extract the stdout redirects specified on the statement as a set of location expressions."""
     redirs: set[facts.Location] = set()
     for redir in stmt.get("Redirs", []):
-        if redir["Op"] in {
-            bashparser_model.RedirOperators.RdrOut.value,
-            bashparser_model.RedirOperators.RdrAll.value,
-            bashparser_model.RedirOperators.AppAll.value,
-            bashparser_model.RedirOperators.AppOut.value,
-        }:
-            if "Word" in redir:
-                redir_word = redir["Word"]
-                redir_val = convert_shell_word_to_value(redir_word, context)
-                if redir_val is not None:
-                    redirs.add(facts.Location(context.filesystem.ref, facts.Filesystem(redir_val[0])))
+        if (
+            redir["Op"]
+            in {
+                bashparser_model.RedirOperators.RdrOut.value,
+                bashparser_model.RedirOperators.RdrAll.value,
+                bashparser_model.RedirOperators.AppAll.value,
+                bashparser_model.RedirOperators.AppOut.value,
+            }
+            and "Word" in redir
+        ):
+            redir_word = redir["Word"]
+            redir_val = convert_shell_word_to_value(redir_word, context)
+            if redir_val is not None:
+                redirs.add(facts.Location(context.filesystem.ref, facts.Filesystem(redir_val[0])))
     return redirs
 
 
@@ -1875,15 +1878,13 @@ def is_simple_var_read(param_exp: bashparser_model.ParamExp) -> bool:
     """Return whether expression is a simple env var read e.g. $ENV_VAR."""
     if param_exp.get("Excl", False) or param_exp.get("Length", False) or param_exp.get("Width", False):
         return False
-    if (
+    return not (
         "Index" in param_exp
         or "Slice" in param_exp
         or "Repl" in param_exp
         or "Names" in param_exp
         or "Exp" in param_exp
-    ):
-        return False
-    return True
+    )
 
 
 def parse_env_var_read_word_part(part: bashparser_model.WordPart, allow_dbl_quoted: bool) -> str | None:

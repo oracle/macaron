@@ -53,18 +53,18 @@ class PyPIBuildSpec(
         """
         match build_cmd_spec["build_tool"]:
             case "pip":
-                build_cmd_spec["command"] = "python -m build --wheel -n".split()
+                build_cmd_spec["command"] = ["python", "-m", "build", "--wheel", "-n"]
             case "poetry":
-                build_cmd_spec["command"] = "poetry build".split()
+                build_cmd_spec["command"] = ["poetry", "build"]
             case "uv":
-                build_cmd_spec["command"] = "uv build".split()
+                build_cmd_spec["command"] = ["uv", "build"]
 
             case "flit":
                 # We might also want to deal with existence flit.ini, we can do so via
                 # "python -m flit.tomlify"
-                build_cmd_spec["command"] = "flit build".split()
+                build_cmd_spec["command"] = ["flit", "build"]
             case "hatch":
-                build_cmd_spec["command"] = "hatch build".split()
+                build_cmd_spec["command"] = ["hatch", "build"]
             case _:
                 logger.debug(
                     "There is no default build command available for the build tools %s.",
@@ -106,7 +106,6 @@ class PyPIBuildSpec(
 
         if pypi_package_json is not None:
             if pypi_package_json.package_json or pypi_package_json.download(dest=""):
-
                 # Get the Python constraints from the PyPI JSON response.
                 json_releases = pypi_package_json.get_releases()
                 if json_releases:

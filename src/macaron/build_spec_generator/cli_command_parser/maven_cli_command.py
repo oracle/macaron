@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the classes that represent components of a Maven CLI Command."""
@@ -318,4 +318,4 @@ class MavenCLICommand:
 
     def to_cmds(self) -> list[str]:
         """Return the CLI Command as a list of strings."""
-        return [self.executable] + self.options.to_option_cmds()
+        return [self.executable, *self.options.to_option_cmds()]

@@ -42,10 +42,10 @@ class MavenBuildSpec(BaseBuildSpec):
         """
         match build_cmd_spec["build_tool"]:
             case "maven":
-                build_cmd_spec["command"] = "mvn clean package".split()
+                build_cmd_spec["command"] = ["mvn", "clean", "package"]
 
             case "gradle":
-                build_cmd_spec["command"] = "./gradlew clean assemble publishToMavenLocal".split()
+                build_cmd_spec["command"] = ["./gradlew", "clean", "assemble", "publishToMavenLocal"]
             case _:
                 logger.debug(
                     "There is no default build command available for the build tools %s.",

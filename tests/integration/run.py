@@ -11,7 +11,7 @@ import logging
 import logging.config
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import sys
 import time
 from abc import abstractmethod
@@ -162,7 +162,7 @@ class Step(Generic[T]):
             cwd=cwd,
             env=patch_env(self.env),
             check=False,
-        )  # nosec: B603
+        )
         end_time = time.monotonic_ns()
 
         if self.expect_fail:
@@ -237,10 +237,7 @@ class ValidateSchemaStep(Step[ValidateSchemaStepOptions]):
     @staticmethod
     def options_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
         """Generate the schema of a schema validation step."""
-        if check_expected_result_files:
-            check_file = check_required_file(cwd)
-        else:
-            check_file = cfgv.check_string
+        check_file = check_required_file(cwd) if check_expected_result_files else cfgv.check_string
 
         return cfgv.Map(
             "schema options",
@@ -302,10 +299,7 @@ class CompareStep(Step[CompareStepOptions]):
     @staticmethod
     def options_schema(cwd: str, check_expected_result_files: bool) -> cfgv.Map:
         """Generate the schema of a compare step."""
-        if check_expected_result_files:
-            check_file = check_required_file(cwd)
-        else:
-            check_file = cfgv.check_string
+        check_file = check_required_file(cwd) if check_expected_result_files else cfgv.check_string
 
         return cfgv.Map(
             "compare options",
@@ -361,7 +355,7 @@ class CompareStep(Step[CompareStepOptions]):
                     *[result_file, expected_file],
                 ],
                 check=False,
-            )  # nosec: B603
+            )
             if proc.returncode != 0:
                 logger.error("Failed to update %s.", expected_file)
                 return 1

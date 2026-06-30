@@ -19,7 +19,7 @@ from macaron.repo_finder.commit_finder import AbstractPurlType, determine_abstra
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_utils import get_repo_tags
 from macaron.slsa_analyzer.analyze_context import AnalyzeContext
-from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableException
+from macaron.slsa_analyzer.checks.provenance_available_check import ProvenanceAvailableError
 from macaron.slsa_analyzer.ci_service import GitHubActions
 from macaron.slsa_analyzer.ci_service.base_ci_service import NoneCIService
 from macaron.slsa_analyzer.package_registry import (
@@ -218,7 +218,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
 
     Raises
     ------
-    ProvenanceAvailableException
+    ProvenanceAvailableError
         If the discovered provenance file size exceeds the configured limit.
     """
     if not registry.enabled:
@@ -259,7 +259,7 @@ def find_gav_provenance(purl: PackageURL, registry: JFrogMavenRegistry) -> list[
                 "The check will not proceed due to potential security risks."
             )
             logger.error(msg)
-            raise ProvenanceAvailableException(msg)
+            raise ProvenanceAvailableError(msg)
 
     provenances = []
     witness_verifier_config = load_witness_verifier_config()

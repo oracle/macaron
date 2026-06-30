@@ -79,9 +79,7 @@ def test_get_repo_name_from_url(
 
 
 def test_is_remote_repo() -> None:
-    """
-    Test the is_remote_repo method
-    """
+    """Test the is_remote_repo method."""
     repo_name = "repo_name"
     remote_urls = [
         f"git@github.com:owner/{repo_name}.git",

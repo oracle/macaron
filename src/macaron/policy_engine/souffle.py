@@ -12,8 +12,9 @@ import glob
 import logging
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import tempfile
+import typing
 from types import TracebackType
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -119,9 +120,10 @@ class SouffleWrapper:
             f"--output-dir={self.output_dir}",
             f"--fact-dir={self.fact_dir}",
             f"--library-dir={self.library_dir}",
-        ] + additional_args
+            *additional_args,
+        ]
         logger.debug("Executing souffle: %s", " ".join(cmd))
-        result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # nosec B603
+        result = subprocess.run(cmd, shell=False, capture_output=True, cwd=self.temp_dir, check=False)  # noqa: S603
         # Souffle doesn't exit with non-zero when the datalog program contains errors, but check anyway.
         self.souffle_stderr = result.stderr.decode("utf-8")
         logger.debug("Souffle stdout: \n%s", result.stdout.decode("utf-8"))
@@ -187,7 +189,7 @@ class SouffleWrapper:
                 result[file_name[0 : file_name.rfind(".")]] = list(reader)
         return result
 
-    def __enter__(self) -> "SouffleWrapper":
+    def __enter__(self) -> typing.Self:
         return self
 
     def __exit__(

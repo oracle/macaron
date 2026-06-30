@@ -7,7 +7,7 @@ import logging
 import os
 import re
 import string
-import subprocess  # nosec B404
+import subprocess
 import urllib.parse
 from configparser import ConfigParser
 from pathlib import Path
@@ -325,7 +325,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
                     # ``git clone`` from prompting for login credentials.
                     "GIT_TERMINAL_PROMPT": "0",
                 }
-                subprocess.run(  # nosec B603
+                subprocess.run(
                     args=["git", "fetch", "origin", "--force", "--tags", "--prune", "--prune-tags"],
                     capture_output=True,
                     cwd=clone_dir,
@@ -350,7 +350,7 @@ def clone_remote_repo(clone_dir: str, url: str) -> Repo | None:
             # ``git clone`` from prompting for login credentials.
             "GIT_TERMINAL_PROMPT": "0",
         }
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(
             args=["git", "clone", "--filter=tree:0", url],
             capture_output=True,
             cwd=parent_dir,
@@ -390,8 +390,8 @@ def list_remote_references(arguments: list[str], repo: str) -> str | None:
         The result of the command.
     """
     try:
-        result = subprocess.run(  # nosec B603
-            args=["git", "ls-remote"] + arguments + [repo],
+        result = subprocess.run(
+            args=["git", "ls-remote", *arguments, repo],
             capture_output=True,
             # By setting stdin to /dev/null and using a new session, we prevent all possible user input prompts.
             stdin=subprocess.DEVNULL,
@@ -615,7 +615,7 @@ def clean_up_repo_path(repo_path: str) -> str:
         The cleaned up repo path.
     """
     cleaned_path = repo_path.strip(" ").rstrip("/")
-    return cleaned_path[:-4] if cleaned_path.endswith(".git") else cleaned_path
+    return cleaned_path.removesuffix(".git")
 
 
 def get_remote_vcs_url(url: str, clean_up: bool = True) -> str:
@@ -736,7 +736,7 @@ def parse_remote_url(
             return None
 
         path = ""
-        if not port.isdecimal():
+        if not port.isdecimal():  # noqa: SIM108
             # Happen for ssh://git@github.com:owner/project.git
             # where parsed_url.netloc="git@github.com:owner", port="owner"
             # and parsed_url.path="project.git".
@@ -763,16 +763,8 @@ def parse_remote_url(
         if not user or host not in allowed_git_service_hostnames:
             return None
 
-        path = ""
         port_num, _, path_remain = port_path.strip("/").partition("/")
-        if not port_num.isdecimal():
-            # port_path doesn't have any port number (e.g. port_path == /org/name).
-            # We use all of port_path as the path.
-            path = port_path
-        else:
-            # port_path have valid port number (e.g. port_path == 7999/org/name).
-            # We only use the rest of the path.
-            path = path_remain
+        path = path_remain if port_num.isdecimal() else port_path
 
         path_params = path.strip("/").split("/")
         if len(path_params) < 2:
@@ -902,10 +894,7 @@ def is_empty_repo(git_obj: Git) -> bool:
     # https://stackoverflow.com/questions/5491832/how-can-i-check-whether-a-git-repository-has-any-commits-in-it
     try:
         head_commit_hash = git_obj.repo.git.rev_parse("HEAD")
-        if not head_commit_hash:
-            return True
-
-        return False
+        return bool(not head_commit_hash)
     except GitCommandError:
         return True
 
@@ -929,15 +918,15 @@ def is_commit_hash(value: str) -> bool:
 
     Example
     -------
-    >>> is_commit_hash('e3a1b6c')
+    >>> is_commit_hash("e3a1b6c")
     True
-    >>> is_commit_hash('e3a1b6c8d9b2ff0c9f5f8a0a5d8f4cf2e19b1db3')
+    >>> is_commit_hash("e3a1b6c8d9b2ff0c9f5f8a0a5d8f4cf2e19b1db3")
     True
-    >>> is_commit_hash('invalid_hash123')
+    >>> is_commit_hash("invalid_hash123")
     False
-    >>> is_commit_hash('master')
+    >>> is_commit_hash("master")
     False
-    >>> is_commit_hash('main')
+    >>> is_commit_hash("main")
     False
     """
     pattern = r"^[a-f0-9]{7,40}$"

@@ -16,7 +16,7 @@ class TestConfiguration(TestCase):
 
     # Disable flake8's D202 check: "No blank lines allowed after function docstring"
     def test_raise_implementation_error(self) -> None:
-        """Test raising errors if child class does not override abstract method(s)."""  # noqa: D202
+        """Test raising errors if child class does not override abstract method(s)."""
 
         # pylint: disable=abstract-method
         class ChildCheck(BaseCheck):

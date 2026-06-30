@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Maven CLI Command parser."""
@@ -347,7 +347,7 @@ MAVEN_OPTION_DEF: list[OptionDef] = [
 class MavenCLICommandParser:
     """A Maven CLI Command Parser."""
 
-    ACCEPTABLE_EXECUTABLE = {"mvn", "mvnw"}
+    ACCEPTABLE_EXECUTABLE = frozenset(("mvn", "mvnw"))
 
     def __init__(self) -> None:
         """Initialize the instance."""

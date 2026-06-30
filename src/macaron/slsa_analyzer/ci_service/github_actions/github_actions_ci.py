@@ -9,7 +9,7 @@ import glob
 import logging
 import os
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow_file
 from macaron.code_analyzer.dataflow_analysis.core import Node, NodeForest
@@ -30,7 +30,7 @@ class GitHubActions(BaseCIService):
     def __init__(self) -> None:
         """Initialize instance."""
         super().__init__(name="github_actions")
-        self.personal_access_token = ""  # nosec B105
+        self.personal_access_token = ""
         self.api_client: GhAPIClient = get_default_gh_client("")
         self.query_page_threshold = 10
         self.max_items_num = 100
@@ -160,7 +160,7 @@ class GitHubActions(BaseCIService):
             # Setting the timezone to UTC because the date format.
             # We are using for GitHub Actions is in ISO format, which contains the offset
             # from the UTC timezone. For example: 2022-04-10T14:10:01+07:00
-            current_time = datetime.now(timezone.utc)
+            current_time = datetime.now(UTC)
             # TODO: it is safer to get commit_date as a datetime object directly.
             commit_date_obj = datetime.fromisoformat(commit_date)
             day_delta = (current_time - commit_date_obj).days
@@ -453,7 +453,7 @@ class GitHubActions(BaseCIService):
         # apiVersion=2022-11-28#retention-of-checks-data
         # TODO: change this check if this issue is resolved:
         # https://github.com/orgs/community/discussions/138249
-        if datetime.now(timezone.utc) - timedelta(days=400) > timestamp:
+        if datetime.now(UTC) - timedelta(days=400) > timestamp:
             logger.debug("Artifact published at %s is older than 400 days.", timestamp)
             return True
 

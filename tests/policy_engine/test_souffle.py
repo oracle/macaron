@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2023, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Test the Souffle wrapper."""
@@ -29,7 +29,7 @@ def test_interpret_file() -> None:
 
 
 def test_interpret_text() -> None:
-    """Test basic call to interpreting a string literal"""
+    """Test basic call to interpreting a string literal."""
     with SouffleWrapper(fact_dir=str(FACT_DIR)) as sfl:
         result = sfl.interpret_text(TEXT)
         assert result == {"path": [["1", "2"], ["1", "3"], ["2", "3"]]}

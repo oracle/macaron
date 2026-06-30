@@ -24,12 +24,12 @@ class ProvenanceDerivedCommitFacts(CheckFacts):
     __tablename__ = "_provenance_derived_commit_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The state of the commit.
     commit_info: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": __tablename__,
     }
 

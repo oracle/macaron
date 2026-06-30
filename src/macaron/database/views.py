@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # pylint: skip-file
@@ -41,7 +41,7 @@ def _create_view(element, comp, **kw):  # type: ignore
 
 @compiler.compiles(DropView)
 def _drop_view(element, comp, **kw):  # type: ignore
-    return "DROP VIEW %s" % (element.name)
+    return f"DROP VIEW {element.name}"
 
 
 def view_exists(
@@ -82,8 +82,8 @@ def view_exists(
     bool
         Returns `True` if the view exists in the database, `False` otherwise.
     """
-    if isinstance(ddl, CreateView) or isinstance(ddl, DropView):
-        assert isinstance(bind, Connection)
+    if isinstance(ddl, (CreateView, DropView)):
+        assert isinstance(bind, Connection)  # noqa: S101
         return ddl.name in sa.inspect(bind).get_view_names()
     return False
 

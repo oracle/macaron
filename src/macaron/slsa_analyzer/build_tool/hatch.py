@@ -67,9 +67,7 @@ class Hatch(BaseBuildTool):
         if not repo_path:
             return []
 
-        results: list[BuildToolConfig] = (
-            []
-        )
+        results: list[BuildToolConfig] = []
         confidence_score = 1.0
         for config_name in self.build_configs:
             if config_path := file_exists(repo_path, config_name, filters=self.path_filters):
@@ -133,7 +131,7 @@ class Hatch(BaseBuildTool):
         cmd_program_name = os.path.basename(build_cmd[0])
 
         # Some projects use a publisher tool and some use the build tool with deploy arguments.
-        deploy_tools = self.publisher if self.publisher else self.builder
+        deploy_tools = self.publisher or self.builder
         deploy_args = self.deploy_arg
 
         # Sometimes hatch is called as a Python module.
@@ -180,7 +178,7 @@ class Hatch(BaseBuildTool):
         if not cmd_program_name:
             return False, Confidence.HIGH
 
-        builder = self.packager if self.packager else self.builder
+        builder = self.packager or self.builder
         build_args = self.build_arg
 
         # Sometimes hatch is called as a Python module.

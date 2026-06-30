@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the check results."""
@@ -24,16 +24,16 @@ class MockFacts(CheckFacts):
     __tablename__ = "_test_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(  # noqa: A003 # pylint: disable=E1136
+    id: Mapped[int] = mapped_column(  # pylint: disable=unsubscriptable-object
         ForeignKey("_check_facts.id"), primary_key=True
     )
 
     #: The name of the tool used to build.
-    test_name: Mapped[str] = mapped_column(  # pylint: disable=E1136
+    test_name: Mapped[str] = mapped_column(  # pylint: disable=unsubscriptable-object
         String, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_test_check",
     }
 

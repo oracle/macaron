@@ -6,7 +6,7 @@
 import hashlib
 import logging
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 from packageurl import PackageURL
@@ -233,7 +233,7 @@ class MavenCentralRegistry(PackageRegistry):
             # The timestamp published in Maven Central is in milliseconds and needs to be divided by 1000.
             # Unfortunately, this is not documented in the API docs.
             try:
-                return datetime.fromtimestamp(round(timestamp / 1000), tz=timezone.utc)
+                return datetime.fromtimestamp(round(timestamp / 1000), tz=UTC)
             except (OverflowError, OSError) as error:
                 raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid") from error
 

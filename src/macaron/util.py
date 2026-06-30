@@ -59,17 +59,16 @@ def url_is_safe(url: str, allow_list: list[str] | None = None, allow_login: bool
     False
     >>> url_is_safe("https://username:attacker.com\\@allowlist.com", ["allowlist.com"])
     False
-    >>> url_is_safe("https://username:test@allowlist.com", ["allowlist.com"], allow_login = True)
+    >>> url_is_safe("https://username:test@allowlist.com", ["allowlist.com"], allow_login=True)
     True
     """
     try:
         parsed_url = urllib.parse.urlparse(url)
     except ValueError:
         return False
-    if not allow_login:
-        if parsed_url.username or parsed_url.password:
-            logger.debug("Potential attempt to redirect to an invalid URL: hostname %s", parsed_url.hostname)
-            return False
+    if not allow_login and (parsed_url.username or parsed_url.password):
+        logger.debug("Potential attempt to redirect to an invalid URL: hostname %s", parsed_url.hostname)
+        return False
 
     hostname = parsed_url.hostname
     if hostname is None or hostname == "":
@@ -371,9 +370,7 @@ def can_download_file(url: str, size_limit: int, timeout: int | None = None) -> 
         return False
 
     size = response.headers.get("Content-Length")
-    if size and int(size) <= size_limit:
-        return True
-    return False
+    return bool(size and int(size) <= size_limit)
 
 
 def download_file_with_size_limit(
@@ -471,10 +468,7 @@ def check_rate_limit(response: Response) -> None:
     response : Response
         The latest response from GitHub API.
     """
-    if "X-RateLimit-Remaining" in response.headers:
-        remains = int(response.headers["X-RateLimit-Remaining"])
-    else:
-        remains = 2
+    remains = int(response.headers["X-RateLimit-Remaining"]) if "X-RateLimit-Remaining" in response.headers else 2
 
     if remains <= 1:
         rate_limit_reset = response.headers.get("X-RateLimit-Reset", default="")
@@ -509,7 +503,7 @@ def construct_query(params: dict) -> str:
 
     Examples
     --------
-    >>> construct_query({"bar":1,"foo":2})
+    >>> construct_query({"bar": 1, "foo": 2})
     'bar=1&foo=2'
     """
     return urllib.parse.urlencode(params)
@@ -531,9 +525,7 @@ def download_github_build_log(url: str, headers: dict) -> str:
         The content of the downloaded build log or empty if error.
     """
     logger.debug("Downloading content at link %s", url)
-    response = requests.get(
-        url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10)
-    )  # nosec B113:request_without_timeout
+    response = requests.get(url=url, headers=headers, timeout=defaults.getint("requests", "timeout", fallback=10))
 
     return response.content.decode("utf-8")
 
@@ -621,7 +613,7 @@ class BytesDecoder:
     """
 
     # Taken from https://w3techs.com/technologies/overview/character_encoding.
-    COMMON_ENCODINGS = [
+    COMMON_ENCODINGS = (
         "ISO-8859-1",
         "cp1252",
         "cp1251",
@@ -632,7 +624,7 @@ class BytesDecoder:
         "cp1250",
         "ISO-8859-2",
         "big5",
-    ]
+    )
 
     @staticmethod
     def decode(data: bytes) -> str | None:

@@ -1,9 +1,7 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This module contains the methods for preparing mock git repositories for testing SLSA checks.
-"""
+"""This module contains the methods for preparing mock git repositories for testing SLSA checks."""
 
 import os
 
@@ -68,7 +66,7 @@ def commit_files(git_wrapper: Git, file_names: list) -> bool:
         # Store the index object as recommended by the documentation.
         current_index = git_wrapper.repo.index
         current_index.add(file_names)
-        current_index.commit(f"Add files: {str(file_names)}")
+        current_index.commit(f"Add files: {file_names!s}")
         return True
     except GitError:
         return False

@@ -46,7 +46,7 @@ def json_extract(entry: dict | list, keys: Sequence[str | int], type_: type[T]) 
             return None
 
         # If statement required for mypy to not complain. The else case can never happen because of the above if block.
-        if isinstance(entry, dict) and isinstance(key, str):
+        if isinstance(entry, dict) and isinstance(key, str):  # noqa: SIM114
             entry = entry[key]
         elif isinstance(entry, list) and isinstance(key, int):
             entry = entry[key]

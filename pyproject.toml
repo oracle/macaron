@@ -122,20 +122,6 @@ Documentation = "https://oracle.github.io/macaron/index.html"
 Issues = "https://github.com/oracle/macaron/issues"
 
 
-# https://bandit.readthedocs.io/en/latest/config.html
-# Skip test B101 because of issue https://github.com/PyCQA/bandit/issues/457
-[tool.bandit]
-tests = []
-skips = ["B101"]
-exclude_dirs = ["tests/malware_analyzer/pypi/resources/sourcecode_samples"]
-
-
-# https://github.com/psf/black#configuration
-[tool.black]
-line-length = 120
-force-exclude = ["tests/malware_analyzer/pypi/resources/sourcecode_samples/"]
-
-
 # https://github.com/commitizen-tools/commitizen
 # https://commitizen-tools.github.io/commitizen/bump/
 [tool.commitizen]
@@ -179,15 +165,6 @@ exclude = [
     "Makefile",
     "SECURITY.md",
 ]
-
-
-# https://pycqa.github.io/isort/
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 120
-skip_gitignore = true
-filter_files = true
 
 
 # https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml
@@ -303,4 +280,76 @@ filterwarnings = [
     # Remove the following when this issue is fixed: https://github.com/CycloneDX/cyclonedx-python-lib/issues/870
     "ignore::DeprecationWarning:cyclonedx.model.tool",
     "error::DeprecationWarning:pkg_resources",
+]
+
+
+# https://docs.astral.sh/ruff/formatter/
+# https://docs.astral.sh/ruff/linter/
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+exclude = [
+    "tests/malware_analyzer/pypi/resources/sourcecode_samples/**/*.py",
+]
+docstring-code-format = true
+docstring-code-line-length = 88
+
+# https://docs.astral.sh/ruff/configuration/
+# https://docs.astral.sh/ruff/rules/
+[tool.ruff.lint]
+exclude = ["docs/*"]
+select = [
+    "A",  # flake8-builtins
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "D",  # pydocstyle
+    "DOC",  # pydoclint
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "FURB",  # refurb
+    "I",  # isort
+    "ICN",  # flake8-import-conventions
+    "LOG",  # flake8-logging
+    "N",  # pep8-naming
+    "PIE",  # flake8-pie
+    "PT",  # flake8-pytest-style
+    "PYI",  # flake8-pyi
+    "RUF",  # ruff-specific rules
+    "S",  # flake8-bandit
+    "SIM",  # flake8-simplify
+    "SLOT",  # flake8-slots
+    "T20",  # flake8-print
+    "UP",  # pyupgrade
+]
+ignore = [
+    "D104",  # D104: Missing docstring in public package
+    "D105",  # D105: Missing docstring in magic method
+    "D404",  # D404: First word of the docstring should not be "This"
+    "E203",  # E203: whitespace before ‘,’, ‘;’, or ‘:’ (not Black compliant)
+    "E501",  # E501: line too long (managed better by Bugbear's B950)
+    "SIM102",  # Use a single `if` statement instead of nested `if` statements
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "D102",  # D102: Missing docstring in public method
+    "D104",  # D104: Missing docstring in public package
+    "S101",  # S101 Use of `assert` detected
+    "T201",  # T201 `print` found
+]
+"tests/malware_analyzer/pypi/resources/sourcecode_samples/**/*" = [
+    "A",  # flake8-builtins
+    "D",  # pydocstyle
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "N",  # pep8-naming
+    "S",  # flake8-bandit
+    "SIM",  # flake8-simplify
 ]

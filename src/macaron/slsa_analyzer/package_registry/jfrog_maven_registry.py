@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Assets on a package registry."""
@@ -154,7 +154,7 @@ class JFrogMavenRegistry(PackageRegistry):
             self.request_timeout = defaults.getint("requests", "timeout", fallback=10)
         except ValueError as error:
             raise ConfigurationError(
-                f'The value of "timeout" in section [requests] ' f"of the .ini configuration file is invalid: {error}",
+                f'The value of "timeout" in section [requests] of the .ini configuration file is invalid: {error}',
             ) from error
 
         try:
