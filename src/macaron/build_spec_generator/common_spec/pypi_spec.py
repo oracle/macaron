@@ -62,24 +62,15 @@ class PyPIBuildSpec(
             case "poetry":
                 build_cmd_spec["command"] = ["poetry", "build"]
             case "uv":
-<<<<<<< HEAD
                 build_cmd_spec["command"] = ["uv", "build"]
-
-=======
-                build_cmd_spec["command"] = "uv build".split()
->>>>>>> 339dddc (feat: added inference for Python wheels that bundle Rust binaries.)
             case "flit":
                 # We might also want to deal with existence flit.ini, we can do so via
                 # "python -m flit.tomlify"
                 build_cmd_spec["command"] = ["flit", "build"]
             case "hatch":
-<<<<<<< HEAD
                 build_cmd_spec["command"] = ["hatch", "build"]
-=======
-                build_cmd_spec["command"] = "hatch build".split()
             case "maturin":
-                build_cmd_spec["command"] = "maturin build --release".split()
->>>>>>> 339dddc (feat: added inference for Python wheels that bundle Rust binaries.)
+                build_cmd_spec["command"] = ["maturin", "build", "--release"]
             case _:
                 logger.debug(
                     "There is no default build command available for the build tools %s.",
@@ -147,7 +138,9 @@ class PyPIBuildSpec(
                         wheel_contents, metadata_contents = self.read_directory(pypi_package_json.wheel_path, purl)
                         generator, version = self.read_generator_line(wheel_contents)
                         if generator != "" and version != "":
-                            self.add_to_build_requires(parsed_build_requires, generator, "pip", "==" + version.replace(" ", ""))
+                            self.add_to_build_requires(
+                                parsed_build_requires, generator, "pip", "==" + version.replace(" ", "")
+                            )
                         # Apply METADATA heuristics to determine setuptools version.
                         elif "License-File" in metadata_contents:
                             self.add_to_build_requires(
@@ -215,14 +208,17 @@ class PyPIBuildSpec(
                             requires = json_extract(content, ["build-system", "requires"], list)
                             if requires:
                                 for requirement in requires:
-                                    if parsed_requirement := self.add_parsed_python_requirement(sdist_build_requires, requirement):
+                                    if parsed_requirement := self.add_parsed_python_requirement(
+                                        sdist_build_requires, requirement
+                                    ):
                                         if parsed_requirement.name.lower() == "maturin":
                                             has_maturin = True
                             # If we cannot find `requires` in `[build-system]`, we lean on the fact that setuptools
                             # was the de-facto build tool, and infer a setuptools version to include.
                             else:
-                                self.add_parsed_python_requirement(sdist_build_requires,
-                                                                   f"setuptools=={chronologically_likeliest_version}")
+                                self.add_parsed_python_requirement(
+                                    sdist_build_requires, f"setuptools=={chronologically_likeliest_version}"
+                                )
                             backend = json_extract(content, ["build-system", "build-backend"], str)
                             if backend:
                                 build_backends_set.add(backend.replace(" ", ""))
@@ -238,10 +234,13 @@ class PyPIBuildSpec(
                             # Here we have successfully analyzed the pyproject.toml file. Now, if we have a setup.py/cfg,
                             # we also need to infer a setuptools version to infer.
                             if pypi_package_json.file_exists("setup.py") or pypi_package_json.file_exists("setup.cfg"):
-                                self.add_parsed_python_requirement(sdist_build_requires,
-                                                                   f"setuptools=={chronologically_likeliest_version}")
+                                self.add_parsed_python_requirement(
+                                    sdist_build_requires, f"setuptools=={chronologically_likeliest_version}"
+                                )
                         except TypeError as error:
-                            logger.debug("Found a type error while reading the pyproject.toml file from the sdist: %s", error)
+                            logger.debug(
+                                "Found a type error while reading the pyproject.toml file from the sdist: %s", error
+                            )
                         except tomli.TOMLDecodeError as error:
                             logger.debug("Failed to read the pyproject.toml file from the sdist: %s", error)
                         except SourceCodeError as error:
@@ -530,13 +529,23 @@ class PyPIBuildSpec(
         str | None
             The inferred Rust toolchain version, or None if unavailable.
         """
+        stripped = content.strip()
+        if not stripped:
+            return None
+
         try:
             parsed = tomli.loads(content)
             toolchain_version = json_extract(parsed, ["toolchain", "channel"], str)
             if toolchain_version:
                 return toolchain_version.strip()
         except tomli.TOMLDecodeError:
-            logger.debug("Failed to infer Rust toolchain version")
+            pass
+
+        for line in stripped.splitlines():
+            sanitized = line.strip().strip('"').strip("'")
+            if not sanitized or sanitized.startswith("#"):
+                continue
+            return sanitized
         return None
 
     def apply_tool_specific_inferences(
