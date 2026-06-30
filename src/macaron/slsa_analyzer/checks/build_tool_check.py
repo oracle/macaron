@@ -24,7 +24,7 @@ class BuildToolFacts(CheckFacts):
     __tablename__ = "_build_tool_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The language of the artifact built by build tool.
     language: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
@@ -53,7 +53,7 @@ class BuildToolFacts(CheckFacts):
         String, nullable=True, info={"justification": JustificationType.HREF}
     )
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_build_tool_check",
     }
 

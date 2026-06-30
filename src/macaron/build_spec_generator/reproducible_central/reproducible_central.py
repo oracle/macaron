@@ -4,7 +4,7 @@
 """This module contains the logic to generate a build spec in the Reproducible Central format."""
 
 import logging
-from enum import Enum
+from enum import StrEnum
 
 import importlib_metadata
 
@@ -46,7 +46,7 @@ buildinfo={buildinfo}
 """
 
 
-class ReproducibleCentralBuildTool(str, Enum):
+class ReproducibleCentralBuildTool(StrEnum):
     """Represent the name of the build tool used in the Reproducible Central's Buildspec.
 
     https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/doc/BUILDSPEC.md
@@ -90,7 +90,7 @@ def gen_reproducible_central_build_spec(build_spec: BaseBuildSpecDict) -> str | 
     for build_command in build_spec["build_commands"]:
         command = build_command["command"]
         if command and ReproducibleCentralBuildTool.MAVEN.name.lower() == build_command["build_tool"]:
-            adapted_build_commands.append(command[:1] + ["-Dmaven.test.skip=true"] + command[1:])
+            adapted_build_commands.append([*command[:1], "-Dmaven.test.skip=true", *command[1:]])
         else:
             adapted_build_commands.append(command)
 

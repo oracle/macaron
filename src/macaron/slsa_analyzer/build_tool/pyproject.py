@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module provides analysis functions for a pyproject.toml file."""
@@ -59,9 +59,7 @@ def contains_build_tool(tool_name: str, pyproject_path: Path) -> bool:
 
     # Check for the existence of a [tool.<tool_name>] section.
     tools = json_extract(content, ["tool"], dict)
-    if tools and tool_name in tools:
-        return True
-    return False
+    return bool(tools and tool_name in tools)
 
 
 def build_system_contains_tool(tool_name: str, pyproject_path: Path) -> bool:
@@ -90,10 +88,7 @@ def build_system_contains_tool(tool_name: str, pyproject_path: Path) -> bool:
         return True
     # Check in 'requires' list.
     requires = json_extract(content, ["build-system", "requires"], list)
-    if requires and any(tool_name in req for req in requires):
-        return True
-
-    return False
+    return bool(requires and any(tool_name in req for req in requires))
 
 
 def get_build_system(pyproject_path: Path) -> dict[str, str] | None:

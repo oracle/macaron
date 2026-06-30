@@ -7,7 +7,7 @@ This module is used to work with repositories that use Gradle build tool.
 """
 
 import logging
-import subprocess  # nosec B404
+import subprocess
 from pathlib import Path
 
 from macaron.config.defaults import defaults
@@ -261,7 +261,7 @@ class Gradle(BaseBuildTool):
             logger.info(
                 "Identifying the group ID for the artifact. This can take a while if Gradle needs to be downloaded."
             )
-            result = subprocess.run(  # nosec B603
+            result = subprocess.run(  # noqa: S603
                 [gradle_exec, "properties"],
                 capture_output=True,
                 cwd=project_path,

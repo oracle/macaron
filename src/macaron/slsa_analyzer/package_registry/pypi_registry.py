@@ -49,7 +49,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def _handle_temp_dir_clean(function: Callable, path: str, onerror: tuple) -> None:
-    raise SourceCodeError(f"Error removing with shutil. function={function}, " f"path={path}, excinfo={onerror}")
+    raise SourceCodeError(f"Error removing with shutil. function={function}, path={path}, excinfo={onerror}")
 
 
 class PyPIRegistry(PackageRegistry):
@@ -277,9 +277,7 @@ class PyPIRegistry(PackageRegistry):
                 temp_dir, f"Error downloading source code from file {file_name}: {error}", error
             )
         if not download_succeeded:
-            self.cleanup_sourcecode_directory(
-                temp_dir, f"Error downloading source code from file {file_name}."
-            )
+            self.cleanup_sourcecode_directory(temp_dir, f"Error downloading source code from file {file_name}.")
 
         if not tarfile.is_tarfile(source_file):
             self.cleanup_sourcecode_directory(temp_dir, f"Unable to extract source code from file {file_name}")
@@ -288,8 +286,7 @@ class PyPIRegistry(PackageRegistry):
             with tarfile.open(source_file, "r:gz") as sourcecode_tar:
                 members = sourcecode_tar.getmembers()
                 if members and all(
-                    member.name == package_name or member.name.startswith(f"{package_name}/")
-                    for member in members
+                    member.name == package_name or member.name.startswith(f"{package_name}/") for member in members
                 ):
                     # Most sdists wrap their contents in a single package-version directory.
                     # Strip that wrapper during extraction so the returned temp directory
@@ -353,9 +350,7 @@ class PyPIRegistry(PackageRegistry):
                 temp_dir, f"Error downloading wheel from file {file_name}: {error}", error
             )
         if not download_succeeded:
-            self.cleanup_sourcecode_directory(
-                temp_dir, f"Error downloading wheel from file {file_name}."
-            )
+            self.cleanup_sourcecode_directory(temp_dir, f"Error downloading wheel from file {file_name}.")
 
         # Wheel is a zip
         if not zipfile.is_zipfile(wheel_file):
@@ -371,7 +366,7 @@ class PyPIRegistry(PackageRegistry):
                     if member.filename.endswith("METADATA"):
                         members.append(member)
                 # Intended suppression. The tool is unable to see that .extractall is being called with a filter
-                zip_file.extractall(temp_dir, members)  # nosec B202:tarfile_unsafe_members
+                zip_file.extractall(temp_dir, members)  # noqa: S202
         except zipfile.BadZipFile as bad_zip:
             self.cleanup_sourcecode_directory(temp_dir, f"Error extracting wheel: {bad_zip}", bad_zip)
 
@@ -577,7 +572,7 @@ class PyPIRegistry(PackageRegistry):
             if releases:
                 # Find smallest requirement satisfying parsed_requirement.name
                 version_tuples: list[tuple[str, Version]] = []
-                for version in releases.keys():
+                for version in releases:
                     try:
                         version_name = str(version)
                         parsed_version = Version(version_name)
@@ -657,9 +652,7 @@ class PyPIInspectorAsset:
 
     def __bool__(self) -> bool:
         """Determine if this inspector object is empty."""
-        if (self.package_sdist_link or self.package_whl_links) and self.package_link_reachability:
-            return True
-        return False
+        return bool((self.package_sdist_link or self.package_whl_links) and self.package_link_reachability)
 
     @staticmethod
     def get_structure(pypi_inspector_url: str) -> list[str] | None:
@@ -1130,11 +1123,7 @@ class PyPIPackageJsonAsset:
         if not os.path.isabs(path):
             path = os.path.join(self.package_sourcecode_path, path)
 
-        if not os.path.exists(path):
-            # Could not find a file at that path
-            return False
-
-        return True
+        return os.path.exists(path)
 
     def iter_sourcecode(self) -> Iterator[tuple[str, bytes]]:
         """
@@ -1157,10 +1146,7 @@ class PyPIPackageJsonAsset:
 
         for root, _directories, files in os.walk(self.package_sourcecode_path):
             for file in files:
-                if root == ".":
-                    root_path = os.getcwd() + os.linesep
-                else:
-                    root_path = root
+                root_path = os.getcwd() + os.linesep if root == "." else root
                 filepath = os.path.join(root_path, file)
 
                 with open(filepath, "rb") as handle:

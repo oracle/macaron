@@ -8,7 +8,7 @@ import os
 import tempfile
 import urllib.parse
 import zipfile
-from enum import Enum
+from enum import Enum, StrEnum
 
 import requests
 
@@ -19,7 +19,7 @@ from macaron.errors import InvalidHTTPResponseError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class JavaArtifactExt(str, Enum):
+class JavaArtifactExt(StrEnum):
     """The extensions for Java artifacts."""
 
     JAR = ".jar"
@@ -57,8 +57,7 @@ def download_file(url: str, dest: str) -> None:
 
     with open(dest, "wb") as fd:
         try:
-            for chunk in response.iter_content(chunk_size=128, decode_unicode=False):
-                fd.write(chunk)
+            fd.writelines(response.iter_content(chunk_size=128, decode_unicode=False))
         except requests.RequestException as error:
             response.close()
             raise InvalidHTTPResponseError(f"Error while streaming java artifact file from {url}") from error
@@ -87,10 +86,14 @@ def join_remote_maven_repo_url(
     Examples
     --------
     >>> remote_maven_repo = "https://repo1.maven.org/maven2"
-    >>> artifact_path = "io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.jar"
+    >>> artifact_path = (
+    ...     "io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.jar"
+    ... )
     >>> join_remote_maven_repo_url(remote_maven_repo, artifact_path)
     'https://repo1.maven.org/maven2/io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.jar'
-    >>> join_remote_maven_repo_url(remote_maven_repo, "io/liftwizard/liftwizard-checkstyle/2.1.22/")
+    >>> join_remote_maven_repo_url(
+    ...     remote_maven_repo, "io/liftwizard/liftwizard-checkstyle/2.1.22/"
+    ... )
     'https://repo1.maven.org/maven2/io/liftwizard/liftwizard-checkstyle/2.1.22/'
     >>> join_remote_maven_repo_url(f"{remote_maven_repo}/", artifact_path)
     'https://repo1.maven.org/maven2/io/liftwizard/liftwizard-checkstyle/2.1.22/liftwizard-checkstyle-2.1.22.jar'

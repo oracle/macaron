@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This check examines the metadata of pypi packages with seven heuristics."""
@@ -56,7 +56,7 @@ class MaliciousMetadataFacts(CheckFacts):
     __tablename__ = "_detect_malicious_metadata_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: Known malware.
     known_malware: Mapped[str | None] = mapped_column(
@@ -71,7 +71,7 @@ class MaliciousMetadataFacts(CheckFacts):
         DBJsonDict, nullable=False, info={"justification": JustificationType.TEXT}
     )
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_detect_malicious_metadata_check",
     }
 
@@ -294,10 +294,12 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         for package_registry_info_entry in package_registry_info_entries:
             match package_registry_info_entry:
                 # Currently, only PyPI packages are supported.
-                case PackageRegistryInfo(
-                    ecosystem="pypi",
-                    package_registry=PyPIRegistry(),
-                ) as pypi_registry_info:
+                case (
+                    PackageRegistryInfo(
+                        ecosystem="pypi",
+                        package_registry=PyPIRegistry(),
+                    ) as pypi_registry_info
+                ):
                     # Retrieve the pre-existing asset, or create a new one.
                     pypi_package_json = find_or_create_pypi_asset(
                         ctx.component.name, ctx.component.version, pypi_registry_info
@@ -356,9 +358,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         # Return UNKNOWN result for unsupported ecosystems.
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
 
-    # This list contains the heuristic analyzer classes
-    # When implementing new analyzer, appending the classes to this list
-    analyzers: list = [
+    # This list contains the heuristic analyzer classes. When implementing a new analyzer,
+    # append its classes to this list.
+    analyzers = (
         EmptyProjectLinkAnalyzer,
         SourceCodeRepoAnalyzer,
         OneReleaseAnalyzer,
@@ -373,9 +375,9 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         SimilarProjectAnalyzer,
         PackageDescriptionIntentAnalyzer,
         TypeStubFileAnalyzer,
-    ]
+    )
 
-    # name used to query the result of all problog rules, so it can be accessed outside the model.
+    # Name used to query the result of all problog rules, so it can be accessed outside the model.
     problog_result_access = "result"
 
     malware_rules_problog_model = f"""

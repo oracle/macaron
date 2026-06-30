@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module handles invoking the souffle policy engine on a database."""
@@ -50,7 +50,7 @@ def get_generated(database_path: os.PathLike | str) -> SouffleProgram:
 
     prelude = get_souffle_import_prelude(os.path.abspath(database_path), metadata)
 
-    for table_name in metadata.tables.keys():
+    for table_name in metadata.tables:
         table = metadata.tables[table_name]
         if table_name[0] == "_":
             prelude.update(project_table_to_key(f"{table_name[1:]}_attribute", table))

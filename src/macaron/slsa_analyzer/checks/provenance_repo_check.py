@@ -28,12 +28,12 @@ class ProvenanceDerivedRepoFacts(CheckFacts):
     # pylint: disable=unsubscriptable-object
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The state of the repository.
     repository_info: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": __tablename__,
     }
 

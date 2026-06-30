@@ -290,7 +290,7 @@ def find_commit_from_version_and_name(git_obj: Git, name: str, version: str) -> 
         name,
         version,
     )
-    return commit if commit else None, CommitFinderInfo.MATCHED
+    return commit or None, CommitFinderInfo.MATCHED
 
 
 def _split_name(name: str) -> list[str]:
@@ -400,7 +400,7 @@ def _build_version_pattern(name: str, version: str) -> tuple[Pattern | None, lis
         if count == 1:
             this_version_pattern = this_version_pattern + INFIX_1
         elif count > 1:
-            if multi_sep:
+            if multi_sep:  # noqa: SIM108
                 # Allow for a change in separator type.
                 this_version_pattern = this_version_pattern + INFIX_3
             else:
@@ -813,7 +813,7 @@ def _compute_tag_version_similarity(
                 # Decrease score if there is a single suffix, and it matches the last version part.
                 score = score - 0.5
 
-    score = 0 if score < 0 else score
+    score = max(score, 0)
 
     if tag_suffix:
         # Slightly prefer matches with a release related suffix.

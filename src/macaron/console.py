@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module implements a rich console handler for logging."""
@@ -215,36 +215,19 @@ class Dependency(TableBuilder):
         """
         layout: list[RenderableType] = []
         if self.description_table.row_count > 0:
-            layout = layout + [
-                "",
-                self.description_table,
-            ]
+            layout = [*layout, "", self.description_table]
         if self.progress_table.row_count > 0:
-            layout = layout + ["", self.progress, "", self.progress_table]
+            layout = [*layout, "", self.progress, "", self.progress_table]
         if self.failed_checks_table.row_count > 0:
-            layout = layout + [
-                "",
-                Rule(" SUMMARY", align="left"),
-                "",
-                self.failed_checks_table,
-            ]
+            layout = [*layout, "", Rule(" SUMMARY", align="left"), "", self.failed_checks_table]
             if self.summary_table.row_count > 0:
-                layout = layout + ["", self.summary_table]
+                layout = [*layout, "", self.summary_table]
                 if self.report_table.row_count > 0:
-                    layout = layout + [
-                        self.report_table,
-                    ]
+                    layout = [*layout, self.report_table]
         elif self.summary_table.row_count > 0:
-            layout = layout + [
-                "",
-                Rule(" SUMMARY", align="left"),
-                "",
-                self.summary_table,
-            ]
+            layout = [*layout, "", Rule(" SUMMARY", align="left"), "", self.summary_table]
             if self.report_table.row_count > 0:
-                layout = layout + [
-                    self.report_table,
-                ]
+                layout = [*layout, self.report_table]
         return layout
 
 
@@ -641,121 +624,64 @@ class RichConsoleHandler(RichHandler, TableBuilder):
                 title_align="left",
                 border_style="red",
             )
-            layout = layout + [error_log_panel]
+            layout = [*layout, error_log_panel]
         if self.command == "analyze":
             if self.show_full_layout:
                 if self.description_table.row_count > 0:
-                    layout = layout + [
-                        Rule(" DESCRIPTION", align="left"),
-                        "",
-                        self.description_table,
-                    ]
+                    layout = [*layout, Rule(" DESCRIPTION", align="left"), "", self.description_table]
                 if self.progress_table.row_count > 0:
-                    layout = layout + ["", self.progress, "", self.progress_table]
+                    layout = [*layout, "", self.progress, "", self.progress_table]
                 if self.failed_checks_table.row_count > 0:
-                    layout = layout + [
-                        "",
-                        Rule(" SUMMARY", align="left"),
-                        "",
-                        self.failed_checks_table,
-                    ]
+                    layout = [*layout, "", Rule(" SUMMARY", align="left"), "", self.failed_checks_table]
                     if self.summary_table.row_count > 0:
-                        layout = layout + ["", self.summary_table]
+                        layout = [*layout, "", self.summary_table]
                     if self.report_table.row_count > 0:
-                        layout = layout + [
-                            self.report_table,
-                        ]
+                        layout = [*layout, self.report_table]
                 elif self.summary_table.row_count > 0:
-                    layout = layout + [
-                        "",
-                        Rule(" SUMMARY", align="left"),
-                        "",
-                        self.summary_table,
-                    ]
+                    layout = [*layout, "", Rule(" SUMMARY", align="left"), "", self.summary_table]
                     if self.report_table.row_count > 0:
-                        layout = layout + [
-                            self.report_table,
-                        ]
+                        layout = [*layout, self.report_table]
                 if self.if_dependency and self.dependency_analysis_list:
                     for idx, dependency in enumerate(self.dependency_analysis_list, start=1):
                         dependency_layout = dependency.make_layout()
-                        layout = (
-                            layout
-                            + [
-                                "",
-                                Rule(f" DEPENDENCY {idx}", align="left"),
-                            ]
-                            + dependency_layout
-                        )
+                        layout = [*layout, "", Rule(f" DEPENDENCY {idx}", align="left"), *dependency_layout]
             elif self.if_dependency and self.dependency_analysis_list:
                 dependency = self.dependency_analysis_list[-1]
                 dependency_layout = dependency.make_layout()
-                layout = (
-                    layout
-                    + [
-                        "",
-                        Rule(f" DEPENDENCY {len(self.dependency_analysis_list)}", align="left"),
-                    ]
-                    + dependency_layout
-                )
+                layout = [
+                    *layout,
+                    "",
+                    Rule(f" DEPENDENCY {len(self.dependency_analysis_list)}", align="left"),
+                    *dependency_layout,
+                ]
             else:
                 if self.description_table.row_count > 0:
-                    layout = layout + [
-                        Rule(" DESCRIPTION", align="left"),
-                        "",
-                        self.description_table,
-                    ]
+                    layout = [*layout, Rule(" DESCRIPTION", align="left"), "", self.description_table]
                 if self.progress_table.row_count > 0:
-                    layout = layout + ["", self.progress, "", self.progress_table]
+                    layout = [*layout, "", self.progress, "", self.progress_table]
                 if self.failed_checks_table.row_count > 0:
-                    layout = layout + [
-                        "",
-                        Rule(" SUMMARY", align="left"),
-                        "",
-                        self.failed_checks_table,
-                    ]
+                    layout = [*layout, "", Rule(" SUMMARY", align="left"), "", self.failed_checks_table]
                     if self.summary_table.row_count > 0:
-                        layout = layout + ["", self.summary_table]
+                        layout = [*layout, "", self.summary_table]
                     if self.report_table.row_count > 0:
-                        layout = layout + [
-                            self.report_table,
-                        ]
+                        layout = [*layout, self.report_table]
                 elif self.summary_table.row_count > 0:
-                    layout = layout + [
-                        "",
-                        Rule(" SUMMARY", align="left"),
-                        "",
-                        self.summary_table,
-                    ]
+                    layout = [*layout, "", Rule(" SUMMARY", align="left"), "", self.summary_table]
                     if self.report_table.row_count > 0:
-                        layout = layout + [
-                            self.report_table,
-                        ]
+                        layout = [*layout, self.report_table]
         elif self.command == "verify-policy":
             if self.policies_table.row_count > 0:
-                layout = layout + [self.policies_table]
+                layout = [*layout, self.policies_table]
             elif self.policy_summary_table.row_count > 0:
                 if self.components_satisfy_table.row_count > 0:
-                    layout = layout + [
-                        "[bold green] Components Satisfy Policy[/]",
-                        self.components_satisfy_table,
-                    ]
+                    layout = [*layout, "[bold green] Components Satisfy Policy[/]", self.components_satisfy_table]
                 else:
-                    layout = layout + [
-                        "[bold green] Components Satisfy Policy[/]  [white not italic]None[/]",
-                    ]
+                    layout = [*layout, "[bold green] Components Satisfy Policy[/]  [white not italic]None[/]"]
                 if self.components_violates_table.row_count > 0:
-                    layout = layout + [
-                        "",
-                        "[bold red] Components Violate Policy[/]",
-                        self.components_violates_table,
-                    ]
+                    layout = [*layout, "", "[bold red] Components Violate Policy[/]", self.components_violates_table]
                 else:
-                    layout = layout + [
-                        "",
-                        "[bold red] Components Violate Policy[/]   [white not italic]None[/]",
-                    ]
-                layout = layout + ["", self.policy_summary_table]
+                    layout = [*layout, "", "[bold red] Components Violate Policy[/]   [white not italic]None[/]"]
+                layout = [*layout, "", self.policy_summary_table]
                 if self.verification_summary_attestation:
                     vsa_table = Table(show_header=False, box=None)
                     vsa_table.add_column("Detail", justify="left")
@@ -771,21 +697,20 @@ class RichConsoleHandler(RichHandler, TableBuilder):
                             f"cat {self.verification_summary_attestation} | jq -r [white]'.payload'[/] | base64 -d | jq",
                         )
 
-                    layout = layout + [vsa_table]
+                    layout = [*layout, vsa_table]
         elif self.command == "find-source":
             if self.find_source_table.row_count > 0:
-                layout = layout + [self.find_source_table]
+                layout = [*layout, self.find_source_table]
         elif self.command == "dump-defaults":
             dump_defaults_table = Table(show_header=False, box=None)
             dump_defaults_table.add_column("Detail", justify="left")
             dump_defaults_table.add_column("Value", justify="left")
             dump_defaults_table.add_row("Dump Defaults", self.dump_defaults)
-            layout = layout + [dump_defaults_table]
-        elif self.command == "gen-build-spec":
-            if self.gen_build_spec_table.row_count > 0:
-                layout = layout + [self.gen_build_spec_table]
+            layout = [*layout, dump_defaults_table]
+        elif self.command == "gen-build-spec" and self.gen_build_spec_table.row_count > 0:
+            layout = [*layout, self.gen_build_spec_table]
         if self.verbose:
-            layout = layout + ["", self.verbose_panel]
+            layout = [*layout, "", self.verbose_panel]
         if self.error_message:
             error_panel = Panel(
                 self.error_message,
@@ -793,7 +718,7 @@ class RichConsoleHandler(RichHandler, TableBuilder):
                 title_align="left",
                 border_style="red",
             )
-            layout = layout + ["", error_panel]
+            layout = [*layout, "", error_panel]
         return Group(*layout)
 
     def error(self, message: str) -> None:

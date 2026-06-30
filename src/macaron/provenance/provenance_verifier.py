@@ -8,7 +8,7 @@ import hashlib
 import logging
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess
 import tarfile
 import zipfile
 from functools import partial
@@ -132,7 +132,7 @@ def verify_npm_provenance(purl: PackageURL, provenance_assets: list[ProvenanceAs
         logger.debug("Signed and unsigned digests do not match.")
         return False
 
-    key = list(signed_digest.keys())[0]
+    key = next(iter(signed_digest.keys()))
     logger.debug(
         "Verified provenance against signed companion. Signed: %s, Unsigned: %s.",
         signed_digest[key][:7],
@@ -150,9 +150,7 @@ def check_purls_equivalent(original_purl: PackageURL, new_purl: PackageURL) -> b
         or original_purl.namespace != new_purl.namespace
     ):
         return False
-    if original_purl.version and original_purl.version != new_purl.version:
-        return False
-    return True
+    return not (original_purl.version and original_purl.version != new_purl.version)
 
 
 def verify_ci_provenance(analyze_ctx: AnalyzeContext, ci_info: CIInfo, download_path: str) -> bool:
@@ -289,14 +287,14 @@ def _extract_archive(file_path: str, temp_path: str) -> bool:
         if zipfile.is_zipfile(file_path):
             with zipfile.ZipFile(file_path, "r") as zip_file:
                 members = (path for path in zip_file.namelist() if _validate_path_traversal(path))
-                zip_file.extractall(temp_path, members=members)  # nosec B202:tarfile_unsafe_members
+                zip_file.extractall(temp_path, members=members)  # noqa: S202
                 return True
         elif tarfile.is_tarfile(file_path):
             with tarfile.open(file_path, mode="r:gz") as tar_file:
                 members_tarinfo = (
                     tarinfo for tarinfo in tar_file.getmembers() if _validate_path_traversal(tarinfo.name)
                 )
-                tar_file.extractall(temp_path, members=members_tarinfo)  # nosec B202:tarfile_unsafe_members
+                tar_file.extractall(temp_path, members=members_tarinfo)  # noqa: S202
                 return True
     except (tarfile.TarError, zipfile.BadZipFile, zipfile.LargeZipFile, OSError, ValueError) as error:
         logger.info(error)
@@ -349,7 +347,7 @@ def _verify_slsa(download_path: str, prov_asset: AssetLocator, asset_name: str, 
     ]
 
     try:
-        verifier_output = subprocess.run(  # nosec B603
+        verifier_output = subprocess.run(  # noqa: S603
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -425,7 +423,7 @@ def determine_provenance_slsa_level(
     if predicate:
         build_type = ProvenancePredicate.get_build_type(provenance_payload.statement)
 
-    if build_type in {SLSAGithubGenericBuildDefinitionV01.expected_build_type} and verified_l3:
+    if build_type == SLSAGithubGenericBuildDefinitionV01.expected_build_type and verified_l3:
         # 3. Provenance is created by the SLSA GitHub generator and verified.
         return 3
 

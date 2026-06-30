@@ -78,9 +78,7 @@ class Poetry(BaseBuildTool):
         file_paths = (file_exists(repo_path, file, filters=self.path_filters) for file in self.build_configs)
         for config_path in file_paths:
             if config_path and os.path.basename(config_path) == "pyproject.toml":
-                if package_lock_exists:
-                    results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
-                elif pyproject.contains_build_tool("poetry", config_path):
+                if package_lock_exists or pyproject.contains_build_tool("poetry", config_path):
                     results.append((str(config_path.relative_to(repo_path)), confidence_score, None, None))
                 # Check the build-system section.
                 else:
@@ -139,7 +137,7 @@ class Poetry(BaseBuildTool):
         cmd_program_name = os.path.basename(build_cmd[0])
 
         # Some projects use a publisher tool and some use the build tool with deploy arguments.
-        deploy_tools = self.publisher if self.publisher else self.builder
+        deploy_tools = self.publisher or self.builder
         deploy_args = self.deploy_arg
 
         # Sometimes poetry is called as a Python module.
@@ -186,7 +184,7 @@ class Poetry(BaseBuildTool):
         if not cmd_program_name:
             return False, Confidence.HIGH
 
-        builder = self.packager if self.packager else self.builder
+        builder = self.packager or self.builder
         build_args = self.build_arg
 
         # Sometimes poetry is called as a Python module.

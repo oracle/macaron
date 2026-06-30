@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains helper functions to process CycloneDX SBOM."""
@@ -6,7 +6,7 @@
 import json
 import logging
 import os
-import subprocess  # nosec B404
+import subprocess
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, TypedDict
@@ -54,7 +54,7 @@ def deserialize_bom_json(file_path: Path) -> Bom:
         If the bom.json file cannot be located or deserialized.
     """
     if not os.path.exists(file_path):
-        raise CycloneDXParserError(f"Unable to locate any BOM files at: {str(file_path.parent)}.")
+        raise CycloneDXParserError(f"Unable to locate any BOM files at: {file_path.parent!s}.")
 
     # We use the `cyclonedx-python-library` library for deserialization following the example here:
     # https://cyclonedx-python-library.readthedocs.io/en/v7.3.4/examples.html
@@ -76,7 +76,7 @@ def deserialize_bom_json(file_path: Path) -> Bom:
 
             if validation_errors:
                 logger.debug("BOM file is invalid: %s", repr(validation_errors))
-                raise CycloneDXParserError(f"BOM file is invalid: {repr(validation_errors)}")
+                raise CycloneDXParserError(f"BOM file is invalid: {validation_errors!r}")
 
             logger.debug("Successfully validated the BOM file at %s", file_path)
 
@@ -340,7 +340,6 @@ class DependencyAnalyzer:
 
         # Grab dependencies for each build tool, collate all into the deps_resolved.
         for build_tool in build_tools:
-
             try:
                 # We allow dependency analysis if SBOM is provided but no repository is found.
                 dep_analyzer = build_tool.get_dep_analyzer()
@@ -371,7 +370,7 @@ class DependencyAnalyzer:
             commands = dep_analyzer.get_cmd()
             try:
                 # Suppressing Bandit's B603 report because the repo paths are validated.
-                analyzer_output = subprocess.run(  # nosec B603
+                analyzer_output = subprocess.run(  # noqa: S603
                     commands,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,

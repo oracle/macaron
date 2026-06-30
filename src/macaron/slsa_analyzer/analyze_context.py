@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Analyze Context class.
@@ -348,7 +348,7 @@ def store_inferred_build_info_results(
         predicate["buildType"] = f"Custom {ci_service.name}"
         predicate["builder"]["id"] = trigger_link
         predicate["invocation"]["configSource"]["uri"] = (
-            f"{ctx.component.repository.remote_path}" f"@refs/heads/{ctx.component.repository.branch_name}"
+            f"{ctx.component.repository.remote_path}@refs/heads/{ctx.component.repository.branch_name}"
         )
         predicate["invocation"]["configSource"]["digest"]["sha1"] = ctx.component.repository.commit_sha
         predicate["invocation"]["configSource"]["entryPoint"] = trigger_link

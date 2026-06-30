@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the functions used for generating build specs from the Macaron database."""
@@ -6,7 +6,7 @@
 import json
 import logging
 import os
-from enum import Enum
+from enum import StrEnum
 
 from packageurl import PackageURL
 from sqlalchemy import create_engine
@@ -23,7 +23,7 @@ from macaron.path_utils.purl_based_path import get_purl_based_dir
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class BuildSpecFormat(str, Enum):
+class BuildSpecFormat(StrEnum):
     """The build spec formats that we support."""
 
     REPRODUCIBLE_CENTRAL = "rc-buildspec"

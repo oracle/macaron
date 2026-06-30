@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Generate souffle datalog for policy prelude."""
@@ -102,8 +102,10 @@ def table_to_declaration(table: Table) -> str:
     >>> from sqlalchemy import Column, MetaData, Table
     >>> from sqlalchemy.sql.sqltypes import Boolean, Integer, String, Text
     >>> metadata = MetaData()
-    >>> tbl = Table("_example", metadata, Column("id", Integer, nullable=False), Column("hello", String))
-    >>> assert table_to_declaration(tbl) == '.decl example (id: number, hello: symbol)'
+    >>> tbl = Table(
+    ...     "_example", metadata, Column("id", Integer, nullable=False), Column("hello", String)
+    ... )
+    >>> assert table_to_declaration(tbl) == ".decl example (id: number, hello: symbol)"
 
     Parameters
     ----------
@@ -162,7 +164,7 @@ def get_fact_input_statements(db_name: os.PathLike | str, metadata: MetaData) ->
     return SouffleProgram(
         directives={
             f'.input {table_name[1:]} (IO=sqlite, filename="{db_name}")'
-            for table_name in metadata.tables.keys()
+            for table_name in metadata.tables
             if table_name[0] == "_"
         }
     )

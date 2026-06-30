@@ -1,9 +1,7 @@
 # Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This module test the Util methods
-"""
+"""This module test the Util methods."""
 
 from collections.abc import Callable
 from unittest import TestCase
@@ -18,14 +16,10 @@ from macaron.util import send_get_http_raw
 
 
 class TestUtil(TestCase):
-    """
-    This class provide tests for the util package.
-    """
+    """This class provide tests for the util package."""
 
     def test_construct_query(self) -> None:
-        """
-        Test whether query is constructed properly
-        """
+        """Test whether query is constructed properly."""
         query = util.construct_query(
             {
                 "q": "Some simple query language:java",
@@ -38,9 +32,7 @@ class TestUtil(TestCase):
     # TODO: the copy_file_bulk method is essential, however, this test
     # needs further work.
     def test_copy_file_bulk(self) -> None:
-        """
-        Test the copy file bulk method
-        """
+        """Test the copy file bulk method."""
         src_path = "/src/path"
         target_path = "/target/path"
 
@@ -60,10 +52,9 @@ class TestUtil(TestCase):
         # Testing copy behaviors.
         with patch("os.makedirs") as mock_make_dirs:
             # Test ignoring existed files.
-            with patch("os.path.exists", return_value=True):
-                with patch("macaron.util.copy_file") as mock_copy_file:
-                    assert util.copy_file_bulk(["file"], src_path, target_path)
-                    mock_copy_file.assert_not_called()
+            with patch("os.path.exists", return_value=True), patch("macaron.util.copy_file") as mock_copy_file:
+                assert util.copy_file_bulk(["file"], src_path, target_path)
+                mock_copy_file.assert_not_called()
 
             # Files do not exist, perform the copy operation.
             with patch("os.path.exists", return_value=False):

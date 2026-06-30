@@ -412,9 +412,7 @@ def _arg_has_attacker_controlled_github_ref(parts: object) -> bool:
             ".event.comment.body",
         }:
             pr_head_ref = True
-    if expansion and pr_head_ref:
-        return True
-    return False
+    return bool(expansion and pr_head_ref)
 
 
 def _has_attacker_controlled_expanded_ref(refs: list[str]) -> bool:

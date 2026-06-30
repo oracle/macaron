@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """A check to determine whether the source repository of a package can be independently verified."""
@@ -28,7 +28,7 @@ class ScmAuthenticityFacts(CheckFacts):
     __tablename__ = "_scm_authenticity_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: Repository link identified by Macaron's repo finder.
     repo_link: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
@@ -52,7 +52,7 @@ class ScmAuthenticityFacts(CheckFacts):
     #: The build tool used to build the package.
     build_tool: Mapped[str] = mapped_column(String, nullable=False, info={"justification": JustificationType.TEXT})
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": __tablename__,
     }
 

@@ -102,14 +102,14 @@ def decode_provenance(provenance: dict) -> dict[str, JsonType]:
         If the payload could not be decoded.
     """
     # The GitHub Attestation stores the DSSE envelope in `dsseEnvelope` property.
-    dsse_envelope = provenance.get("dsseEnvelope", None)
+    dsse_envelope = provenance.get("dsseEnvelope")
     if dsse_envelope:
         provenance_payload = dsse_envelope.get("payload", None)
         logger.debug("Found dsseEnvelope property in the provenance.")
     else:
         # Some provenances, such as Witness may not include the DSSE envelope `dsseEnvelope`
         # property but contain its value directly.
-        provenance_payload = provenance.get("payload", None)
+        provenance_payload = provenance.get("payload")
     if not provenance_payload:
         # PyPI Attestation.
         provenance_payload = json_extract(provenance, ["envelope", "statement"], str)

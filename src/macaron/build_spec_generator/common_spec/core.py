@@ -7,7 +7,7 @@ import logging
 import pprint
 import shlex
 from collections.abc import Sequence
-from enum import Enum
+from enum import Enum, StrEnum
 from importlib import metadata as importlib_metadata
 
 import sqlalchemy.orm
@@ -47,7 +47,7 @@ class LANGUAGES(Enum):
     PYPI = "python"
 
 
-class MacaronBuildToolName(str, Enum):
+class MacaronBuildToolName(StrEnum):
     """Represent the name of a build tool that Macaron stores in the database.
 
     This doesn't cover all build tools that Macaron supports, and ONLY includes the ones that we

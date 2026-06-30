@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the Registry class for loading checks."""
@@ -11,7 +11,7 @@ import sys
 import traceback
 from collections.abc import Callable, Iterable
 from graphlib import CycleError, TopologicalSorter
-from typing import Any, TypeVar
+from typing import Any, ClassVar, TypeVar
 
 from macaron.config.defaults import defaults
 from macaron.console import access_handler
@@ -37,10 +37,10 @@ T = TypeVar("T")
 class Registry:
     """This abstract class is used to store checks in Macaron."""
 
-    _all_checks_mapping: dict[str, BaseCheck] = {}
+    _all_checks_mapping: ClassVar[dict[str, BaseCheck]] = {}
 
     # Map between a check and any child checks that depend on it.
-    _check_relationships_mapping: dict[str, dict[str, CheckResultType]] = {}
+    _check_relationships_mapping: ClassVar[dict[str, dict[str, CheckResultType]]] = {}
 
     # The format for check id
     _id_format = re.compile(r"^mcn_([a-z]+_)+([0-9]+)$")
@@ -254,10 +254,7 @@ class Registry:
         >>> Registry._validate_check_id_format("Some_Thing', '', '%(*$)")
         False
         """
-        if (not isinstance(check_id, str)) or (not Registry._id_format.match(check_id)):
-            return False
-
-        return True
+        return not (not isinstance(check_id, str) or not Registry._id_format.match(check_id))
 
     @staticmethod
     def _validate_check_relationship(relationship: Any) -> bool:
@@ -277,16 +274,13 @@ class Registry:
         bool
             True if valid, else False.
         """
-        if (
+        return bool(
             relationship
             and isinstance(relationship, tuple)
             and len(relationship) == 2
             and isinstance(relationship[0], str)
             and isinstance(relationship[1], CheckResultType)
-        ):
-            return True
-
-        return False
+        )
 
     def get_parents(self, check_id: str) -> set[str]:
         """Return the ids of all direct parent checks.

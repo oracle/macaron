@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module validates the result JSON files against a JSON schema."""
@@ -13,7 +13,7 @@ import jsonschema
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run main logic."""
-    if not argv or not len(argv) == 3:
+    if not argv or len(argv) != 3:
         print("Usage: python3 schema_validate.py <json_path> <schema_path>")
         return os.EX_USAGE
 

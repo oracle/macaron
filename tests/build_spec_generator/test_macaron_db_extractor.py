@@ -1,10 +1,10 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains tests for the macaron_db_extractor module."""
 
 from collections.abc import Generator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -72,15 +72,15 @@ def invalid_db_session() -> Generator[Session, Any, None]:
         pytest.param(
             [
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/oracle/macaron@0.16.0",
                 ),
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/boo/foo@0.1.0",
                 ),
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/oracle/macaron@0.16.0",
                 ),
             ],
@@ -91,15 +91,15 @@ def invalid_db_session() -> Generator[Session, Any, None]:
         pytest.param(
             [
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/oracle/macaron@0.16.0",
                 ),
                 (
-                    datetime(year=2025, month=12, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=12, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/oracle/macaron@0.16.0",
                 ),
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/boo/foo@0.1.0",
                 ),
             ],
@@ -159,11 +159,11 @@ def test_lookup_latest_component(
         pytest.param(
             [
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/boo/foo@0.2.0",
                 ),
                 (
-                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+                    datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
                     "pkg:maven/boo/boohoo@1.0",
                 ),
             ],
@@ -211,7 +211,7 @@ def test_lookup_latest_component_empty_db(
 def test_repository_information_from_latest_component(macaron_db_session: Session) -> None:
     """Test getting the repository information from looking up a latest component."""
     analysis = Analysis(
-        analysis_time=datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=timezone.utc),
+        analysis_time=datetime(year=2025, month=5, day=6, hour=10, minute=30, second=30, tzinfo=UTC),
         macaron_version=__version__,
     )
 

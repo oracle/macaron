@@ -1,9 +1,7 @@
 # Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
-"""
-This module tests the GitHub git service.
-"""
+"""This module tests the GitHub git service."""
 
 from macaron.slsa_analyzer.git_service import GitHub
 

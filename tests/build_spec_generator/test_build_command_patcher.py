@@ -169,7 +169,7 @@ def test_patch_mvn_cli_command_error(
     invalid_patch: dict[str, MavenOptionPatchValueType | None],
 ) -> None:
     """Test patch mvn cli command patching with invalid patch."""
-    original_cmd = "mvn -s ../.github/maven-settings.xml install -Pexamples,noRun".split()
+    original_cmd = ["mvn", "-s", "../.github/maven-settings.xml", "install", "-Pexamples,noRun"]
 
     assert (
         _patch_command(
@@ -348,7 +348,16 @@ def test_patch_gradle_cli_command_error(
     invalid_patch: dict[str, GradleOptionPatchValueType | None],
 ) -> None:
     """Test patch mvn cli command patching with invalid patch."""
-    original_cmd = "gradle clean build --no-build-cache --debug --console plain -Dorg.gradle.parallel=true".split()
+    original_cmd = [
+        "gradle",
+        "clean",
+        "build",
+        "--no-build-cache",
+        "--debug",
+        "--console",
+        "plain",
+        "-Dorg.gradle.parallel=true",
+    ]
     assert (
         _patch_command(
             cmd=original_cmd,
@@ -406,7 +415,7 @@ def test_patch_arbitrary_command(
     ("cmd", "patches"),
     [
         pytest.param(
-            "mvn --this-is-not-a-mvn-option".split(),
+            ["mvn", "--this-is-not-a-mvn-option"],
             {
                 PatchCommandBuildTool.MAVEN: {
                     "--debug": True,
@@ -418,7 +427,7 @@ def test_patch_arbitrary_command(
             id="incorrect_mvn_command",
         ),
         pytest.param(
-            "gradle clean build --not-a-gradle-command".split(),
+            ["gradle", "clean", "build", "--not-a-gradle-command"],
             {
                 PatchCommandBuildTool.MAVEN: {
                     "--debug": True,
@@ -430,7 +439,7 @@ def test_patch_arbitrary_command(
             id="incorrect_gradle_command",
         ),
         pytest.param(
-            "mvn clean package".split(),
+            ["mvn", "clean", "package"],
             {
                 PatchCommandBuildTool.MAVEN: {
                     "--not-a-valid-option": True,
@@ -439,7 +448,7 @@ def test_patch_arbitrary_command(
             id="incorrect_patch_option_long_name",
         ),
         pytest.param(
-            "mvn clean package".split(),
+            ["mvn", "clean", "package"],
             {
                 PatchCommandBuildTool.MAVEN: {
                     # --debug expects a boolean or a None value.

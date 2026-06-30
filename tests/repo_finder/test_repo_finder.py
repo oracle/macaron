@@ -95,7 +95,6 @@ def test_pom_extraction_ordering(tmp_path: Path, test_config: str, expected: str
             """
             [repofinder.java]
             artifact_repositories =
-                 
             """,
             RepoFinderInfo.NO_MAVEN_HOST_PROVIDED,
         ),
@@ -103,7 +102,6 @@ def test_pom_extraction_ordering(tmp_path: Path, test_config: str, expected: str
             """
             [repofinder.java]
             repo_pom_paths =
-                 
             """,
             RepoFinderInfo.NO_POM_TAGS_PROVIDED,
         ),

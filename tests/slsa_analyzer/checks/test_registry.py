@@ -20,7 +20,7 @@ from macaron.slsa_analyzer.registry import Registry
 
 
 class MockCheck(BaseCheck):
-    """BaseCheck with no-op impl for abstract method"""
+    """BaseCheck with no-op impl for abstract method."""
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
         return CheckResultData(result_tables=[], result_type=CheckResultType.UNKNOWN)
@@ -88,9 +88,8 @@ class TestRegistry(TestCase):
 
     def test_exit_on_registering_undefined_check(self) -> None:
         """Test registering a check which Macaron cannot resolve its module."""
-        with patch("inspect.getmodule", return_value=False):
-            with pytest.raises(SystemExit):
-                self.REGISTRY.register(MockCheck("mcn_undefined_check_1", "This check is an undefined Check."))
+        with patch("inspect.getmodule", return_value=False), pytest.raises(SystemExit):
+            self.REGISTRY.register(MockCheck("mcn_undefined_check_1", "This check is an undefined Check."))
 
     @given(one_of(none(), text(), integers(), tuples(), binary(), booleans()))
     def test_exit_on_invalid_check_relationship(self, relationship: SearchStrategy) -> None:
@@ -162,7 +161,11 @@ class TestRegistry(TestCase):
     def test_exit_on_invalid_status_on_skipped(self, status_on_skipped: SearchStrategy) -> None:
         """Test registering a check with invalid status_on_skipped instance variable."""
         check = MockCheck(
-            "mcn_invalid_eval_reqs_1", "Invalid_status_on_skipped", [], [], status_on_skipped  # type: ignore
+            "mcn_invalid_eval_reqs_1",
+            "Invalid_status_on_skipped",
+            [],
+            [],
+            status_on_skipped,  # type: ignore
         )
         with pytest.raises(SystemExit):
             self.REGISTRY.register(check)

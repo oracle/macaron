@@ -101,9 +101,7 @@ def test_download_package_sourcecode_cleans_up_when_download_raises(
     assert not os.path.exists(source_path)
 
 
-def test_download_package_wheel_cleans_up_when_download_raises(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_download_package_wheel_cleans_up_when_download_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The wheel temp directory should be removed if the download helper raises."""
     wheel_name = "example-1.0.0-py3-none-any"
     wheel_path = os.path.join(tmp_path, f"{wheel_name}_abcdef")

@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import string
-import subprocess  # nosec B404
+import subprocess
 from urllib.parse import urlparse
 
 from packageurl import PackageURL
@@ -125,10 +125,8 @@ def get_local_repos_path() -> str:
 
     If the directory does not exist, it is created.
     """
-    local_repos_path = (
-        global_config.local_repos_path
-        if global_config.local_repos_path
-        else os.path.join(global_config.output_path, GIT_REPOS_DIR, "local_repos")
+    local_repos_path = global_config.local_repos_path or os.path.join(
+        global_config.output_path, GIT_REPOS_DIR, "local_repos"
     )
     if not os.path.exists(local_repos_path):
         os.makedirs(local_repos_path, exist_ok=True)
@@ -173,10 +171,7 @@ def check_repo_urls_are_equivalent(repo_1: str, repo_2: str) -> bool:
     """
     repo_url_1 = urlparse(repo_1)
     repo_url_2 = urlparse(repo_2)
-    if repo_url_1.hostname != repo_url_2.hostname or repo_url_1.path != repo_url_2.path:
-        return False
-
-    return True
+    return not (repo_url_1.hostname != repo_url_2.hostname or repo_url_1.path != repo_url_2.path)
 
 
 def get_repo_tags(git_obj: Git) -> dict[str, str]:
@@ -218,7 +213,7 @@ def get_repo_tags(git_obj: Git) -> dict[str, str]:
         logger.debug("")
         return {}
     try:
-        result = subprocess.run(  # nosec B603
+        result = subprocess.run(
             args=["git", "show-ref", "--tags", "-d"],
             capture_output=True,
             cwd=repository_path,

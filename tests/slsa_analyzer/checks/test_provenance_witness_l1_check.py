@@ -1,11 +1,11 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Test the check ``provenance_witness_l1_check``."""
 
 import pytest
 
-from macaron.slsa_analyzer.checks.provenance_witness_l1_check import WitnessProvenanceException, verify_artifact_assets
+from macaron.slsa_analyzer.checks.provenance_witness_l1_check import WitnessProvenanceError, verify_artifact_assets
 from macaron.slsa_analyzer.package_registry.jfrog_maven_registry import (
     JFrogMavenAsset,
     JFrogMavenAssetMetadata,
@@ -234,7 +234,7 @@ def test_non_product_witness_subject(
     non_product_subjects: list[InTotoV01Subject],
 ) -> None:
     """A subject that is not a file attested by the Witness product attestator should raise an exception."""
-    with pytest.raises(WitnessProvenanceException):
+    with pytest.raises(WitnessProvenanceError):
         verify_artifact_assets(
             artifact_assets=artifact_assets,
             subjects=non_product_subjects,

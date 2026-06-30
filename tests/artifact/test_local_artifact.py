@@ -1,4 +1,4 @@
-# Copyright (c) 2024 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Test the local artifact utilities."""
@@ -121,7 +121,7 @@ def test_construct_local_artifact_paths_glob_pattern_pypi_purl_error(purl_str: s
 
 
 def test_find_artifact_paths_from_invalid_python_venv() -> None:
-    """Test find_artifact_paths_from_python_venv method with invalid venv path"""
+    """Test find_artifact_paths_from_python_venv method with invalid venv path."""
     with pytest.raises(LocalArtifactFinderError):
         find_artifact_dirs_from_python_venv("./does-not-exist", ["django", "django-5.0.6.dist-info"])
 

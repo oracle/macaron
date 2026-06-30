@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the implementation of the Provenance Available check."""
@@ -20,7 +20,7 @@ from macaron.slsa_analyzer.slsa_req import ReqName
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class ProvenanceAvailableException(MacaronError):
+class ProvenanceAvailableError(MacaronError):
     """When there is an error while checking if a provenance is available."""
 
 
@@ -30,7 +30,7 @@ class ProvenanceAvailableFacts(CheckFacts):
     __tablename__ = "_provenance_available_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The provenance asset name.
     asset_name: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.TEXT})
@@ -38,7 +38,7 @@ class ProvenanceAvailableFacts(CheckFacts):
     #: The URL for the provenance asset.
     asset_url: Mapped[str] = mapped_column(String, nullable=True, info={"justification": JustificationType.HREF})
 
-    __mapper_args__ = {
+    __mapper_args__ = {  # noqa: RUF012 (https://github.com/astral-sh/ruff/issues/25392)
         "polymorphic_identity": "_provenance_available_check",
     }
 

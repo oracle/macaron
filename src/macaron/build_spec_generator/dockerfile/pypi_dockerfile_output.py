@@ -124,9 +124,9 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     EOF
 
     # Run the build
-    RUN source /deps/bin/activate && /deps/bin/pip install wheel && {modern_build_command
-                                                                     if version in SpecifierSet(">=3.6")
-                                                                     else legacy_build_command}
+    RUN source /deps/bin/activate && /deps/bin/pip install wheel && {
+        modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command
+    }
 
     # Validate script
     RUN cat <<'EOF' >/validate

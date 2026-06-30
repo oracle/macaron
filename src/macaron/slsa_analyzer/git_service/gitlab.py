@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the spec for the GitLab service.
@@ -89,10 +89,7 @@ class GitLab(BaseGitService):
         # Construct clone URL from ``urlparse`` result, with or without an access token.
         # https://docs.gitlab.com/ee/gitlab-basics/start-using-git.html#clone-using-a-token
         access_token: str | None = self.token_function()
-        if access_token:
-            clone_url_netloc = f"oauth2:{access_token}@{self.hostname}"
-        else:
-            clone_url_netloc = self.hostname
+        clone_url_netloc = f"oauth2:{access_token}@{self.hostname}" if access_token else self.hostname
 
         clone_url = urlunparse(
             ParseResult(

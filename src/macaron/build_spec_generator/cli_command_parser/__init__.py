@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contain the base classes cli command parsers related."""
@@ -7,7 +7,7 @@ import argparse
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Generic, Protocol, TypeGuard, TypeVar
 
 
@@ -93,7 +93,7 @@ class OptionDef(Generic[P]):
         raise NotImplementedError()
 
 
-class PatchCommandBuildTool(str, Enum):
+class PatchCommandBuildTool(StrEnum):
     """Build tool supported for CLICommand patching."""
 
     MAVEN = "maven"

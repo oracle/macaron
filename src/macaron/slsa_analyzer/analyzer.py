@@ -10,7 +10,7 @@ import re
 import sys
 import tempfile
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import NamedTuple
 
@@ -70,7 +70,7 @@ from macaron.slsa_analyzer.asset import VirtualReleaseAsset
 from macaron.slsa_analyzer.build_tool import BUILD_TOOLS
 
 # To load all checks into the registry
-from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F401,F403
+from macaron.slsa_analyzer.checks import *  # pylint: disable=wildcard-import,unused-wildcard-import # noqa: F403
 from macaron.slsa_analyzer.ci_service import CI_SERVICES
 from macaron.slsa_analyzer.database_store import store_analyze_context_to_db
 from macaron.slsa_analyzer.git_service import GIT_SERVICES, BaseGitService, GitHub
@@ -195,7 +195,7 @@ class Analyzer:
                 # Note that the changes will be committed to the DB when the
                 # current Session context terminates.
                 analysis = Analysis(
-                    analysis_time=datetime.now(tz=timezone.utc),
+                    analysis_time=datetime.now(tz=UTC),
                     macaron_version=__version__,
                 )
 
@@ -279,9 +279,8 @@ class Analyzer:
                     dup_record.context = find_ctx
 
                 for record in report.get_records():
-                    if not record.status == SCMStatus.DUPLICATED_SCM:
-                        if record.context:
-                            store_analyze_context_to_db(record.context)
+                    if record.status != SCMStatus.DUPLICATED_SCM and record.context:
+                        store_analyze_context_to_db(record.context)
 
                 # Store dependency relations.
                 for parent, child in report.get_dependencies():
@@ -453,7 +452,7 @@ class Analyzer:
                 analysis_target.branch,
                 analysis_target.digest,
                 analysis_target.parsed_purl,
-                provenance_commit_digest=provenance_commit_digest
+                provenance_commit_digest=provenance_commit_digest,
             )
             if git_obj:
                 final_digest = git_obj.get_head().hash
@@ -466,18 +465,17 @@ class Analyzer:
         )
 
         # Check if repo came from direct input.
-        if parsed_purl:
-            if check_if_input_purl_provenance_conflict(
-                bool(repo_path_input),
-                provenance_repo_url,
-                parsed_purl,
-            ):
-                return Record(
-                    record_id=repo_id,
-                    description="Input mismatch between repo (purl) and provenance.",
-                    pre_config=config,
-                    status=SCMStatus.ANALYSIS_FAILED,
-                )
+        if parsed_purl and check_if_input_purl_provenance_conflict(
+            bool(repo_path_input),
+            provenance_repo_url,
+            parsed_purl,
+        ):
+            return Record(
+                record_id=repo_id,
+                description="Input mismatch between repo (purl) and provenance.",
+                pre_config=config,
+                status=SCMStatus.ANALYSIS_FAILED,
+            )
 
         # Create the component.
         try:
@@ -705,13 +703,9 @@ class Analyzer:
             commit_date_str,
         )
 
-        self.rich_handler.add_description_table_content("Branch:", res_branch if res_branch else "None")
-        self.rich_handler.add_description_table_content(
-            "Commit Hash:", commit_sha if commit_sha else "[red]Not Found[/]"
-        )
-        self.rich_handler.add_description_table_content(
-            "Commit Date:", commit_date_str if commit_date_str else "[red]Not Found[/]"
-        )
+        self.rich_handler.add_description_table_content("Branch:", res_branch or "None")
+        self.rich_handler.add_description_table_content("Commit Hash:", commit_sha or "[red]Not Found[/]")
+        self.rich_handler.add_description_table_content("Commit Date:", commit_date_str or "[red]Not Found[/]")
 
         return repository
 
@@ -1147,7 +1141,7 @@ class Analyzer:
         """Determine the package registries used by the software component."""
         relevant_package_registries = []
         for package_registry in package_registries_info:
-            if not package_registry.ecosystem == analyze_ctx.component.type:
+            if package_registry.ecosystem != analyze_ctx.component.type:
                 continue
             relevant_package_registries.append(package_registry)
 
