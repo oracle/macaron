@@ -36,7 +36,8 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     GenerateBuildSpecError
         Raised if dockerfile cannot be generated.
     """
-    if buildspec["has_binaries"]:
+    maturin_build = is_maturin_build(buildspec)
+    if buildspec["has_binaries"] and not maturin_build:
         raise GenerateBuildSpecError("We currently do not support generating a dockerfile for non-pure Python packages")
     language_version: str | None = pick_specific_version(buildspec["language_version"])
     if language_version is None:
@@ -48,6 +49,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         raise GenerateBuildSpecError("Derived interpreter version could not be parsed") from error
 
     backend_install_commands = " && ".join(build_backend_commands(buildspec))
+    rustup_install_commands = build_rustup_install_commands() if maturin_build else ""
 
     modern_build_command = "python -m build --wheel -n"
 
@@ -72,7 +74,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
 
     # Install core tools
     RUN dnf -y install which wget tar unzip git
-
+    {rustup_install_commands}
     # Install compiler and make
     RUN dnf -y install gcc make
 
@@ -154,6 +156,40 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     """
 
     return dedent(dockerfile_content)
+
+
+def is_maturin_build(buildspec: BaseBuildSpecDict) -> bool:
+    """Check whether the buildspec uses the Maturin build backend.
+
+    Parameters
+    ----------
+    buildspec: BaseBuildSpecDict
+        The build specification to inspect.
+
+    Returns
+    -------
+    bool
+        Whether the buildspec uses Maturin.
+    """
+    return any(backend == "maturin" or backend.startswith("maturin.") for backend in buildspec["build_backends"])
+
+
+def build_rustup_install_commands() -> str:
+    """Generate commands that install the Rust toolchain required by Maturin.
+
+    Returns
+    -------
+    str
+        Dockerfile commands that install Rustup and add Cargo to ``PATH``.
+    """
+    return """
+    # Install Rust toolchain using Rustup
+    RUN <<EOF
+        wget -q https://sh.rustup.rs -O /tmp/rustup-init.sh
+        sh /tmp/rustup-init.sh -y --profile minimal
+    EOF
+
+    ENV PATH=/root/.cargo/bin:$PATH"""
 
 
 def openssl_install_commands(version: Version) -> str:

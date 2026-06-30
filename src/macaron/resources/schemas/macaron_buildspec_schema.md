@@ -13,7 +13,7 @@ The integration cases in `tests/integration/cases/pypi_toga/test.yaml` and `test
 | `ecosystem` | Yes | Package ecosystem, such as `maven` or `pypi`. This is derived from the PURL type and selects the ecosystem-specific BuildSpec resolver. |
 | `purl` | Yes | Package URL for the target component. |
 | `language` | Yes | Main implementation language inferred for the ecosystem, for example `java` for Maven or `python` for PyPI. |
-| `build_tools` | Yes | Build tools or package managers detected for the repository. For generated specs, Macaron currently recognizes tools such as `maven`, `gradle`, `pip`, `poetry`, `uv`, `flit`, `hatch`, and `conda`, though not every tool has an ecosystem-specific default command. |
+| `build_tools` | Yes | Build tools or package managers detected for the repository. For generated specs, Macaron currently recognizes tools such as `maven`, `gradle`, `pip`, `poetry`, `uv`, `flit`, `hatch`, `maturin`, and `conda`, though not every tool has an ecosystem-specific default command. |
 | `macaron_version` | Yes | Version of Macaron that generated the spec. |
 | `group_id` | No | Ecosystem-specific group or namespace. For Maven this is the Maven group ID. For PyPI this is usually `null`. |
 | `artifact_id` | Yes | Package or artifact name. |
@@ -29,9 +29,9 @@ The integration cases in `tests/integration/cases/pypi_toga/test.yaml` and `test
 | `environment` | No | Environment variables needed by the build or test steps. Values are strings. |
 | `artifact_path` | No | Expected output artifact path or location, if known. |
 | `entry_point` | No | Script, class, binary, or other entry point for running the project, if known. |
-| `build_requires` | No | Build environment requirements as a mapping from package name to version specifier. This is currently used for PyPI packages only, where values are inferred from wheel metadata, `pyproject.toml`, source distributions, and fallback heuristics. A value may be an empty string when a package is required but no concrete version constraint is known. |
+| `build_requires` | No | Build environment requirements as an array of requirement entries. Each entry identifies the requirement, its installer, and its version constraint.|
 | `build_backends` | No | Build backends used by a frontend build tool. For PyPI, this can include values such as `setuptools.build_meta`; these correspond to the backend that tools such as `pip` or `python -m build` call to create a wheel. |
-| `has_binaries` | No | Whether the package artifact includes non-pure binaries. Currently ony PyPI packages are supported.|
+| `has_binaries` | No | Whether the package artifact includes non-pure binaries. Maturin-backed binary packages have dedicated Dockerfile generation support; other non-pure Python packages remain unsupported by that output format. |
 | `upstream_artifacts` | No | Upstream artifacts analyzed while generating the spec, grouped by artifact kind. For example, PyPI may record wheel and sdist URLs; downstream rebuild formats can use the wheel URL to compare the rebuilt artifact with the published artifact. |
 
 ## `build_commands`
@@ -44,7 +44,7 @@ The entries are not only shell snippets. They also carry supporting context abou
 
 | Field | Required by schema | Meaning |
 | --- | --- | --- |
-| `build_tool` | Yes | The build tool the entry applies to, for example `maven`, `gradle`, `pip`, `poetry`, `uv`, `flit`, or `hatch`. It should match one of the values in the top-level `build_tools` list. |
+| `build_tool` | Yes | The build tool the entry applies to, for example `maven`, `gradle`, `pip`, `poetry`, `uv`, `flit`, `hatch`, or `maturin`. It should match one of the values in the top-level `build_tools` list. |
 | `build_tool_version` | No | Detected build tool version, when Macaron can infer one. The schema allows this to be `null`, but generated specs omit the field when the version is unknown. |
 | `build_config_path` | Yes | Path to the build configuration file associated with this command, relative to the repository root. Examples: `pom.xml`, `submodule/pom.xml`, `build.gradle`, `pyproject.toml`. |
 | `root_build_config_path` | No | Optional path to a root or entry build configuration for multi-module builds, relative to the repository root. Maven and Gradle detection can use this when the artifact-specific config is in a module but the build should be launched from a higher-level config. |
@@ -86,6 +86,7 @@ Current defaults include:
 | PyPI | `uv` | `["uv", "build"]` |
 | PyPI | `flit` | `["flit", "build"]` |
 | PyPI | `hatch` | `["hatch", "build"]` |
+| PyPI | `maturin` | `["maturin", "build", "--release"]` |
 
 For PyPI packages with non-pure binary artifacts, the PyPI resolver currently sets `build_commands` to an empty array instead of emitting a rebuild command.
 
@@ -138,11 +139,23 @@ This abbreviated example follows the same shape as the validated `pypi_toga` int
     }
   ],
   "has_binaries": false,
-  "build_requires": {
-    "setuptools": "==80.3.1",
-    "setuptools_scm": "==8.3.1",
-    "setuptools_dynamic_dependencies": "==1.0.0"
-  },
+  "build_requires": [
+    {
+      "name": "setuptools",
+      "version": "==80.3.1",
+      "installer": "pip"
+    },
+    {
+      "name": "setuptools_dynamic_dependencies",
+      "version": "==1.0.0",
+      "installer": "pip"
+    },
+    {
+      "name": "setuptools_scm",
+      "version": "==8.3.1",
+      "installer": "pip"
+    }
+  ],
   "build_backends": ["setuptools.build_meta"],
   "upstream_artifacts": {
     "wheels": ["https://files.pythonhosted.org/.../toga-0.5.1-py3-none-any.whl"],
