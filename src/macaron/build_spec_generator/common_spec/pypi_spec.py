@@ -539,7 +539,7 @@ class PyPIBuildSpec(
             if toolchain_version:
                 return toolchain_version.strip()
         except tomli.TOMLDecodeError:
-            pass
+            logger.debug("Failed to parse toml content.")
 
         for line in stripped.splitlines():
             sanitized = line.strip().strip('"').strip("'")
