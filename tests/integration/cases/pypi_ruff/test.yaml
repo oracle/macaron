@@ -28,7 +28,6 @@ steps:
     expected: expected_default.buildspec
 - name: Generate the buildspec
   kind: gen-build-spec
-  expect_fail: true
   options:
     command_args:
     - -purl

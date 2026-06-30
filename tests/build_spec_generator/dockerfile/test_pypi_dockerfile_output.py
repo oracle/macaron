@@ -7,7 +7,7 @@ import pytest
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict, SpecBuildCommandDict
 from macaron.build_spec_generator.dockerfile import pypi_dockerfile_output
-from macaron.build_spec_generator.dockerfile.pypi_dockerfile_output import build_backend_commands, gen_dockerfile
+from macaron.build_spec_generator.dockerfile.pypi_dockerfile_output import gen_dockerfile
 
 
 @pytest.fixture(name="pypi_build_spec")
@@ -63,16 +63,15 @@ def test_successful_generation(
     assert gen_dockerfile(pypi_build_spec) == snapshot
 
 
-def test_build_backend_commands_only_uses_pip_requirements(pypi_build_spec: BaseBuildSpecDict) -> None:
-    """Ensure non-pip build requirements are ignored in pip installation commands."""
+def test_maturin_binary_package_generation(snapshot: str, pypi_build_spec: BaseBuildSpecDict) -> None:
+    """Ensure a Dockerfile is generated for a Maturin-backed binary package."""
+    pypi_build_spec["has_binaries"] = True
+    pypi_build_spec["build_backends"] = ["maturin"]
     pypi_build_spec["build_requires"] = [
-        {"name": "setuptools", "version": "==80.9.0", "installer": "pip"},
-        {"name": "wheel", "installer": "pip"},
+        {"name": "maturin", "version": ">=1,<2", "installer": "pip"},
         {"name": "rustup", "installer": "bootstrap"},
-        {"name": "rust", "version": "1.75.0", "installer": "rustup"},
+        {"name": "rust", "installer": "rustup"},
+        {"name": "pyo3", "version": "==0.24.0", "installer": "cargo"},
     ]
 
-    assert build_backend_commands(pypi_build_spec) == [
-        '/deps/bin/pip install "wheel"',
-        "/deps/bin/pip install --upgrade setuptools",
-    ]
+    assert gen_dockerfile(pypi_build_spec) == snapshot

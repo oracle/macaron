@@ -122,7 +122,7 @@
         "required": ["name", "installer"],
         "additionalProperties": false
       },
-      "description": "Required packages that must be available in the build environment."
+      "description": "Build environment requirements, including the installer and version constraint for each requirement."
     },
     "build_backends": {
       "type": "array",
