@@ -1,0 +1,16 @@
+{
+    "passed_policies": [],
+    "component_satisfies_policy": [],
+    "failed_policies": [
+        [
+            "registry-maintainability"
+        ]
+    ],
+    "component_violates_policy": [
+        [
+            "1",
+            "pkg:pypi/boto@2.49.0",
+            "registry-maintainability"
+        ]
+    ]
+}

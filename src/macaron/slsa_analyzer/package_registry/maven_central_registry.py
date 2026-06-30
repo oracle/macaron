@@ -239,6 +239,102 @@ class MavenCentralRegistry(PackageRegistry):
 
         raise InvalidHTTPResponseError(f"Invalid response from Maven central for {url}.")
 
+    def find_latest_release_timestamp(self, namespace: str, name: str) -> datetime:
+        """Return the timestamp of the most recent release of the package on Maven Central.
+
+        Uses the same Maven Central Search REST API as ``find_publish_timestamp``
+        but omits the version filter. All releases are fetched and sorted in
+        Python by timestamp to find the most recent one. This allows the registry
+        maintainability check to evaluate release recency without requiring a
+        pinned version in the PURL.
+
+        Parameters
+        ----------
+        namespace : str
+            The Maven group ID (e.g. ``com.intellectualsites.arkitektonika``).
+        name : str
+            The Maven artifact ID (e.g. ``Arkitektonika-Client``).
+
+        Returns
+        -------
+        datetime
+            A timezone-aware ``datetime`` object representing the
+            publication timestamp of the most recent release.
+
+        Raises
+        ------
+        InvalidHTTPResponseError
+            If the URL construction fails, the HTTP response is invalid, or the
+            expected timestamp is missing or malformed.
+        """
+        query_params = [f"q=g:{namespace}", f"a:{name}"]
+
+        try:
+            url = urllib.parse.urlunsplit(
+                urllib.parse.SplitResult(
+                    scheme=self.search_scheme,
+                    netloc=self.search_netloc,
+                    path=f"/{self.search_endpoint}",
+                    query="&".join(
+                        [
+                            "+AND+".join(query_params),
+                            "core=gav",
+                            "rows=100",
+                            "wt=json",
+                        ]
+                    ),
+                    fragment="",
+                )
+            )
+        except ValueError as error:
+            raise InvalidHTTPResponseError(
+                "Failed to construct the latest-release search URL for Maven Central."
+            ) from error
+
+        response = send_get_http_raw(url, headers=None, timeout=self.request_timeout)
+        if response:
+            try:
+                res_obj = response.json()
+            except requests.exceptions.JSONDecodeError as error:
+                raise InvalidHTTPResponseError(
+                    f"Failed to process response from Maven Central for {url}."
+                ) from error
+            if not res_obj:
+                raise InvalidHTTPResponseError(f"Empty response returned by {url}.")
+            if not res_obj.get("response"):
+                raise InvalidHTTPResponseError(
+                    f"The response returned by {url} misses `response` attribute."
+                )
+            if not res_obj.get("response").get("docs"):
+                raise InvalidHTTPResponseError(
+                    f"No releases found for {namespace}:{name} on Maven Central."
+                )
+
+            # The Maven Central search API does not support server-side sorting,
+            # so we sort the returned releases by timestamp in Python to find the newest.
+            docs = res_obj["response"]["docs"]
+            docs_with_timestamp = [d for d in docs if d.get("timestamp")]
+            if not docs_with_timestamp:
+                raise InvalidHTTPResponseError(
+                    f"The timestamp is missing in the response returned by {url}."
+                )
+
+            latest_doc = max(docs_with_timestamp, key=lambda d: d["timestamp"])
+            timestamp = latest_doc["timestamp"]
+
+            logger.debug(
+                "Found latest release timestamp for %s:%s: %s.", namespace, name, timestamp
+            )
+
+            try:
+                return datetime.fromtimestamp(round(timestamp / 1000), tz=timezone.utc)
+            except (OverflowError, OSError) as error:
+                raise InvalidHTTPResponseError(
+                    f"The timestamp returned by {url} is invalid."
+                ) from error
+
+        raise InvalidHTTPResponseError(f"Invalid response from Maven Central for {url}.")
+
     def get_artifact_hash(self, purl: PackageURL) -> str | None:
         """Return the hash of the artifact found by the passed purl relevant to the registry's URL.
 

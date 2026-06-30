@@ -100,6 +100,9 @@ the requirements that are currently supported by Macaron.
    * - ``mcn_license_1``
      - **License check** - Check whether the repository license is not in the configured deny-list.
      - This check detects the repository license via the GitHub API and validates it against a user-defined list of denied SPDX identifiers configured in ``defaults.ini``. If the deny-list is empty, any detected license is accepted.
+   * - ``mcn_registry_maintainability_1``
+     - **Registry maintainability** - Check whether the package exists in its public registry and is actively maintained.
+     - This check validates registry presence, release recency, and explicit deprecation or yanked status (PyPI, npm). Also checks whether the source repository has been archived and how recently code was pushed, when a GitHub repository is available. For Maven packages, the check always queries Maven Central for the **latest** release date (rather than the pinned version's publish date), so actively maintained packages with old pinned versions are not incorrectly flagged as unmaintained. Maven packages without a pinned version are also evaluated via the latest release date. The inactivity threshold is configurable via ``defaults.ini`` (``[registry_maintainability] inactivity_threshold_days``). Returns ``UNKNOWN`` when the ecosystem is unsupported or a Maven Central lookup fails.
 
 ----------------------
 How does Macaron work?
