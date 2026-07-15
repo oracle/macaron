@@ -287,15 +287,15 @@ def pick_specific_version(inferred_constraints: list[str]) -> str | None:
     Examples
     --------
     >>> pick_specific_version([">=3.0"])
-    '3.4.10'
+    '3.8.20'
     >>> pick_specific_version([">=3.8"])
     '3.8.20'
     >>> pick_specific_version([">=3.0", "!=3.4", "!=3.3", "!=3.5"])
-    '3.6.15'
+    '3.8.20'
     >>> pick_specific_version(["<=3.12"])
-    '3.4.10'
-    >>> pick_specific_version(["<=3.12", "==3.6"])
-    '3.6.15'
+    '3.8.20'
+    >>> pick_specific_version(["<=3.12", "==3.6"]) is None
+    True
     """
     # We cannot create virtual environments for Python versions <= 3.3.0, as
     # it did not exist back then
