@@ -21,7 +21,7 @@ from macaron.build_spec_generator.common_spec.base_spec import (
     SpecBuildRequirementDict,
 )
 from macaron.config.defaults import defaults
-from macaron.errors import SourceCodeError, WheelTagError
+from macaron.errors import SourceCodeError
 from macaron.json_tools import json_extract
 from macaron.slsa_analyzer.package_registry import pypi_registry
 from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInfo
@@ -172,11 +172,8 @@ class PyPIBuildSpec(
                                 python_version_set.update(wheel_name_python_version_set)
                         except InvalidWheelFilename:
                             logger.debug("Could not parse wheel file name to extract version")
-                except WheelTagError:
-                    logger.debug("Can not analyze non-pure wheels")
                 except SourceCodeError:
                     logger.debug("Could not download wheel matching this PURL")
-
                 logger.debug("From .dist_info build-requires: %s", parsed_build_requires)
 
                 try:

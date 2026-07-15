@@ -9,6 +9,7 @@ from textwrap import dedent
 
 from bs4 import BeautifulSoup, FeatureNotFound
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from packaging.version import InvalidVersion, Version
 
 from macaron.build_spec_generator.common_spec.base_spec import BaseBuildSpecDict
@@ -39,19 +40,13 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     maturin_build = is_maturin_build(buildspec)
     if buildspec["has_binaries"] and not maturin_build:
         raise GenerateBuildSpecError("We currently do not support generating a dockerfile for non-pure Python packages")
-    language_version: str | None = pick_specific_version(buildspec["language_version"])
-    if language_version is None:
-        raise GenerateBuildSpecError("Could not derive specific interpreter version")
-    try:
-        version = Version(language_version)
-    except InvalidVersion as error:
-        logger.debug("Ran into issue converting %s to a version: %s", language_version, error)
-        raise GenerateBuildSpecError("Derived interpreter version could not be parsed") from error
-
     backend_install_commands = " && ".join(build_backend_commands(buildspec))
-    rustup_install_commands = build_rustup_install_commands() if maturin_build else ""
+    rustup_install_commands = build_rustup_install_commands(buildspec) if maturin_build else ""
+    frontend_install_command = "\n        /deps/bin/pip install build" if not maturin_build else ""
+    wheel_install_command = "/deps/bin/pip install wheel && " if not maturin_build else ""
 
     modern_build_command = "python -m build --wheel -n"
+    maturin_build_command = "maturin build --release --out dist --compatibility manylinux_2_34"
 
     legacy_build_command = (
         'if test -f "setup.py"; then python setup.py bdist_wheel; else python -m build --wheel -n; fi'
@@ -67,7 +62,31 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
             wheel_name = wheel_url.rsplit("/", 1)[-1]
     else:
         logger.debug("We could not find an upstream artifact, and therefore we cannot run validation")
-
+    if maturin_build and not wheel_url:
+        raise GenerateBuildSpecError(
+            "Could not find a Linux x86_64 binary wheel to validate the Maturin Dockerfile output"
+        )
+    language_constraints = (
+        [f"=={wheel_python_version}"]
+        if maturin_build and (wheel_python_version := get_wheel_cpython_version(wheel_name))
+        else buildspec["language_version"]
+    )
+    language_version: str | None = pick_specific_version(language_constraints)
+    if language_version is None:
+        raise GenerateBuildSpecError("Could not derive specific interpreter version")
+    try:
+        version = Version(language_version)
+    except InvalidVersion as error:
+        logger.debug("Ran into issue converting %s to a version: %s", language_version, error)
+        raise GenerateBuildSpecError("Derived interpreter version could not be parsed") from error
+    wheel_name_validation = (
+        "        # Compare file tree"
+        if maturin_build
+        else f'''\
+        # Compare wheel names
+        [ $(basename $BUILT_WHEEL) == "{wheel_name}" ] || {{ echo "Wheel name does not match!"; exit 1; }}
+        # Compare file tree'''
+    )
     dockerfile_content = f"""
     #syntax=docker/dockerfile:1.10
     FROM oraclelinux:9
@@ -102,7 +121,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     # Build interpreter and create venv
     RUN <<EOF
         cd Python-{language_version}
-        ./configure --with-pydebug
+        ./configure{"" if maturin_build else " --with-pydebug"}
         make -s -j $(nproc)
         make install
         ./python -m ensurepip
@@ -121,13 +140,16 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
 
     # Install build and the build backends
     RUN <<EOF
-        {backend_install_commands}
-        /deps/bin/pip install build
+        {backend_install_commands}{frontend_install_command}
     EOF
 
     # Run the build
-    RUN source /deps/bin/activate && /deps/bin/pip install wheel && {
-        modern_build_command if version in SpecifierSet(">=3.6") else legacy_build_command
+    RUN source /deps/bin/activate && {wheel_install_command}{
+        maturin_build_command
+        if maturin_build
+        else modern_build_command
+        if version in SpecifierSet(">=3.6")
+        else legacy_build_command
     }
 
     # Validate script
@@ -143,9 +165,7 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
         [ -e $BUILT_WHEEL ] || {{ echo "No wheels found!"; exit 1; }}
         # Download the wheel
         wget -q {wheel_url}
-        # Compare wheel names
-        [ $(basename $BUILT_WHEEL) == "{wheel_name}" ] || {{ echo "Wheel name does not match!"; exit 1; }}
-        # Compare file tree
+{wheel_name_validation}
         (unzip -Z1 $BUILT_WHEEL | grep -v '\\.dist-info' | sort) > built.tree
         (unzip -Z1 "{wheel_name}" | grep -v '\\.dist-info' | sort ) > pypi_artifact.tree
         diff -u built.tree pypi_artifact.tree || {{ echo "File trees do not match!"; exit 1; }}
@@ -156,6 +176,19 @@ def gen_dockerfile(buildspec: BaseBuildSpecDict) -> str:
     """
 
     return dedent(dockerfile_content)
+
+
+def get_wheel_cpython_version(wheel_name: str) -> str | None:
+    """Return the CPython minor version encoded in a wheel filename."""
+    try:
+        _, _, _, tags = parse_wheel_filename(wheel_name)
+    except InvalidWheelFilename:
+        return None
+    for tag in sorted(tags, key=lambda tag: tag.interpreter):
+        match = re.fullmatch(r"cp(\d)(\d+)", tag.interpreter)
+        if match:
+            return f"{match.group(1)}.{match.group(2)}"
+    return None
 
 
 def is_maturin_build(buildspec: BaseBuildSpecDict) -> bool:
@@ -174,19 +207,29 @@ def is_maturin_build(buildspec: BaseBuildSpecDict) -> bool:
     return any(backend == "maturin" or backend.startswith("maturin.") for backend in buildspec["build_backends"])
 
 
-def build_rustup_install_commands() -> str:
+def build_rustup_install_commands(buildspec: BaseBuildSpecDict) -> str:
     """Generate commands that install the Rust toolchain required by Maturin.
 
-    Returns
-    -------
-    str
-        Dockerfile commands that install Rustup and add Cargo to ``PATH``.
+    Rustup accepts a concrete channel rather than a packaging version
+    constraint. Concrete inferred channels are used directly; constraints
+    such as ``>=1.75`` use Rustup's stable default.
     """
-    return """
+    rust_version = next(
+        (
+            requirement.get("version")
+            for requirement in buildspec["build_requires"]
+            if requirement["name"] == "rust" and requirement["installer"] == "rustup"
+        ),
+        None,
+    )
+    default_toolchain = ""
+    if rust_version and re.fullmatch(r"(?:stable|beta|nightly|\d+(?:\.\d+){0,2})", rust_version):
+        default_toolchain = f" --default-toolchain {rust_version}"
+    return f"""\
     # Install Rust toolchain using Rustup
     RUN <<EOF
         wget -q https://sh.rustup.rs -O /tmp/rustup-init.sh
-        sh /tmp/rustup-init.sh -y --profile minimal
+        sh /tmp/rustup-init.sh -y --profile minimal{default_toolchain}
     EOF
 
     ENV PATH=/root/.cargo/bin:$PATH"""
@@ -256,7 +299,7 @@ def pick_specific_version(inferred_constraints: list[str]) -> str | None:
     """
     # We cannot create virtual environments for Python versions <= 3.3.0, as
     # it did not exist back then
-    version_set = SpecifierSet(">=3.4.0")
+    version_set = SpecifierSet(">=3.8.0")
     for version in inferred_constraints:
         try:
             version_set &= SpecifierSet(version)

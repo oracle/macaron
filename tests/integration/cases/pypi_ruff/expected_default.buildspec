@@ -1012,7 +1012,7 @@
         {
             "name": "maturin",
             "installer": "pip",
-            "version": "<2.0,>=1.9.3"
+            "version": "==1.13.1"
         },
         {
             "name": "mdtest",
@@ -2538,6 +2538,9 @@
         "maturin"
     ],
     "upstream_artifacts": {
+        "wheels": [
+            "https://files.pythonhosted.org/packages/e8/31/bf1a0803d077e679cfeee5f2f67290a0fa79c7385b5d9a8c17b9db2c48f0/ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+        ],
         "sdist": [
             "https://files.pythonhosted.org/packages/24/21/a7d5c126d5b557715ef81098f3db2fe20f622a039ff2e626af28d674ab80/ruff-0.15.13.tar.gz"
         ]

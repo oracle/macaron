@@ -7,8 +7,7 @@
   
   # Install core tools
   RUN dnf -y install which wget tar unzip git
-  
-  # Install Rust toolchain using Rustup
+      # Install Rust toolchain using Rustup
   RUN <<EOF
       wget -q https://sh.rustup.rs -O /tmp/rustup-init.sh
       sh /tmp/rustup-init.sh -y --profile minimal
@@ -50,7 +49,7 @@
   # Build interpreter and create venv
   RUN <<EOF
       cd Python-3.9.25
-      ./configure --with-pydebug
+      ./configure
       make -s -j $(nproc)
       make install
       ./python -m ensurepip
@@ -70,11 +69,10 @@
   # Install build and the build backends
   RUN <<EOF
       /deps/bin/pip install "maturin>=1,<2"
-      /deps/bin/pip install build
   EOF
   
   # Run the build
-  RUN source /deps/bin/activate && /deps/bin/pip install wheel && python -m build --wheel -n
+  RUN source /deps/bin/activate && maturin build --release --out dist --compatibility manylinux_2_34
   
   # Validate script
   RUN cat <<'EOF' >/validate
@@ -89,8 +87,6 @@
       [ -e $BUILT_WHEEL ] || { echo "No wheels found!"; exit 1; }
       # Download the wheel
       wget -q https://files.pythonhosted.org/packages/96/c5/1e741d26306c42e2bf6ab740b2202872727e0f606033c9dd713f8b93f5a8/cachetools-6.2.1-py3-none-any.whl
-      # Compare wheel names
-      [ $(basename $BUILT_WHEEL) == "cachetools-6.2.1-py3-none-any.whl" ] || { echo "Wheel name does not match!"; exit 1; }
       # Compare file tree
       (unzip -Z1 $BUILT_WHEEL | grep -v '\.dist-info' | sort) > built.tree
       (unzip -Z1 "cachetools-6.2.1-py3-none-any.whl" | grep -v '\.dist-info' | sort ) > pypi_artifact.tree

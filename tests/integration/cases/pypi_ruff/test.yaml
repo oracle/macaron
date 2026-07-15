@@ -34,3 +34,9 @@ steps:
     - pkg:pypi/ruff@0.15.13
     - --output-format
     - dockerfile
+- name: Compare Dockerfile
+  kind: compare
+  options:
+    kind: dockerfile_build_spec
+    result: output/buildspec/pypi/ruff/dockerfile.buildspec
+    expected: expected_dockerfile.buildspec
