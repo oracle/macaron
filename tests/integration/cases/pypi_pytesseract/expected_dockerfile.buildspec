@@ -10,8 +10,8 @@ RUN dnf -y install gcc make
 
 # Download and unzip interpreter
 RUN <<EOF
-    wget https://www.python.org/ftp/python/3.7.17/Python-3.7.17.tgz
-    tar -xf Python-3.7.17.tgz
+    wget https://www.python.org/ftp/python/3.8.20/Python-3.8.20.tgz
+    tar -xf Python-3.8.20.tgz
 EOF
 
 # Install necessary libraries to build the interpreter
@@ -39,7 +39,7 @@ ENV LDFLAGS=-L/opt/openssl/lib
 
 # Build interpreter and create venv
 RUN <<EOF
-    cd Python-3.7.17
+    cd Python-3.8.20
     ./configure --with-pydebug
     make -s -j $(nproc)
     make install
@@ -78,7 +78,7 @@ RUN cat <<'EOF' >/validate
     # Ensure the artifact produced is not the literal returned by the glob
     [ -e $BUILT_WHEEL ] || { echo "No wheels found!"; exit 1; }
     # Download the wheel
-    wget -q
+        wget -q
     # Compare wheel names
     [ $(basename $BUILT_WHEEL) == "" ] || { echo "Wheel name does not match!"; exit 1; }
     # Compare file tree
