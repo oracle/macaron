@@ -304,13 +304,16 @@ requirements.txt: pyproject.toml
 # Remove GHSA-vfmq-68hx-4jfw when the following issue is resolved to be able to
 # install the latest version of lxml.
 # https://github.com/semgrep/semgrep/issues/11630
+#
+# Remove PYSEC-2026-2132 when Semgrep allows Click >=8.3.3. Click is a
+# transitive dependency of Semgrep
 
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw
+	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw --ignore-vuln PYSEC-2026-2132
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-ruff check-lint check-mypy check-go check-actionlint
