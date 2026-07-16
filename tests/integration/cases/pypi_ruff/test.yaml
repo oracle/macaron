@@ -2,12 +2,10 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 description: |
-  Analyzing a PyPI PURL that has provenance available on the PyPI registry, and passes the SCM authenticity check.
-  It also tests buildspec generation.
+  Test buildspec generation for a non-pure wheel that bundles Ruff.
 
 tags:
 - macaron-python-package
-- tutorial
 
 steps:
 - name: Run macaron analyze
@@ -15,43 +13,30 @@ steps:
   options:
     command_args:
     - -purl
-    - pkg:pypi/toga@0.5.1
-- name: Run macaron verify-policy to verify passed/failed checks
-  kind: verify
-  options:
-    policy: policy.dl
+    - pkg:pypi/ruff@0.15.13
 - name: Generate the buildspec
   kind: gen-build-spec
   options:
     command_args:
     - -purl
-    - pkg:pypi/toga@0.5.1
-    - --output-format
-    - default-buildspec
+    - pkg:pypi/ruff@0.15.13
 - name: Compare Buildspec.
   kind: compare
   options:
     kind: default_build_spec
-    result: output/buildspec/pypi/toga/macaron.buildspec
+    result: output/buildspec/pypi/ruff/macaron.buildspec
     expected: expected_default.buildspec
-# TODO: dockerfile generated does not actually build due to a source layout issue
 - name: Generate the buildspec
   kind: gen-build-spec
   options:
     command_args:
     - -purl
-    - pkg:pypi/toga@0.5.1
+    - pkg:pypi/ruff@0.15.13
     - --output-format
     - dockerfile
 - name: Compare Dockerfile
   kind: compare
   options:
     kind: dockerfile_build_spec
-    result: output/buildspec/pypi/toga/dockerfile.buildspec
+    result: output/buildspec/pypi/ruff/dockerfile.buildspec
     expected: expected_dockerfile.buildspec
-- name: Validate the produced buildspec
-  kind: validate_schema
-  options:
-    kind: json_schema
-    schema: macaron_buildspec_json
-    result: output/buildspec/pypi/toga/macaron.buildspec

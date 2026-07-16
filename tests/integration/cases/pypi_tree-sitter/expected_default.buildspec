@@ -1,5 +1,5 @@
 {
-    "macaron_version": "0.22.0",
+    "macaron_version": "0.24.0",
     "group_id": null,
     "artifact_id": "tree-sitter",
     "version": "0.25.2",
@@ -7,7 +7,7 @@
     "git_tag": "e2a5b21449c30c6a4fb49a55567a4699c3271f10",
     "newline": "lf",
     "language_version": [
-        "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+        ">=3.9"
     ],
     "ecosystem": "pypi",
     "purl": "pkg:pypi/tree-sitter@0.25.2",
@@ -15,15 +15,35 @@
     "build_tools": [
         "pip"
     ],
-    "build_commands": [],
+    "build_commands": [
+        {
+            "build_tool": "pip",
+            "command": [
+                "python",
+                "-m",
+                "build",
+                "--wheel",
+                "-n"
+            ],
+            "build_config_path": "pyproject.toml",
+            "confidence_score": 1.0
+        }
+    ],
     "has_binaries": true,
-    "build_requires": {
-        "setuptools": ">=43"
-    },
+    "build_requires": [
+        {
+            "name": "setuptools",
+            "installer": "pip",
+            "version": "==80.9.0"
+        }
+    ],
     "build_backends": [
         "setuptools.build_meta"
     ],
     "upstream_artifacts": {
+        "wheels": [
+            "https://files.pythonhosted.org/packages/c5/a4/68ae301626f2393a62119481cb660eb93504a524fc741a6f1528a4568cf6/tree_sitter-0.25.2-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+        ],
         "sdist": [
             "https://files.pythonhosted.org/packages/66/7c/0350cfc47faadc0d3cf7d8237a4e34032b3014ddf4a12ded9933e1648b55/tree-sitter-0.25.2.tar.gz"
         ]

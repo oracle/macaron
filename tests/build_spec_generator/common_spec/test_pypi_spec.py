@@ -12,9 +12,12 @@ from macaron.build_spec_generator.common_spec.pypi_spec import PyPIBuildSpec
 @pytest.mark.parametrize(
     ("build_tool", "expected_command"),
     [
+        ("pip", ["python", "-m", "build", "--wheel", "-n"]),
         ("poetry", ["poetry", "build"]),
         ("flit", ["flit", "build"]),
         ("uv", ["uv", "build"]),
+        ("hatch", ["hatch", "build"]),
+        ("maturin", ["maturin", "build", "--release"]),
     ],
 )
 def test_set_default_build_commands_for_pypi_tools(build_tool: str, expected_command: list[str]) -> None:
