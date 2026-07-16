@@ -34,6 +34,7 @@ steps:
     kind: default_build_spec
     result: output/buildspec/pypi/toga/macaron.buildspec
     expected: expected_default.buildspec
+# TODO: dockerfile generated does not actually build due to a source layout issue
 - name: Generate the buildspec
   kind: gen-build-spec
   options:
