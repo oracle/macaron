@@ -414,7 +414,7 @@ def _check_maven_no_version(
                         pushed_at: str | None = repo_data.get("pushed_at")
                         if pushed_at:
                             try:
-                                commit_dt = datetime.fromisoformat(pushed_at)
+                                commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
                                 days_since_commit = (now - commit_dt).days
                             except ValueError:
                                 logger.debug(
