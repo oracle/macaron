@@ -5,7 +5,8 @@
 
 import logging
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from packageurl import PackageURL
 from sqlalchemy import Boolean, ForeignKey, Integer, String
@@ -32,12 +33,8 @@ from macaron.slsa_analyzer.specs.package_registry_spec import PackageRegistryInf
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-_REMEDIATION_GENERIC = (
-    "Consider replacing or reviewing this dependency as it may no longer be actively maintained."
-)
-_REMEDIATION_DEPRECATED = (
-    "This package has been explicitly deprecated or removed. Consider replacing this dependency."
-)
+_REMEDIATION_GENERIC = "Consider replacing or reviewing this dependency as it may no longer be actively maintained."
+_REMEDIATION_DEPRECATED = "This package has been explicitly deprecated or removed. Consider replacing this dependency."
 _REMEDIATION_ARCHIVED = (
     "The source repository has been archived and is no longer accepting contributions."
     " Consider replacing this dependency."
@@ -50,7 +47,7 @@ class RegistryMaintainabilityFacts(CheckFacts):
     __tablename__ = "_registry_maintainability_check"
 
     #: The primary key.
-    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)  # noqa: A003
+    id: Mapped[int] = mapped_column(ForeignKey("_check_facts.id"), primary_key=True)
 
     #: The name of the matched package registry (e.g. PyPI, npm).
     registry_name: Mapped[str | None] = mapped_column(
@@ -129,7 +126,7 @@ class RegistryMaintainabilityFacts(CheckFacts):
         info={"justification": JustificationType.TEXT},
     )
 
-    __mapper_args__ = {
+    __mapper_args__: ClassVar[dict[str, str]] = {
         "polymorphic_identity": "_registry_maintainability_check",
     }
 
@@ -216,11 +213,16 @@ def _check_deprecated(
             return None, None
 
         # The package-level endpoint stores per-version file info under ``releases``.
+        # A version may have multiple distribution files (.tar.gz, .whl, etc.).
+        # Per PEP 592, yanking is tracked per file; we treat the version as yanked
+        # if ANY of its files carries the yanked flag.
         version_files = json_extract(pypi_asset.package_json, ["releases", version], list)
         if version_files:
-            yanked: bool = bool(version_files[0].get("yanked", False))
-            yanked_reason: str | None = version_files[0].get("yanked_reason") or None
-            return yanked, yanked_reason
+            yanked_files = [f for f in version_files if f.get("yanked")]
+            if yanked_files:
+                yanked_reason: str | None = yanked_files[0].get("yanked_reason") or None
+                return True, yanked_reason
+            return False, None
 
         return False, None
 
@@ -289,13 +291,9 @@ def _get_latest_release_timestamp(
         if upload_time_str:
             try:
                 # PyPI upload_time strings use "%Y-%m-%dT%H:%M:%S" (no tz suffix); assume UTC.
-                return datetime.strptime(upload_time_str, "%Y-%m-%dT%H:%M:%S").replace(
-                    tzinfo=timezone.utc
-                )
+                return datetime.strptime(upload_time_str, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=UTC)
             except ValueError:
-                logger.debug(
-                    "Could not parse PyPI latest release upload time %r.", upload_time_str
-                )
+                logger.debug("Could not parse PyPI latest release upload time %r.", upload_time_str)
         return None
 
     if isinstance(pkg_registry, NPMRegistry):
@@ -303,15 +301,11 @@ def _get_latest_release_timestamp(
         if latest_version is None:
             logger.debug("Could not determine latest version for npm package %s.", name)
             return None
-        latest_purl = str(
-            PackageURL(type="npm", namespace=namespace, name=name, version=latest_version)
-        )
+        latest_purl = str(PackageURL(type="npm", namespace=namespace, name=name, version=latest_version))
         try:
             return pkg_registry.find_publish_timestamp(latest_purl)
         except InvalidHTTPResponseError as error:
-            logger.debug(
-                "Could not retrieve latest release timestamp for npm package %s: %s", name, error
-            )
+            logger.debug("Could not retrieve latest release timestamp for npm package %s: %s", name, error)
         return None
 
     if isinstance(pkg_registry, MavenCentralRegistry) and namespace:
@@ -349,9 +343,11 @@ def _check_maven_no_version(
     Returns
     -------
     CheckResultData | None
-        A ``CheckResultData`` with ``PASSED`` or ``FAILED`` if the
-        latest release date can be determined from Maven Central, or ``None``
-        if the lookup fails (the caller should return ``UNKNOWN`` in that case).
+        A ``CheckResultData`` with ``PASSED`` or ``FAILED`` if the latest
+        release date can be determined from Maven Central. Returns a
+        ``CheckResultData`` with ``UNKNOWN`` when the Maven Central API call
+        fails. Returns ``None`` only when this helper is not applicable
+        (non-Maven PURL, missing namespace, or no matching registry).
     """
     if ctx.component.type != "maven":
         return None
@@ -372,9 +368,7 @@ def _check_maven_no_version(
         if not isinstance(pkg_registry, MavenCentralRegistry):
             continue
 
-        registry_url = (
-            f"https://central.sonatype.com/artifact/{namespace}/{ctx.component.name}"
-        )
+        registry_url = f"https://central.sonatype.com/artifact/{namespace}/{ctx.component.name}"
         try:
             latest_dt = pkg_registry.find_latest_release_timestamp(namespace, ctx.component.name)
         except InvalidHTTPResponseError as error:
@@ -389,20 +383,15 @@ def _check_maven_no_version(
                     RegistryMaintainabilityFacts(
                         registry_name=registry_name,
                         registry_url=registry_url,
-                        remediation=(
-                            "Cannot determine registry status: "
-                            "Maven Central API is unavailable."
-                        ),
+                        remediation=("Cannot determine registry status: Maven Central API is unavailable."),
                         confidence=Confidence.LOW,
                     )
                 ],
                 result_type=CheckResultType.UNKNOWN,
             )
 
-        now = datetime.now(timezone.utc)
-        threshold: int = defaults.getint(
-            "registry_maintainability", "inactivity_threshold_days", fallback=365
-        )
+        now = datetime.now(UTC)
+        threshold: int = defaults.getint("registry_maintainability", "inactivity_threshold_days", fallback=365)
         days_since_release = (now - latest_dt).days
         last_release_date = latest_dt.strftime("%Y-%m-%d")
         registry_name = type(pkg_registry).__name__.replace("Registry", "")
@@ -411,6 +400,8 @@ def _check_maven_no_version(
             # Apply the same GitHub rescue signal as the versioned path: if the
             # GitHub repo shows recent commit activity, treat the package as
             # still maintained despite the stale Maven Central release.
+            # An archived repo is never rescued — it always fails.
+            is_archived: bool | None = None
             days_since_commit: int | None = None
             git_service = ctx.dynamic_data.get("git_service")
             if isinstance(git_service, GitHub) and ctx.component.repository:
@@ -418,17 +409,35 @@ def _check_maven_no_version(
                 full_name = repo.complete_name.removeprefix("github.com/")
                 repo_data = git_service.api_client.get_repo_data(full_name)
                 if repo_data:
-                    pushed_at: str | None = repo_data.get("pushed_at")
-                    if pushed_at:
-                        try:
-                            commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
-                            days_since_commit = (now - commit_dt).days
-                        except ValueError:
-                            logger.debug(
-                                "Could not parse pushed_at timestamp %r for %s.",
-                                pushed_at,
-                                ctx.component.purl,
-                            )
+                    is_archived = bool(repo_data.get("archived", False))
+                    if not is_archived:
+                        pushed_at: str | None = repo_data.get("pushed_at")
+                        if pushed_at:
+                            try:
+                                commit_dt = datetime.fromisoformat(pushed_at)
+                                days_since_commit = (now - commit_dt).days
+                            except ValueError:
+                                logger.debug(
+                                    "Could not parse pushed_at timestamp %r for %s.",
+                                    pushed_at,
+                                    ctx.component.purl,
+                                )
+
+            if is_archived:
+                return CheckResultData(
+                    result_tables=[
+                        RegistryMaintainabilityFacts(
+                            registry_name=registry_name,
+                            registry_url=registry_url,
+                            days_since_release=days_since_release,
+                            last_release_date=last_release_date,
+                            is_archived=True,
+                            remediation=_REMEDIATION_ARCHIVED,
+                            confidence=Confidence.MEDIUM,
+                        )
+                    ],
+                    result_type=CheckResultType.FAILED,
+                )
 
             if days_since_commit is not None and days_since_commit <= threshold:
                 return CheckResultData(
@@ -496,10 +505,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
     def __init__(self) -> None:
         """Initialize the check instance."""
         check_id = "mcn_registry_maintainability_1"
-        description = (
-            "Check if the package exists in its expected public registry "
-            "and is actively maintained."
-        )
+        description = "Check if the package exists in its expected public registry and is actively maintained."
         super().__init__(check_id=check_id, description=description)
 
     def run_check(self, ctx: AnalyzeContext) -> CheckResultData:
@@ -530,10 +536,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
             return CheckResultData(
                 result_tables=[
                     RegistryMaintainabilityFacts(
-                        remediation=(
-                            "Cannot determine registry status: "
-                            "the PURL does not include a specific version."
-                        ),
+                        remediation=("Cannot determine registry status: the PURL does not include a specific version."),
                         confidence=Confidence.LOW,
                     )
                 ],
@@ -551,9 +554,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
             if _registry_info.ecosystem != ctx.component.type:
                 continue
             try:
-                publish_dt = _registry_info.package_registry.find_publish_timestamp(
-                    ctx.component.purl
-                )
+                publish_dt = _registry_info.package_registry.find_publish_timestamp(ctx.component.purl)
                 matched_registry_info = _registry_info
                 break
             except InvalidHTTPResponseError as error:
@@ -592,7 +593,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
         parsed_purl = PackageURL.from_string(ctx.component.purl)
         namespace: str | None = parsed_purl.namespace
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Use latest release date of the package for the recency signal.
         latest_publish_dt = _get_latest_release_timestamp(
@@ -628,7 +629,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
                 if pushed_at:
                     # GitHub timestamps use the ``Z`` suffix; normalise for datetime.fromisoformat() on Python < 3.11.
                     try:
-                        commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
+                        commit_dt = datetime.fromisoformat(pushed_at)
                         days_since_commit = (now - commit_dt).days
                         last_commit_date = commit_dt.strftime("%Y-%m-%d")
                     except ValueError:
@@ -645,13 +646,9 @@ class RegistryMaintainabilityCheck(BaseCheck):
             )
 
         # Determine result based on collected signals.
-        threshold: int = defaults.getint(
-            "registry_maintainability", "inactivity_threshold_days", fallback=365
-        )
+        threshold: int = defaults.getint("registry_maintainability", "inactivity_threshold_days", fallback=365)
 
-        registry_url = _build_registry_url(
-            registry_info, ctx.component.name, namespace, ctx.component.version
-        )
+        registry_url = _build_registry_url(registry_info, ctx.component.name, namespace, ctx.component.version)
 
         result_type: CheckResultType
         remediation: str | None

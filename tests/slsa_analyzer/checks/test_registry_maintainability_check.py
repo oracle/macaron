@@ -4,7 +4,7 @@
 """Tests for the registry maintainability check."""
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -60,6 +60,7 @@ def _mock_pypi_ctx(macaron_path: Path, purl: str = _PYPI_PURL) -> MockAnalyzeCon
     ctx.dynamic_data["git_service"] = NoneGitService()
     return ctx
 
+
 # Tests
 
 
@@ -80,12 +81,8 @@ def test_unknown_no_registries(macaron_path: Path, tmp_path: Path) -> None:
     assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
-def test_unknown_api_error(
-    mock_timestamp: MagicMock, macaron_path: Path, tmp_path: Path
-) -> None:
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
+def test_unknown_api_error(mock_timestamp: MagicMock, macaron_path: Path, tmp_path: Path) -> None:
     """The check returns UNKNOWN when deps.dev raises InvalidHTTPResponseError."""
     _load_registry_config(tmp_path)
     mock_timestamp.side_effect = InvalidHTTPResponseError("API unavailable")
@@ -94,9 +91,7 @@ def test_unknown_api_error(
     assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_pass_recent_release(
@@ -108,7 +103,7 @@ def test_pass_recent_release(
 ) -> None:
     """The check passes when the last release is within the threshold."""
     _load_registry_config(tmp_path, threshold_days=365)
-    recent = datetime.now(timezone.utc) - timedelta(days=30)
+    recent = datetime.now(UTC) - timedelta(days=30)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
@@ -118,9 +113,7 @@ def test_pass_recent_release(
     assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_fail_stale_release(
@@ -132,7 +125,7 @@ def test_fail_stale_release(
 ) -> None:
     """The check fails when the last release exceeds the inactivity threshold."""
     _load_registry_config(tmp_path, threshold_days=365)
-    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    stale = datetime.now(UTC) - timedelta(days=500)
     mock_timestamp.return_value = stale
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
@@ -142,9 +135,7 @@ def test_fail_stale_release(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_fail_yanked_pypi(
@@ -156,7 +147,7 @@ def test_fail_yanked_pypi(
 ) -> None:
     """The check fails immediately when a PyPI release is yanked, regardless of age."""
     _load_registry_config(tmp_path)
-    recent = datetime.now(timezone.utc) - timedelta(days=10)
+    recent = datetime.now(UTC) - timedelta(days=10)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (True, "Security vulnerability discovered.")
     mock_latest.return_value = None
@@ -166,9 +157,7 @@ def test_fail_yanked_pypi(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_fail_deprecated_npm(
@@ -180,7 +169,7 @@ def test_fail_deprecated_npm(
 ) -> None:
     """The check fails immediately when an npm package version is deprecated."""
     _load_registry_config(tmp_path)
-    recent = datetime.now(timezone.utc) - timedelta(days=10)
+    recent = datetime.now(UTC) - timedelta(days=10)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (True, "Use express@5 instead.")
     mock_latest.return_value = None
@@ -196,9 +185,7 @@ def test_fail_deprecated_npm(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
@@ -212,15 +199,13 @@ def test_fail_archived_repo(
 ) -> None:
     """The check fails when the GitHub repository is archived, even if release is recent."""
     _load_registry_config(tmp_path)
-    recent = datetime.now(timezone.utc) - timedelta(days=10)
+    recent = datetime.now(UTC) - timedelta(days=10)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
     mock_api_client.get_repo_data.return_value = {
         "archived": True,
-        "pushed_at": (datetime.now(timezone.utc) - timedelta(days=10)).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        ),
+        "pushed_at": (datetime.now(UTC) - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
     check = RegistryMaintainabilityCheck()
@@ -229,9 +214,7 @@ def test_fail_archived_repo(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
@@ -245,8 +228,8 @@ def test_fail_stale_commit(
 ) -> None:
     """The check fails when the last commit exceeds the threshold, even if release is recent."""
     _load_registry_config(tmp_path, threshold_days=365)
-    recent = datetime.now(timezone.utc) - timedelta(days=30)
-    stale_push = datetime.now(timezone.utc) - timedelta(days=500)
+    recent = datetime.now(UTC) - timedelta(days=30)
+    stale_push = datetime.now(UTC) - timedelta(days=500)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
@@ -261,9 +244,7 @@ def test_fail_stale_commit(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_custom_threshold(
@@ -276,7 +257,7 @@ def test_custom_threshold(
     """The check respects a custom threshold loaded from config."""
     _load_registry_config(tmp_path, threshold_days=60)
     # 90 days exceeds the 60-day threshold.
-    slightly_stale = datetime.now(timezone.utc) - timedelta(days=90)
+    slightly_stale = datetime.now(UTC) - timedelta(days=90)
     mock_timestamp.return_value = slightly_stale
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None  # fall back to find_publish_timestamp value
@@ -286,9 +267,7 @@ def test_custom_threshold(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_boundary_at_threshold(
@@ -300,7 +279,7 @@ def test_boundary_at_threshold(
 ) -> None:
     """The check passes when days_since_release equals the threshold exactly (threshold is exclusive)."""
     _load_registry_config(tmp_path, threshold_days=365)
-    at_threshold = datetime.now(timezone.utc) - timedelta(days=365)
+    at_threshold = datetime.now(UTC) - timedelta(days=365)
     mock_timestamp.return_value = at_threshold
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
@@ -310,9 +289,7 @@ def test_boundary_at_threshold(
     assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
@@ -326,7 +303,7 @@ def test_skip_github_for_non_github(
 ) -> None:
     """No GitHub API call is made when the git service is not GitHub; check still runs correctly."""
     _load_registry_config(tmp_path)
-    recent = datetime.now(timezone.utc) - timedelta(days=30)
+    recent = datetime.now(UTC) - timedelta(days=30)
     mock_timestamp.return_value = recent
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
@@ -356,9 +333,7 @@ def _mock_maven_ctx(macaron_path: Path, purl: str = _MAVEN_PURL) -> MockAnalyzeC
     return ctx
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp")
 @patch(
     "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
 )
@@ -370,18 +345,16 @@ def test_maven_pass_recent_release(
 ) -> None:
     """Maven check passes when the latest release is within the threshold."""
     _load_registry_config(tmp_path, threshold_days=365)
-    recent = datetime.now(timezone.utc) - timedelta(days=30)
+    recent = datetime.now(UTC) - timedelta(days=30)
     mock_timestamp.return_value = recent  # pinned version publish date (old)
-    mock_latest.return_value = recent     # latest release date (recent)
+    mock_latest.return_value = recent  # latest release date (recent)
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_maven_ctx(macaron_path)
     assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp")
 @patch(
     "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
 )
@@ -393,19 +366,17 @@ def test_maven_fail_stale_latest_release(
 ) -> None:
     """Maven check fails when the latest release exceeds the inactivity threshold."""
     _load_registry_config(tmp_path, threshold_days=365)
-    pinned_date = datetime.now(timezone.utc) - timedelta(days=2000)
-    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    pinned_date = datetime.now(UTC) - timedelta(days=2000)
+    stale = datetime.now(UTC) - timedelta(days=500)
     mock_timestamp.return_value = pinned_date  # pinned version (very old)
-    mock_latest.return_value = stale           # latest release is also stale
+    mock_latest.return_value = stale  # latest release is also stale
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_maven_ctx(macaron_path)
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_publish_timestamp")
 @patch(
     "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
 )
@@ -421,8 +392,8 @@ def test_maven_pass_old_pinned_but_recent_latest(
     publish date and incorrectly failed for old but actively maintained packages.
     """
     _load_registry_config(tmp_path, threshold_days=365)
-    mock_timestamp.return_value = datetime.now(timezone.utc) - timedelta(days=2000)  # pinned very old
-    mock_latest.return_value = datetime.now(timezone.utc) - timedelta(days=10)       # latest is recent
+    mock_timestamp.return_value = datetime.now(UTC) - timedelta(days=2000)  # pinned very old
+    mock_latest.return_value = datetime.now(UTC) - timedelta(days=10)  # latest is recent
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_maven_ctx(macaron_path)
@@ -439,7 +410,7 @@ def test_maven_no_version_pass(
 ) -> None:
     """Maven check passes for a no-version PURL when the latest release is recent."""
     _load_registry_config(tmp_path, threshold_days=365)
-    mock_latest.return_value = datetime.now(timezone.utc) - timedelta(days=30)
+    mock_latest.return_value = datetime.now(UTC) - timedelta(days=30)
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
@@ -456,7 +427,7 @@ def test_maven_no_version_fail_stale(
 ) -> None:
     """Maven check fails for a no-version PURL when the latest release is stale."""
     _load_registry_config(tmp_path, threshold_days=365)
-    mock_latest.return_value = datetime.now(timezone.utc) - timedelta(days=500)
+    mock_latest.return_value = datetime.now(UTC) - timedelta(days=500)
 
     check = RegistryMaintainabilityCheck()
     ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
@@ -480,14 +451,43 @@ def test_maven_no_version_unknown_on_api_error(
     assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
 
 
+@patch(
+    "macaron.slsa_analyzer.package_registry.maven_central_registry.MavenCentralRegistry.find_latest_release_timestamp"
+)
+@patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
+def test_maven_no_version_archived_repo_fails(
+    mock_api_client: MagicMock,
+    mock_latest: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Archived GitHub repo always fails the no-version Maven check, even with a recent push date.
+
+    An archived repo is explicitly frozen and should never be rescued by the
+    GitHub commit signal, mirroring the behaviour of the versioned path.
+    """
+    _load_registry_config(tmp_path, threshold_days=365)
+    # Registry release is stale, which triggers the GitHub rescue path.
+    mock_latest.return_value = datetime.now(UTC) - timedelta(days=500)
+    # pushed_at is recent, but the repo is archived — rescue must NOT apply.
+    recent_push = datetime.now(UTC) - timedelta(days=5)
+    mock_api_client.get_repo_data.return_value = {
+        "archived": True,
+        "pushed_at": recent_push.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
+    ctx.dynamic_data["git_service"] = _make_github_service()
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
+
+
 # ---------------------------------------------------------------------------
 # GitHub rescue signal tests
 # ---------------------------------------------------------------------------
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
@@ -505,8 +505,8 @@ def test_stale_registry_rescued_by_recent_commit(
     registry release recently but the project as a whole is actively maintained.
     """
     _load_registry_config(tmp_path, threshold_days=365)
-    stale = datetime.now(timezone.utc) - timedelta(days=500)
-    recent_push = datetime.now(timezone.utc) - timedelta(days=5)
+    stale = datetime.now(UTC) - timedelta(days=500)
+    recent_push = datetime.now(UTC) - timedelta(days=5)
     mock_timestamp.return_value = stale
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None  # latest = same as pinned (stale)
@@ -521,9 +521,7 @@ def test_stale_registry_rescued_by_recent_commit(
     assert check.run_check(ctx).result_type == CheckResultType.PASSED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 @patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
@@ -537,7 +535,7 @@ def test_stale_registry_and_stale_commit_fails(
 ) -> None:
     """Stale registry release fails the check when the GitHub commit is also stale."""
     _load_registry_config(tmp_path, threshold_days=365)
-    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    stale = datetime.now(UTC) - timedelta(days=500)
     mock_timestamp.return_value = stale
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
@@ -552,9 +550,7 @@ def test_stale_registry_and_stale_commit_fails(
     assert check.run_check(ctx).result_type == CheckResultType.FAILED
 
 
-@patch(
-    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
-)
+@patch("macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
 @patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
 def test_stale_registry_no_github_data_fails(
@@ -566,7 +562,7 @@ def test_stale_registry_no_github_data_fails(
 ) -> None:
     """Stale registry release fails when there is no GitHub repo to check as a rescue signal."""
     _load_registry_config(tmp_path, threshold_days=365)
-    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    stale = datetime.now(UTC) - timedelta(days=500)
     mock_timestamp.return_value = stale
     mock_deprecated.return_value = (False, None)
     mock_latest.return_value = None
