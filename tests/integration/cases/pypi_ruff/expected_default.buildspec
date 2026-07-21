@@ -1,0 +1,2548 @@
+{
+    "macaron_version": "0.24.0",
+    "group_id": null,
+    "artifact_id": "ruff",
+    "version": "0.15.13",
+    "git_repo": "https://github.com/astral-sh/ruff",
+    "git_tag": "2afb467ce397e4a89c13a0a814c62cfecb0e9e49",
+    "newline": "lf",
+    "language_version": [
+        ">=3.7"
+    ],
+    "ecosystem": "pypi",
+    "purl": "pkg:pypi/ruff@0.15.13",
+    "language": "python",
+    "build_tools": [
+        "uv",
+        "pip"
+    ],
+    "build_commands": [
+        {
+            "build_tool": "uv",
+            "command": [
+                "uv",
+                "build"
+            ],
+            "build_config_path": "pyproject.toml",
+            "confidence_score": 1.0
+        }
+    ],
+    "has_binaries": true,
+    "build_requires": [
+        {
+            "name": "adler2",
+            "installer": "cargo",
+            "version": "==2.0.1"
+        },
+        {
+            "name": "aho-corasick",
+            "installer": "cargo",
+            "version": "==1.1.4"
+        },
+        {
+            "name": "alloca",
+            "installer": "cargo",
+            "version": "==0.4.0"
+        },
+        {
+            "name": "allocator-api2",
+            "installer": "cargo",
+            "version": "==0.2.21"
+        },
+        {
+            "name": "android_system_properties",
+            "installer": "cargo",
+            "version": "==0.1.5"
+        },
+        {
+            "name": "anes",
+            "installer": "cargo",
+            "version": "==0.1.6"
+        },
+        {
+            "name": "annotate-snippets",
+            "installer": "cargo",
+            "version": "==0.11.5"
+        },
+        {
+            "name": "anstream",
+            "installer": "cargo",
+            "version": "==0.6.21"
+        },
+        {
+            "name": "anstyle",
+            "installer": "cargo",
+            "version": "==1.0.14"
+        },
+        {
+            "name": "anstyle-lossy",
+            "installer": "cargo",
+            "version": "==1.1.4"
+        },
+        {
+            "name": "anstyle-parse",
+            "installer": "cargo",
+            "version": "==0.2.7"
+        },
+        {
+            "name": "anstyle-query",
+            "installer": "cargo",
+            "version": "==1.1.4"
+        },
+        {
+            "name": "anstyle-svg",
+            "installer": "cargo",
+            "version": "==0.1.11"
+        },
+        {
+            "name": "anstyle-wincon",
+            "installer": "cargo",
+            "version": "==3.0.10"
+        },
+        {
+            "name": "anyhow",
+            "installer": "cargo",
+            "version": "==1.0.102"
+        },
+        {
+            "name": "approx",
+            "installer": "cargo",
+            "version": "==0.5.1"
+        },
+        {
+            "name": "arc-swap",
+            "installer": "cargo",
+            "version": "==1.9.1"
+        },
+        {
+            "name": "argfile",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "arrayvec",
+            "installer": "cargo",
+            "version": "==0.7.6"
+        },
+        {
+            "name": "assert_fs",
+            "installer": "cargo",
+            "version": "==1.1.3"
+        },
+        {
+            "name": "attribute-derive",
+            "installer": "cargo",
+            "version": "==0.10.3"
+        },
+        {
+            "name": "attribute-derive-macro",
+            "installer": "cargo",
+            "version": "==0.10.3"
+        },
+        {
+            "name": "autocfg",
+            "installer": "cargo",
+            "version": "==1.5.0"
+        },
+        {
+            "name": "bincode",
+            "installer": "cargo",
+            "version": "==2.0.1"
+        },
+        {
+            "name": "bincode_derive",
+            "installer": "cargo",
+            "version": "==2.0.1"
+        },
+        {
+            "name": "bit-set",
+            "installer": "cargo",
+            "version": "==0.8.0"
+        },
+        {
+            "name": "bit-vec",
+            "installer": "cargo",
+            "version": "==0.8.0"
+        },
+        {
+            "name": "bitflags",
+            "installer": "cargo",
+            "version": "==1.3.2"
+        },
+        {
+            "name": "bitvec",
+            "installer": "cargo",
+            "version": "==1.0.1"
+        },
+        {
+            "name": "block-buffer",
+            "installer": "cargo",
+            "version": "==0.10.4"
+        },
+        {
+            "name": "block2",
+            "installer": "cargo",
+            "version": "==0.6.2"
+        },
+        {
+            "name": "boxcar",
+            "installer": "cargo",
+            "version": "==0.2.14"
+        },
+        {
+            "name": "bstr",
+            "installer": "cargo",
+            "version": "==1.12.1"
+        },
+        {
+            "name": "bumpalo",
+            "installer": "cargo",
+            "version": "==3.19.0"
+        },
+        {
+            "name": "byteorder",
+            "installer": "cargo",
+            "version": "==1.5.0"
+        },
+        {
+            "name": "cachedir",
+            "installer": "cargo",
+            "version": "==0.3.1"
+        },
+        {
+            "name": "camino",
+            "installer": "cargo",
+            "version": "==1.2.2"
+        },
+        {
+            "name": "cast",
+            "installer": "cargo",
+            "version": "==0.3.0"
+        },
+        {
+            "name": "castaway",
+            "installer": "cargo",
+            "version": "==0.2.4"
+        },
+        {
+            "name": "cc",
+            "installer": "cargo",
+            "version": "==1.2.38"
+        },
+        {
+            "name": "cfg-if",
+            "installer": "cargo",
+            "version": "==1.0.3"
+        },
+        {
+            "name": "cfg_aliases",
+            "installer": "cargo",
+            "version": "==0.2.1"
+        },
+        {
+            "name": "chacha20",
+            "installer": "cargo",
+            "version": "==0.10.0"
+        },
+        {
+            "name": "chrono",
+            "installer": "cargo",
+            "version": "==0.4.44"
+        },
+        {
+            "name": "ciborium",
+            "installer": "cargo",
+            "version": "==0.2.2"
+        },
+        {
+            "name": "ciborium-io",
+            "installer": "cargo",
+            "version": "==0.2.2"
+        },
+        {
+            "name": "ciborium-ll",
+            "installer": "cargo",
+            "version": "==0.2.2"
+        },
+        {
+            "name": "clap",
+            "installer": "cargo",
+            "version": "==4.6.1"
+        },
+        {
+            "name": "clap_builder",
+            "installer": "cargo",
+            "version": "==4.6.0"
+        },
+        {
+            "name": "clap_complete",
+            "installer": "cargo",
+            "version": "==4.5.58"
+        },
+        {
+            "name": "clap_complete_command",
+            "installer": "cargo",
+            "version": "==0.6.1"
+        },
+        {
+            "name": "clap_complete_nushell",
+            "installer": "cargo",
+            "version": "==4.5.8"
+        },
+        {
+            "name": "clap_derive",
+            "installer": "cargo",
+            "version": "==4.6.1"
+        },
+        {
+            "name": "clap_lex",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "clearscreen",
+            "installer": "cargo",
+            "version": "==4.0.6"
+        },
+        {
+            "name": "codspeed",
+            "installer": "cargo",
+            "version": "==4.4.1"
+        },
+        {
+            "name": "codspeed-criterion-compat",
+            "installer": "cargo",
+            "version": "==4.4.1"
+        },
+        {
+            "name": "codspeed-criterion-compat-walltime",
+            "installer": "cargo",
+            "version": "==4.4.1"
+        },
+        {
+            "name": "codspeed-divan-compat",
+            "installer": "cargo",
+            "version": "==4.4.1"
+        },
+        {
+            "name": "codspeed-divan-compat-macros",
+            "installer": "cargo",
+            "version": "==4.4.1"
+        },
+        {
+            "name": "codspeed-divan-compat-walltime",
+            "installer": "cargo",
+            "version": "==4.4.1"
+        },
+        {
+            "name": "collection_literals",
+            "installer": "cargo",
+            "version": "==1.0.2"
+        },
+        {
+            "name": "colorchoice",
+            "installer": "cargo",
+            "version": "==1.0.4"
+        },
+        {
+            "name": "colored",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "compact_str",
+            "installer": "cargo",
+            "version": "==0.9.0"
+        },
+        {
+            "name": "condtype",
+            "installer": "cargo",
+            "version": "==1.3.0"
+        },
+        {
+            "name": "console",
+            "installer": "cargo",
+            "version": "==0.16.1"
+        },
+        {
+            "name": "console_error_panic_hook",
+            "installer": "cargo",
+            "version": "==0.1.7"
+        },
+        {
+            "name": "console_log",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "core-foundation-sys",
+            "installer": "cargo",
+            "version": "==0.8.7"
+        },
+        {
+            "name": "countme",
+            "installer": "cargo",
+            "version": "==3.0.1"
+        },
+        {
+            "name": "cpufeatures",
+            "installer": "cargo",
+            "version": "==0.2.17"
+        },
+        {
+            "name": "crc32fast",
+            "installer": "cargo",
+            "version": "==1.5.0"
+        },
+        {
+            "name": "criterion",
+            "installer": "cargo",
+            "version": "==0.8.2"
+        },
+        {
+            "name": "criterion-plot",
+            "installer": "cargo",
+            "version": "==0.5.0"
+        },
+        {
+            "name": "crossbeam",
+            "installer": "cargo",
+            "version": "==0.8.4"
+        },
+        {
+            "name": "crossbeam-channel",
+            "installer": "cargo",
+            "version": "==0.5.15"
+        },
+        {
+            "name": "crossbeam-deque",
+            "installer": "cargo",
+            "version": "==0.8.6"
+        },
+        {
+            "name": "crossbeam-epoch",
+            "installer": "cargo",
+            "version": "==0.9.18"
+        },
+        {
+            "name": "crossbeam-queue",
+            "installer": "cargo",
+            "version": "==0.3.12"
+        },
+        {
+            "name": "crossbeam-utils",
+            "installer": "cargo",
+            "version": "==0.8.21"
+        },
+        {
+            "name": "crunchy",
+            "installer": "cargo",
+            "version": "==0.2.4"
+        },
+        {
+            "name": "crypto-common",
+            "installer": "cargo",
+            "version": "==0.1.6"
+        },
+        {
+            "name": "csv",
+            "installer": "cargo",
+            "version": "==1.4.0"
+        },
+        {
+            "name": "csv-core",
+            "installer": "cargo",
+            "version": "==0.1.12"
+        },
+        {
+            "name": "ctrlc",
+            "installer": "cargo",
+            "version": "==3.5.2"
+        },
+        {
+            "name": "darling",
+            "installer": "cargo",
+            "version": "==0.23.0"
+        },
+        {
+            "name": "darling_core",
+            "installer": "cargo",
+            "version": "==0.23.0"
+        },
+        {
+            "name": "darling_macro",
+            "installer": "cargo",
+            "version": "==0.23.0"
+        },
+        {
+            "name": "dashmap",
+            "installer": "cargo",
+            "version": "==6.1.0"
+        },
+        {
+            "name": "datatest-stable",
+            "installer": "cargo",
+            "version": "==0.3.3"
+        },
+        {
+            "name": "derive-where",
+            "installer": "cargo",
+            "version": "==1.6.0"
+        },
+        {
+            "name": "diff",
+            "installer": "cargo",
+            "version": "==0.1.13"
+        },
+        {
+            "name": "difflib",
+            "installer": "cargo",
+            "version": "==0.4.0"
+        },
+        {
+            "name": "digest",
+            "installer": "cargo",
+            "version": "==0.10.7"
+        },
+        {
+            "name": "dirs",
+            "installer": "cargo",
+            "version": "==6.0.0"
+        },
+        {
+            "name": "dirs-sys",
+            "installer": "cargo",
+            "version": "==0.5.0"
+        },
+        {
+            "name": "dispatch2",
+            "installer": "cargo",
+            "version": "==0.3.0"
+        },
+        {
+            "name": "displaydoc",
+            "installer": "cargo",
+            "version": "==0.2.5"
+        },
+        {
+            "name": "divan-macros",
+            "installer": "cargo",
+            "version": "==0.1.17"
+        },
+        {
+            "name": "doc-comment",
+            "installer": "cargo",
+            "version": "==0.3.3"
+        },
+        {
+            "name": "drop_bomb",
+            "installer": "cargo",
+            "version": "==0.1.5"
+        },
+        {
+            "name": "dunce",
+            "installer": "cargo",
+            "version": "==1.0.5"
+        },
+        {
+            "name": "dyn-clone",
+            "installer": "cargo",
+            "version": "==1.0.20"
+        },
+        {
+            "name": "either",
+            "installer": "cargo",
+            "version": "==1.15.0"
+        },
+        {
+            "name": "encode_unicode",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "equivalent",
+            "installer": "cargo",
+            "version": "==1.0.2"
+        },
+        {
+            "name": "errno",
+            "installer": "cargo",
+            "version": "==0.3.14"
+        },
+        {
+            "name": "escape8259",
+            "installer": "cargo",
+            "version": "==0.5.3"
+        },
+        {
+            "name": "escargot",
+            "installer": "cargo",
+            "version": "==0.5.15"
+        },
+        {
+            "name": "etcetera",
+            "installer": "cargo",
+            "version": "==0.11.0"
+        },
+        {
+            "name": "fancy-regex",
+            "installer": "cargo",
+            "version": "==0.14.0"
+        },
+        {
+            "name": "fastrand",
+            "installer": "cargo",
+            "version": "==2.3.0"
+        },
+        {
+            "name": "fern",
+            "installer": "cargo",
+            "version": "==0.7.1"
+        },
+        {
+            "name": "filetime",
+            "installer": "cargo",
+            "version": "==0.2.27"
+        },
+        {
+            "name": "find-msvc-tools",
+            "installer": "cargo",
+            "version": "==0.1.2"
+        },
+        {
+            "name": "flate2",
+            "installer": "cargo",
+            "version": "==1.1.2"
+        },
+        {
+            "name": "fnv",
+            "installer": "cargo",
+            "version": "==1.0.7"
+        },
+        {
+            "name": "foldhash",
+            "installer": "cargo",
+            "version": "==0.1.5"
+        },
+        {
+            "name": "form_urlencoded",
+            "installer": "cargo",
+            "version": "==1.2.2"
+        },
+        {
+            "name": "fs-err",
+            "installer": "cargo",
+            "version": "==3.3.0"
+        },
+        {
+            "name": "fsevent-sys",
+            "installer": "cargo",
+            "version": "==4.1.0"
+        },
+        {
+            "name": "funty",
+            "installer": "cargo",
+            "version": "==2.0.0"
+        },
+        {
+            "name": "generic-array",
+            "installer": "cargo",
+            "version": "==0.14.7"
+        },
+        {
+            "name": "get-size-derive2",
+            "installer": "cargo",
+            "version": "==0.8.0"
+        },
+        {
+            "name": "get-size2",
+            "installer": "cargo",
+            "version": "==0.8.0"
+        },
+        {
+            "name": "getopts",
+            "installer": "cargo",
+            "version": "==0.2.24"
+        },
+        {
+            "name": "getrandom",
+            "installer": "cargo",
+            "version": "==0.2.16"
+        },
+        {
+            "name": "glob",
+            "installer": "cargo",
+            "version": "==0.3.3"
+        },
+        {
+            "name": "globset",
+            "installer": "cargo",
+            "version": "==0.4.18"
+        },
+        {
+            "name": "globwalk",
+            "installer": "cargo",
+            "version": "==0.9.1"
+        },
+        {
+            "name": "half",
+            "installer": "cargo",
+            "version": "==2.6.0"
+        },
+        {
+            "name": "hashbrown",
+            "installer": "cargo",
+            "version": "==0.14.5"
+        },
+        {
+            "name": "hashlink",
+            "installer": "cargo",
+            "version": "==0.10.0"
+        },
+        {
+            "name": "heck",
+            "installer": "cargo",
+            "version": "==0.5.0"
+        },
+        {
+            "name": "hermit-abi",
+            "installer": "cargo",
+            "version": "==0.5.2"
+        },
+        {
+            "name": "html-escape",
+            "installer": "cargo",
+            "version": "==0.2.13"
+        },
+        {
+            "name": "iana-time-zone",
+            "installer": "cargo",
+            "version": "==0.1.64"
+        },
+        {
+            "name": "iana-time-zone-haiku",
+            "installer": "cargo",
+            "version": "==0.1.2"
+        },
+        {
+            "name": "icu_collections",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "icu_locale_core",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "icu_normalizer",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "icu_normalizer_data",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "icu_properties",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "icu_properties_data",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "icu_provider",
+            "installer": "cargo",
+            "version": "==2.2.0"
+        },
+        {
+            "name": "id-arena",
+            "installer": "cargo",
+            "version": "==2.3.0"
+        },
+        {
+            "name": "ident_case",
+            "installer": "cargo",
+            "version": "==1.0.1"
+        },
+        {
+            "name": "idna",
+            "installer": "cargo",
+            "version": "==1.1.0"
+        },
+        {
+            "name": "idna_adapter",
+            "installer": "cargo",
+            "version": "==1.2.1"
+        },
+        {
+            "name": "ignore",
+            "installer": "cargo",
+            "version": "==0.4.25"
+        },
+        {
+            "name": "imara-diff",
+            "installer": "cargo",
+            "version": "==0.2.0"
+        },
+        {
+            "name": "imperative",
+            "installer": "cargo",
+            "version": "==1.0.7"
+        },
+        {
+            "name": "indexmap",
+            "installer": "cargo",
+            "version": "==2.14.0"
+        },
+        {
+            "name": "indicatif",
+            "installer": "cargo",
+            "version": "==0.18.4"
+        },
+        {
+            "name": "indoc",
+            "installer": "cargo",
+            "version": "==2.0.7"
+        },
+        {
+            "name": "inotify",
+            "installer": "cargo",
+            "version": "==0.11.0"
+        },
+        {
+            "name": "inotify-sys",
+            "installer": "cargo",
+            "version": "==0.1.5"
+        },
+        {
+            "name": "insta",
+            "installer": "cargo",
+            "version": "==1.47.2"
+        },
+        {
+            "name": "insta-cmd",
+            "installer": "cargo",
+            "version": "==0.6.0"
+        },
+        {
+            "name": "interpolator",
+            "installer": "cargo",
+            "version": "==0.5.0"
+        },
+        {
+            "name": "intrusive-collections",
+            "installer": "cargo",
+            "version": "==0.9.7"
+        },
+        {
+            "name": "inventory",
+            "installer": "cargo",
+            "version": "==0.3.24"
+        },
+        {
+            "name": "is-macro",
+            "installer": "cargo",
+            "version": "==0.3.7"
+        },
+        {
+            "name": "is-terminal",
+            "installer": "cargo",
+            "version": "==0.4.16"
+        },
+        {
+            "name": "is_terminal_polyfill",
+            "installer": "cargo",
+            "version": "==1.70.1"
+        },
+        {
+            "name": "itertools",
+            "installer": "cargo",
+            "version": "==0.10.5"
+        },
+        {
+            "name": "itoa",
+            "installer": "cargo",
+            "version": "==1.0.15"
+        },
+        {
+            "name": "jiff",
+            "installer": "cargo",
+            "version": "==0.2.24"
+        },
+        {
+            "name": "jiff-static",
+            "installer": "cargo",
+            "version": "==0.2.24"
+        },
+        {
+            "name": "jiff-tzdb",
+            "installer": "cargo",
+            "version": "==0.1.4"
+        },
+        {
+            "name": "jiff-tzdb-platform",
+            "installer": "cargo",
+            "version": "==0.1.3"
+        },
+        {
+            "name": "jobserver",
+            "installer": "cargo",
+            "version": "==0.1.34"
+        },
+        {
+            "name": "jod-thread",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "js-sys",
+            "installer": "cargo",
+            "version": "==0.3.82"
+        },
+        {
+            "name": "kqueue",
+            "installer": "cargo",
+            "version": "==1.1.1"
+        },
+        {
+            "name": "kqueue-sys",
+            "installer": "cargo",
+            "version": "==1.0.4"
+        },
+        {
+            "name": "lazy_static",
+            "installer": "cargo",
+            "version": "==1.5.0"
+        },
+        {
+            "name": "leb128fmt",
+            "installer": "cargo",
+            "version": "==0.1.0"
+        },
+        {
+            "name": "libc",
+            "installer": "cargo",
+            "version": "==0.2.186"
+        },
+        {
+            "name": "libcst",
+            "installer": "cargo",
+            "version": "==1.8.6"
+        },
+        {
+            "name": "libcst_derive",
+            "installer": "cargo",
+            "version": "==1.8.6"
+        },
+        {
+            "name": "libmimalloc-sys",
+            "installer": "cargo",
+            "version": "==0.1.47"
+        },
+        {
+            "name": "libredox",
+            "installer": "cargo",
+            "version": "==0.1.10"
+        },
+        {
+            "name": "libtest-mimic",
+            "installer": "cargo",
+            "version": "==0.7.3"
+        },
+        {
+            "name": "linux-raw-sys",
+            "installer": "cargo",
+            "version": "==0.12.1"
+        },
+        {
+            "name": "litemap",
+            "installer": "cargo",
+            "version": "==0.8.0"
+        },
+        {
+            "name": "lock_api",
+            "installer": "cargo",
+            "version": "==0.4.13"
+        },
+        {
+            "name": "log",
+            "installer": "cargo",
+            "version": "==0.4.29"
+        },
+        {
+            "name": "lsp-server",
+            "installer": "cargo",
+            "version": "==0.7.9"
+        },
+        {
+            "name": "lsp-types",
+            "installer": "cargo",
+            "version": "==0.95.1"
+        },
+        {
+            "name": "manyhow",
+            "installer": "cargo",
+            "version": "==0.11.4"
+        },
+        {
+            "name": "manyhow-macros",
+            "installer": "cargo",
+            "version": "==0.11.4"
+        },
+        {
+            "name": "markdown",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "matchers",
+            "installer": "cargo",
+            "version": "==0.2.0"
+        },
+        {
+            "name": "matchit",
+            "installer": "cargo",
+            "version": "==0.9.2"
+        },
+        {
+            "name": "maturin",
+            "installer": "pip",
+            "version": "==1.13.1"
+        },
+        {
+            "name": "mdtest",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "memchr",
+            "installer": "cargo",
+            "version": "==2.8.0"
+        },
+        {
+            "name": "memoffset",
+            "installer": "cargo",
+            "version": "==0.9.1"
+        },
+        {
+            "name": "mimalloc",
+            "installer": "cargo",
+            "version": "==0.1.50"
+        },
+        {
+            "name": "minicov",
+            "installer": "cargo",
+            "version": "==0.3.7"
+        },
+        {
+            "name": "minimal-lexical",
+            "installer": "cargo",
+            "version": "==0.2.1"
+        },
+        {
+            "name": "miniz_oxide",
+            "installer": "cargo",
+            "version": "==0.8.9"
+        },
+        {
+            "name": "mio",
+            "installer": "cargo",
+            "version": "==1.0.4"
+        },
+        {
+            "name": "natord",
+            "installer": "cargo",
+            "version": "==1.0.9"
+        },
+        {
+            "name": "newtype-uuid",
+            "installer": "cargo",
+            "version": "==1.3.2"
+        },
+        {
+            "name": "nix",
+            "installer": "cargo",
+            "version": "==0.31.2"
+        },
+        {
+            "name": "nom",
+            "installer": "cargo",
+            "version": "==7.1.3"
+        },
+        {
+            "name": "normalize-line-endings",
+            "installer": "cargo",
+            "version": "==0.3.0"
+        },
+        {
+            "name": "notify",
+            "installer": "cargo",
+            "version": "==8.2.0"
+        },
+        {
+            "name": "notify-types",
+            "installer": "cargo",
+            "version": "==2.0.0"
+        },
+        {
+            "name": "nu-ansi-term",
+            "installer": "cargo",
+            "version": "==0.50.1"
+        },
+        {
+            "name": "num-traits",
+            "installer": "cargo",
+            "version": "==0.2.19"
+        },
+        {
+            "name": "num_cpus",
+            "installer": "cargo",
+            "version": "==1.17.0"
+        },
+        {
+            "name": "objc2",
+            "installer": "cargo",
+            "version": "==0.6.3"
+        },
+        {
+            "name": "objc2-encode",
+            "installer": "cargo",
+            "version": "==4.1.0"
+        },
+        {
+            "name": "once_cell",
+            "installer": "cargo",
+            "version": "==1.21.3"
+        },
+        {
+            "name": "once_cell_polyfill",
+            "installer": "cargo",
+            "version": "==1.70.1"
+        },
+        {
+            "name": "oorandom",
+            "installer": "cargo",
+            "version": "==11.1.5"
+        },
+        {
+            "name": "option-ext",
+            "installer": "cargo",
+            "version": "==0.2.0"
+        },
+        {
+            "name": "ordermap",
+            "installer": "cargo",
+            "version": "==1.2.0"
+        },
+        {
+            "name": "os_pipe",
+            "installer": "cargo",
+            "version": "==1.2.2"
+        },
+        {
+            "name": "os_str_bytes",
+            "installer": "cargo",
+            "version": "==7.1.1"
+        },
+        {
+            "name": "page_size",
+            "installer": "cargo",
+            "version": "==0.6.0"
+        },
+        {
+            "name": "parking_lot",
+            "installer": "cargo",
+            "version": "==0.12.4"
+        },
+        {
+            "name": "parking_lot_core",
+            "installer": "cargo",
+            "version": "==0.9.11"
+        },
+        {
+            "name": "paste",
+            "installer": "cargo",
+            "version": "==1.0.15"
+        },
+        {
+            "name": "path-absolutize",
+            "installer": "cargo",
+            "version": "==3.1.1"
+        },
+        {
+            "name": "path-dedot",
+            "installer": "cargo",
+            "version": "==3.1.1"
+        },
+        {
+            "name": "path-slash",
+            "installer": "cargo",
+            "version": "==0.2.1"
+        },
+        {
+            "name": "pathdiff",
+            "installer": "cargo",
+            "version": "==0.2.3"
+        },
+        {
+            "name": "peg",
+            "installer": "cargo",
+            "version": "==0.8.5"
+        },
+        {
+            "name": "peg-macros",
+            "installer": "cargo",
+            "version": "==0.8.5"
+        },
+        {
+            "name": "peg-runtime",
+            "installer": "cargo",
+            "version": "==0.8.5"
+        },
+        {
+            "name": "pep440_rs",
+            "installer": "cargo",
+            "version": "==0.7.3"
+        },
+        {
+            "name": "pep508_rs",
+            "installer": "cargo",
+            "version": "==0.9.2"
+        },
+        {
+            "name": "percent-encoding",
+            "installer": "cargo",
+            "version": "==2.3.2"
+        },
+        {
+            "name": "pest",
+            "installer": "cargo",
+            "version": "==2.8.2"
+        },
+        {
+            "name": "pest_derive",
+            "installer": "cargo",
+            "version": "==2.8.2"
+        },
+        {
+            "name": "pest_generator",
+            "installer": "cargo",
+            "version": "==2.8.2"
+        },
+        {
+            "name": "pest_meta",
+            "installer": "cargo",
+            "version": "==2.8.2"
+        },
+        {
+            "name": "phf",
+            "installer": "cargo",
+            "version": "==0.11.3"
+        },
+        {
+            "name": "phf_codegen",
+            "installer": "cargo",
+            "version": "==0.11.3"
+        },
+        {
+            "name": "phf_generator",
+            "installer": "cargo",
+            "version": "==0.11.3"
+        },
+        {
+            "name": "phf_shared",
+            "installer": "cargo",
+            "version": "==0.11.3"
+        },
+        {
+            "name": "pin-project-lite",
+            "installer": "cargo",
+            "version": "==0.2.16"
+        },
+        {
+            "name": "pkg-config",
+            "installer": "cargo",
+            "version": "==0.3.32"
+        },
+        {
+            "name": "portable-atomic",
+            "installer": "cargo",
+            "version": "==1.13.1"
+        },
+        {
+            "name": "portable-atomic-util",
+            "installer": "cargo",
+            "version": "==0.2.4"
+        },
+        {
+            "name": "potential_utf",
+            "installer": "cargo",
+            "version": "==0.1.3"
+        },
+        {
+            "name": "ppv-lite86",
+            "installer": "cargo",
+            "version": "==0.2.21"
+        },
+        {
+            "name": "predicates",
+            "installer": "cargo",
+            "version": "==3.1.3"
+        },
+        {
+            "name": "predicates-core",
+            "installer": "cargo",
+            "version": "==1.0.9"
+        },
+        {
+            "name": "predicates-tree",
+            "installer": "cargo",
+            "version": "==1.0.12"
+        },
+        {
+            "name": "pretty_assertions",
+            "installer": "cargo",
+            "version": "==1.4.1"
+        },
+        {
+            "name": "prettyplease",
+            "installer": "cargo",
+            "version": "==0.2.37"
+        },
+        {
+            "name": "proc-macro-crate",
+            "installer": "cargo",
+            "version": "==3.4.0"
+        },
+        {
+            "name": "proc-macro-utils",
+            "installer": "cargo",
+            "version": "==0.10.0"
+        },
+        {
+            "name": "proc-macro2",
+            "installer": "cargo",
+            "version": "==1.0.106"
+        },
+        {
+            "name": "pyproject-toml",
+            "installer": "cargo",
+            "version": "==0.13.7"
+        },
+        {
+            "name": "quick-junit",
+            "installer": "cargo",
+            "version": "==0.6.0"
+        },
+        {
+            "name": "quick-xml",
+            "installer": "cargo",
+            "version": "==0.38.4"
+        },
+        {
+            "name": "quickcheck",
+            "installer": "cargo",
+            "version": "==1.1.0"
+        },
+        {
+            "name": "quickcheck_macros",
+            "installer": "cargo",
+            "version": "==1.2.0"
+        },
+        {
+            "name": "quote",
+            "installer": "cargo",
+            "version": "==1.0.45"
+        },
+        {
+            "name": "quote-use",
+            "installer": "cargo",
+            "version": "==0.8.4"
+        },
+        {
+            "name": "quote-use-macros",
+            "installer": "cargo",
+            "version": "==0.8.4"
+        },
+        {
+            "name": "r-efi",
+            "installer": "cargo",
+            "version": "==5.3.0"
+        },
+        {
+            "name": "radium",
+            "installer": "cargo",
+            "version": "==0.7.0"
+        },
+        {
+            "name": "rand",
+            "installer": "cargo",
+            "version": "==0.8.5"
+        },
+        {
+            "name": "rand_chacha",
+            "installer": "cargo",
+            "version": "==0.3.1"
+        },
+        {
+            "name": "rand_core",
+            "installer": "cargo",
+            "version": "==0.6.4"
+        },
+        {
+            "name": "rayon",
+            "installer": "cargo",
+            "version": "==1.12.0"
+        },
+        {
+            "name": "rayon-core",
+            "installer": "cargo",
+            "version": "==1.13.0"
+        },
+        {
+            "name": "redox_syscall",
+            "installer": "cargo",
+            "version": "==0.5.17"
+        },
+        {
+            "name": "redox_users",
+            "installer": "cargo",
+            "version": "==0.5.2"
+        },
+        {
+            "name": "ref-cast",
+            "installer": "cargo",
+            "version": "==1.0.25"
+        },
+        {
+            "name": "ref-cast-impl",
+            "installer": "cargo",
+            "version": "==1.0.25"
+        },
+        {
+            "name": "regex",
+            "installer": "cargo",
+            "version": "==1.12.3"
+        },
+        {
+            "name": "regex-automata",
+            "installer": "cargo",
+            "version": "==0.4.14"
+        },
+        {
+            "name": "regex-lite",
+            "installer": "cargo",
+            "version": "==0.1.7"
+        },
+        {
+            "name": "regex-syntax",
+            "installer": "cargo",
+            "version": "==0.8.10"
+        },
+        {
+            "name": "ron",
+            "installer": "cargo",
+            "version": "==0.12.0"
+        },
+        {
+            "name": "ruff",
+            "installer": "cargo",
+            "version": "==0.15.13"
+        },
+        {
+            "name": "ruff_annotate_snippets",
+            "installer": "cargo",
+            "version": "==0.1.0"
+        },
+        {
+            "name": "ruff_benchmark",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_cache",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_db",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_dev",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_diagnostics",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_formatter",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_graph",
+            "installer": "cargo",
+            "version": "==0.1.0"
+        },
+        {
+            "name": "ruff_index",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_linter",
+            "installer": "cargo",
+            "version": "==0.15.13"
+        },
+        {
+            "name": "ruff_macros",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_markdown",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_memory_usage",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_notebook",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_options_metadata",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_ast",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_ast_integration_tests",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_codegen",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_formatter",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_importer",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_index",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_literal",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_parser",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_semantic",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_stdlib",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_trivia",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_python_trivia_integration_tests",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_server",
+            "installer": "cargo",
+            "version": "==0.2.2"
+        },
+        {
+            "name": "ruff_source_file",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_text_size",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ruff_wasm",
+            "installer": "cargo",
+            "version": "==0.15.13"
+        },
+        {
+            "name": "ruff_workspace",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "rust",
+            "installer": "rustup",
+            "version": ">=1.93"
+        },
+        {
+            "name": "rust-stemmers",
+            "installer": "cargo",
+            "version": "==1.2.0"
+        },
+        {
+            "name": "rustc-hash",
+            "installer": "cargo",
+            "version": "==2.1.2"
+        },
+        {
+            "name": "rustc-stable-hash",
+            "installer": "cargo",
+            "version": "==0.1.2"
+        },
+        {
+            "name": "rustix",
+            "installer": "cargo",
+            "version": "==1.1.4"
+        },
+        {
+            "name": "rustup",
+            "installer": "bootstrap"
+        },
+        {
+            "name": "rustversion",
+            "installer": "cargo",
+            "version": "==1.0.22"
+        },
+        {
+            "name": "ryu",
+            "installer": "cargo",
+            "version": "==1.0.20"
+        },
+        {
+            "name": "salsa",
+            "installer": "cargo",
+            "version": "==0.26.2"
+        },
+        {
+            "name": "salsa-macro-rules",
+            "installer": "cargo",
+            "version": "==0.26.2"
+        },
+        {
+            "name": "salsa-macros",
+            "installer": "cargo",
+            "version": "==0.26.2"
+        },
+        {
+            "name": "same-file",
+            "installer": "cargo",
+            "version": "==1.0.6"
+        },
+        {
+            "name": "schemars",
+            "installer": "cargo",
+            "version": "==1.2.1"
+        },
+        {
+            "name": "schemars_derive",
+            "installer": "cargo",
+            "version": "==1.2.1"
+        },
+        {
+            "name": "scopeguard",
+            "installer": "cargo",
+            "version": "==1.2.0"
+        },
+        {
+            "name": "seahash",
+            "installer": "cargo",
+            "version": "==4.1.0"
+        },
+        {
+            "name": "semver",
+            "installer": "cargo",
+            "version": "==1.0.27"
+        },
+        {
+            "name": "serde",
+            "installer": "cargo",
+            "version": "==1.0.228"
+        },
+        {
+            "name": "serde-wasm-bindgen",
+            "installer": "cargo",
+            "version": "==0.6.5"
+        },
+        {
+            "name": "serde_core",
+            "installer": "cargo",
+            "version": "==1.0.228"
+        },
+        {
+            "name": "serde_derive",
+            "installer": "cargo",
+            "version": "==1.0.228"
+        },
+        {
+            "name": "serde_derive_internals",
+            "installer": "cargo",
+            "version": "==0.29.1"
+        },
+        {
+            "name": "serde_json",
+            "installer": "cargo",
+            "version": "==1.0.149"
+        },
+        {
+            "name": "serde_repr",
+            "installer": "cargo",
+            "version": "==0.1.20"
+        },
+        {
+            "name": "serde_spanned",
+            "installer": "cargo",
+            "version": "==1.1.1"
+        },
+        {
+            "name": "serde_test",
+            "installer": "cargo",
+            "version": "==1.0.177"
+        },
+        {
+            "name": "serde_with",
+            "installer": "cargo",
+            "version": "==3.19.0"
+        },
+        {
+            "name": "serde_with_macros",
+            "installer": "cargo",
+            "version": "==3.19.0"
+        },
+        {
+            "name": "sha2",
+            "installer": "cargo",
+            "version": "==0.10.9"
+        },
+        {
+            "name": "sharded-slab",
+            "installer": "cargo",
+            "version": "==0.1.7"
+        },
+        {
+            "name": "shellexpand",
+            "installer": "cargo",
+            "version": "==3.1.2"
+        },
+        {
+            "name": "shlex",
+            "installer": "cargo",
+            "version": "==1.3.0"
+        },
+        {
+            "name": "similar",
+            "installer": "cargo",
+            "version": "==2.7.0"
+        },
+        {
+            "name": "siphasher",
+            "installer": "cargo",
+            "version": "==1.0.1"
+        },
+        {
+            "name": "smallvec",
+            "installer": "cargo",
+            "version": "==1.15.1"
+        },
+        {
+            "name": "snapbox",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "snapbox-macros",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "stable_deref_trait",
+            "installer": "cargo",
+            "version": "==1.2.0"
+        },
+        {
+            "name": "static_assertions",
+            "installer": "cargo",
+            "version": "==1.1.0"
+        },
+        {
+            "name": "statrs",
+            "installer": "cargo",
+            "version": "==0.18.0"
+        },
+        {
+            "name": "strip-ansi-escapes",
+            "installer": "cargo",
+            "version": "==0.2.1"
+        },
+        {
+            "name": "strsim",
+            "installer": "cargo",
+            "version": "==0.11.1"
+        },
+        {
+            "name": "strum",
+            "installer": "cargo",
+            "version": "==0.28.0"
+        },
+        {
+            "name": "strum_macros",
+            "installer": "cargo",
+            "version": "==0.28.0"
+        },
+        {
+            "name": "supports-hyperlinks",
+            "installer": "cargo",
+            "version": "==3.2.0"
+        },
+        {
+            "name": "syn",
+            "installer": "cargo",
+            "version": "==2.0.117"
+        },
+        {
+            "name": "synstructure",
+            "installer": "cargo",
+            "version": "==0.13.2"
+        },
+        {
+            "name": "tap",
+            "installer": "cargo",
+            "version": "==1.0.1"
+        },
+        {
+            "name": "tempfile",
+            "installer": "cargo",
+            "version": "==3.27.0"
+        },
+        {
+            "name": "termcolor",
+            "installer": "cargo",
+            "version": "==1.4.1"
+        },
+        {
+            "name": "terminal_size",
+            "installer": "cargo",
+            "version": "==0.4.3"
+        },
+        {
+            "name": "terminfo",
+            "installer": "cargo",
+            "version": "==0.9.0"
+        },
+        {
+            "name": "termtree",
+            "installer": "cargo",
+            "version": "==0.5.1"
+        },
+        {
+            "name": "test-case",
+            "installer": "cargo",
+            "version": "==3.3.1"
+        },
+        {
+            "name": "test-case-core",
+            "installer": "cargo",
+            "version": "==3.3.1"
+        },
+        {
+            "name": "test-case-macros",
+            "installer": "cargo",
+            "version": "==3.3.1"
+        },
+        {
+            "name": "thin-vec",
+            "installer": "cargo",
+            "version": "==0.2.14"
+        },
+        {
+            "name": "thiserror",
+            "installer": "cargo",
+            "version": "==1.0.69"
+        },
+        {
+            "name": "thiserror-impl",
+            "installer": "cargo",
+            "version": "==1.0.69"
+        },
+        {
+            "name": "thread_local",
+            "installer": "cargo",
+            "version": "==1.1.9"
+        },
+        {
+            "name": "threadpool",
+            "installer": "cargo",
+            "version": "==1.8.1"
+        },
+        {
+            "name": "tikv-jemalloc-sys",
+            "installer": "cargo",
+            "version": "==0.6.1+5.3.0-1-ge13ca993e8ccb9ba9847cc330696e02839f328f7"
+        },
+        {
+            "name": "tikv-jemallocator",
+            "installer": "cargo",
+            "version": "==0.6.1"
+        },
+        {
+            "name": "tinystr",
+            "installer": "cargo",
+            "version": "==0.8.3"
+        },
+        {
+            "name": "tinytemplate",
+            "installer": "cargo",
+            "version": "==1.2.1"
+        },
+        {
+            "name": "tinyvec",
+            "installer": "cargo",
+            "version": "==1.10.0"
+        },
+        {
+            "name": "tinyvec_macros",
+            "installer": "cargo",
+            "version": "==0.1.1"
+        },
+        {
+            "name": "toml",
+            "installer": "cargo",
+            "version": "==0.9.12+spec-1.1.0"
+        },
+        {
+            "name": "toml_datetime",
+            "installer": "cargo",
+            "version": "==0.7.5+spec-1.1.0"
+        },
+        {
+            "name": "toml_edit",
+            "installer": "cargo",
+            "version": "==0.23.6"
+        },
+        {
+            "name": "toml_parser",
+            "installer": "cargo",
+            "version": "==1.1.2+spec-1.1.0"
+        },
+        {
+            "name": "toml_writer",
+            "installer": "cargo",
+            "version": "==1.1.1+spec-1.1.0"
+        },
+        {
+            "name": "tracing",
+            "installer": "cargo",
+            "version": "==0.1.44"
+        },
+        {
+            "name": "tracing-attributes",
+            "installer": "cargo",
+            "version": "==0.1.31"
+        },
+        {
+            "name": "tracing-core",
+            "installer": "cargo",
+            "version": "==0.1.36"
+        },
+        {
+            "name": "tracing-flame",
+            "installer": "cargo",
+            "version": "==0.2.0"
+        },
+        {
+            "name": "tracing-indicatif",
+            "installer": "cargo",
+            "version": "==0.3.14"
+        },
+        {
+            "name": "tracing-log",
+            "installer": "cargo",
+            "version": "==0.2.0"
+        },
+        {
+            "name": "tracing-subscriber",
+            "installer": "cargo",
+            "version": "==0.3.23"
+        },
+        {
+            "name": "tryfn",
+            "installer": "cargo",
+            "version": "==1.0.0"
+        },
+        {
+            "name": "ty",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_combine",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_completion_bench",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_completion_eval",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_ide",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_module_resolver",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_project",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_python_core",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_python_semantic",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_server",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_site_packages",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_static",
+            "installer": "cargo",
+            "version": "==0.0.1"
+        },
+        {
+            "name": "ty_test",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_vendored",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "ty_wasm",
+            "installer": "cargo",
+            "version": "==0.0.0"
+        },
+        {
+            "name": "typed-arena",
+            "installer": "cargo",
+            "version": "==2.0.2"
+        },
+        {
+            "name": "typeid",
+            "installer": "cargo",
+            "version": "==1.0.3"
+        },
+        {
+            "name": "typenum",
+            "installer": "cargo",
+            "version": "==1.18.0"
+        },
+        {
+            "name": "ucd-trie",
+            "installer": "cargo",
+            "version": "==0.1.7"
+        },
+        {
+            "name": "unicode-id",
+            "installer": "cargo",
+            "version": "==0.3.6"
+        },
+        {
+            "name": "unicode-ident",
+            "installer": "cargo",
+            "version": "==1.0.24"
+        },
+        {
+            "name": "unicode-normalization",
+            "installer": "cargo",
+            "version": "==0.1.24"
+        },
+        {
+            "name": "unicode-width",
+            "installer": "cargo",
+            "version": "==0.2.2"
+        },
+        {
+            "name": "unicode-xid",
+            "installer": "cargo",
+            "version": "==0.2.6"
+        },
+        {
+            "name": "unicode_names2",
+            "installer": "cargo",
+            "version": "==1.3.0"
+        },
+        {
+            "name": "unicode_names2_generator",
+            "installer": "cargo",
+            "version": "==1.3.0"
+        },
+        {
+            "name": "unit-prefix",
+            "installer": "cargo",
+            "version": "==0.5.1"
+        },
+        {
+            "name": "unscanny",
+            "installer": "cargo",
+            "version": "==0.1.0"
+        },
+        {
+            "name": "unty",
+            "installer": "cargo",
+            "version": "==0.0.4"
+        },
+        {
+            "name": "url",
+            "installer": "cargo",
+            "version": "==2.5.8"
+        },
+        {
+            "name": "urlencoding",
+            "installer": "cargo",
+            "version": "==2.1.3"
+        },
+        {
+            "name": "utf8-width",
+            "installer": "cargo",
+            "version": "==0.1.7"
+        },
+        {
+            "name": "utf8_iter",
+            "installer": "cargo",
+            "version": "==1.0.4"
+        },
+        {
+            "name": "utf8parse",
+            "installer": "cargo",
+            "version": "==0.2.2"
+        },
+        {
+            "name": "uuid",
+            "installer": "cargo",
+            "version": "==1.23.1"
+        },
+        {
+            "name": "valuable",
+            "installer": "cargo",
+            "version": "==0.1.1"
+        },
+        {
+            "name": "version-ranges",
+            "installer": "cargo",
+            "version": "==0.1.1"
+        },
+        {
+            "name": "version_check",
+            "installer": "cargo",
+            "version": "==0.9.5"
+        },
+        {
+            "name": "virtue",
+            "installer": "cargo",
+            "version": "==0.0.18"
+        },
+        {
+            "name": "vt100",
+            "installer": "cargo",
+            "version": "==0.16.2"
+        },
+        {
+            "name": "vte",
+            "installer": "cargo",
+            "version": "==0.14.1"
+        },
+        {
+            "name": "wait-timeout",
+            "installer": "cargo",
+            "version": "==0.2.1"
+        },
+        {
+            "name": "walkdir",
+            "installer": "cargo",
+            "version": "==2.5.0"
+        },
+        {
+            "name": "wasi",
+            "installer": "cargo",
+            "version": "==0.11.1+wasi-snapshot-preview1"
+        },
+        {
+            "name": "wasip2",
+            "installer": "cargo",
+            "version": "==1.0.1+wasi-0.2.4"
+        },
+        {
+            "name": "wasip3",
+            "installer": "cargo",
+            "version": "==0.4.0+wasi-0.3.0-rc-2026-01-06"
+        },
+        {
+            "name": "wasm-bindgen",
+            "installer": "cargo",
+            "version": "==0.2.105"
+        },
+        {
+            "name": "wasm-bindgen-futures",
+            "installer": "cargo",
+            "version": "==0.4.55"
+        },
+        {
+            "name": "wasm-bindgen-macro",
+            "installer": "cargo",
+            "version": "==0.2.105"
+        },
+        {
+            "name": "wasm-bindgen-macro-support",
+            "installer": "cargo",
+            "version": "==0.2.105"
+        },
+        {
+            "name": "wasm-bindgen-shared",
+            "installer": "cargo",
+            "version": "==0.2.105"
+        },
+        {
+            "name": "wasm-bindgen-test",
+            "installer": "cargo",
+            "version": "==0.3.55"
+        },
+        {
+            "name": "wasm-bindgen-test-macro",
+            "installer": "cargo",
+            "version": "==0.3.55"
+        },
+        {
+            "name": "wasm-encoder",
+            "installer": "cargo",
+            "version": "==0.244.0"
+        },
+        {
+            "name": "wasm-metadata",
+            "installer": "cargo",
+            "version": "==0.244.0"
+        },
+        {
+            "name": "wasmparser",
+            "installer": "cargo",
+            "version": "==0.244.0"
+        },
+        {
+            "name": "web-sys",
+            "installer": "cargo",
+            "version": "==0.3.82"
+        },
+        {
+            "name": "web-time",
+            "installer": "cargo",
+            "version": "==1.1.0"
+        },
+        {
+            "name": "which",
+            "installer": "cargo",
+            "version": "==8.0.2"
+        },
+        {
+            "name": "wild",
+            "installer": "cargo",
+            "version": "==2.2.1"
+        },
+        {
+            "name": "winapi",
+            "installer": "cargo",
+            "version": "==0.3.9"
+        },
+        {
+            "name": "winapi-i686-pc-windows-gnu",
+            "installer": "cargo",
+            "version": "==0.4.0"
+        },
+        {
+            "name": "winapi-util",
+            "installer": "cargo",
+            "version": "==0.1.11"
+        },
+        {
+            "name": "winapi-x86_64-pc-windows-gnu",
+            "installer": "cargo",
+            "version": "==0.4.0"
+        },
+        {
+            "name": "windows-core",
+            "installer": "cargo",
+            "version": "==0.62.0"
+        },
+        {
+            "name": "windows-implement",
+            "installer": "cargo",
+            "version": "==0.60.0"
+        },
+        {
+            "name": "windows-interface",
+            "installer": "cargo",
+            "version": "==0.59.1"
+        },
+        {
+            "name": "windows-link",
+            "installer": "cargo",
+            "version": "==0.1.3"
+        },
+        {
+            "name": "windows-result",
+            "installer": "cargo",
+            "version": "==0.4.0"
+        },
+        {
+            "name": "windows-strings",
+            "installer": "cargo",
+            "version": "==0.5.0"
+        },
+        {
+            "name": "windows-sys",
+            "installer": "cargo",
+            "version": "==0.52.0"
+        },
+        {
+            "name": "windows-targets",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_aarch64_gnullvm",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_aarch64_msvc",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_i686_gnu",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_i686_gnullvm",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_i686_msvc",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_x86_64_gnu",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_x86_64_gnullvm",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "windows_x86_64_msvc",
+            "installer": "cargo",
+            "version": "==0.52.6"
+        },
+        {
+            "name": "winnow",
+            "installer": "cargo",
+            "version": "==0.7.13"
+        },
+        {
+            "name": "wit-bindgen",
+            "installer": "cargo",
+            "version": "==0.46.0"
+        },
+        {
+            "name": "wit-bindgen-core",
+            "installer": "cargo",
+            "version": "==0.51.0"
+        },
+        {
+            "name": "wit-bindgen-rust",
+            "installer": "cargo",
+            "version": "==0.51.0"
+        },
+        {
+            "name": "wit-bindgen-rust-macro",
+            "installer": "cargo",
+            "version": "==0.51.0"
+        },
+        {
+            "name": "wit-component",
+            "installer": "cargo",
+            "version": "==0.244.0"
+        },
+        {
+            "name": "wit-parser",
+            "installer": "cargo",
+            "version": "==0.244.0"
+        },
+        {
+            "name": "writeable",
+            "installer": "cargo",
+            "version": "==0.6.2"
+        },
+        {
+            "name": "wyz",
+            "installer": "cargo",
+            "version": "==0.5.1"
+        },
+        {
+            "name": "yansi",
+            "installer": "cargo",
+            "version": "==1.0.1"
+        },
+        {
+            "name": "yoke",
+            "installer": "cargo",
+            "version": "==0.8.2"
+        },
+        {
+            "name": "yoke-derive",
+            "installer": "cargo",
+            "version": "==0.8.2"
+        },
+        {
+            "name": "zerocopy",
+            "installer": "cargo",
+            "version": "==0.8.27"
+        },
+        {
+            "name": "zerocopy-derive",
+            "installer": "cargo",
+            "version": "==0.8.27"
+        },
+        {
+            "name": "zerofrom",
+            "installer": "cargo",
+            "version": "==0.1.6"
+        },
+        {
+            "name": "zerofrom-derive",
+            "installer": "cargo",
+            "version": "==0.1.6"
+        },
+        {
+            "name": "zerotrie",
+            "installer": "cargo",
+            "version": "==0.2.4"
+        },
+        {
+            "name": "zerovec",
+            "installer": "cargo",
+            "version": "==0.11.6"
+        },
+        {
+            "name": "zerovec-derive",
+            "installer": "cargo",
+            "version": "==0.11.3"
+        },
+        {
+            "name": "zip",
+            "installer": "cargo",
+            "version": "==0.6.6"
+        },
+        {
+            "name": "zmij",
+            "installer": "cargo",
+            "version": "==1.0.10"
+        },
+        {
+            "name": "zstd",
+            "installer": "cargo",
+            "version": "==0.11.2+zstd.1.5.2"
+        },
+        {
+            "name": "zstd-safe",
+            "installer": "cargo",
+            "version": "==5.0.2+zstd.1.5.2"
+        },
+        {
+            "name": "zstd-sys",
+            "installer": "cargo",
+            "version": "==2.0.16+zstd.1.5.7"
+        }
+    ],
+    "build_backends": [
+        "maturin"
+    ],
+    "upstream_artifacts": {
+        "wheels": [
+            "https://files.pythonhosted.org/packages/e8/31/bf1a0803d077e679cfeee5f2f67290a0fa79c7385b5d9a8c17b9db2c48f0/ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+        ],
+        "sdist": [
+            "https://files.pythonhosted.org/packages/24/21/a7d5c126d5b557715ef81098f3db2fe20f622a039ff2e626af28d674ab80/ruff-0.15.13.tar.gz"
+        ]
+    }
+}

@@ -4,7 +4,13 @@ FROM oraclelinux:9
 
 # Install core tools
 RUN dnf -y install which wget tar unzip git
+    # Install Rust toolchain using Rustup
+RUN <<EOF
+    wget -q https://sh.rustup.rs -O /tmp/rustup-init.sh
+    sh /tmp/rustup-init.sh -y --profile minimal
+EOF
 
+ENV PATH=/root/.cargo/bin:$PATH
 # Install compiler and make
 RUN dnf -y install gcc make
 
@@ -40,7 +46,7 @@ ENV LDFLAGS=-L/opt/openssl/lib
 # Build interpreter and create venv
 RUN <<EOF
     cd Python-3.8.20
-    ./configure --with-pydebug
+    ./configure
     make -s -j $(nproc)
     make install
     ./python -m ensurepip
@@ -51,24 +57,23 @@ EOF
 RUN <<EOF
     mkdir src
     cd src
-    git clone https://github.com/madmaze/pytesseract .
-    git checkout --force 805d3959496232edf2f0feb41af750d5702d85b7
+    git clone https://github.com/astral-sh/ruff .
+    git checkout --force 2afb467ce397e4a89c13a0a814c62cfecb0e9e49
 EOF
 
 WORKDIR /src
 
 # Install build and the build backends
 RUN <<EOF
-    /deps/bin/pip install --upgrade setuptools
-    /deps/bin/pip install build
+    /deps/bin/pip install "maturin==1.13.1"
 EOF
 
 # Run the build
-RUN source /deps/bin/activate && /deps/bin/pip install wheel && python -m build --wheel -n
+RUN source /deps/bin/activate && maturin build --release --out dist --compatibility manylinux_2_34
 
 # Validate script
 RUN cat <<'EOF' >/validate
-    [ -n "" ] || { echo "No upstream artifact to validate against."; exit 1; }
+    [ -n "https://files.pythonhosted.org/packages/e8/31/bf1a0803d077e679cfeee5f2f67290a0fa79c7385b5d9a8c17b9db2c48f0/ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" ] || { echo "No upstream artifact to validate against."; exit 1; }
     # Capture artifacts generated
     WHEELS=(/src/dist/*.whl)
     # Ensure we only have one artifact
@@ -78,12 +83,10 @@ RUN cat <<'EOF' >/validate
     # Ensure the artifact produced is not the literal returned by the glob
     [ -e $BUILT_WHEEL ] || { echo "No wheels found!"; exit 1; }
     # Download the wheel
-        wget -q
-    # Compare wheel names
-    [ $(basename $BUILT_WHEEL) == "" ] || { echo "Wheel name does not match!"; exit 1; }
+    wget -q https://files.pythonhosted.org/packages/e8/31/bf1a0803d077e679cfeee5f2f67290a0fa79c7385b5d9a8c17b9db2c48f0/ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
     # Compare file tree
     (unzip -Z1 $BUILT_WHEEL | grep -v '\.dist-info' | sort) > built.tree
-    (unzip -Z1 "" | grep -v '\.dist-info' | sort ) > pypi_artifact.tree
+    (unzip -Z1 "ruff-0.15.13-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" | grep -v '\.dist-info' | sort ) > pypi_artifact.tree
     diff -u built.tree pypi_artifact.tree || { echo "File trees do not match!"; exit 1; }
     echo "Success!"
 EOF

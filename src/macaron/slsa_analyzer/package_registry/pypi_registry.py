@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import bisect
 import copy
+import fnmatch
 import hashlib
 import logging
 import os
@@ -29,7 +30,7 @@ from packaging.utils import InvalidWheelFilename, parse_wheel_filename
 from packaging.version import InvalidVersion, Version
 
 from macaron.config.defaults import defaults
-from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError, WheelTagError
+from macaron.errors import ConfigurationError, InvalidHTTPResponseError, SourceCodeError
 from macaron.json_tools import json_extract
 from macaron.malware_analyzer.datetime_parser import parse_datetime
 from macaron.slsa_analyzer.package_registry.package_registry import PackageRegistry
@@ -868,13 +869,14 @@ class PyPIPackageJsonAsset:
                     return configured_source_url
         return None
 
-    def get_wheel_url(self, tag: str = "none-any") -> str | None:
-        """Get url of wheel corresponding to specified tag.
+    def get_wheel_url(self, wheel_tag_pattern: str = "*-none-any") -> str | None:
+        """Get the URL of a wheel matching the requested tag pattern.
 
         Parameters
         ----------
-        tag: str
-            Wheel tag to match. Defaults to none-any.
+        wheel_tag_pattern: str
+            Shell-style pattern matched against parsed wheel tags. The default
+            selects pure ``none-any`` wheels.
 
         Returns
         -------
@@ -898,7 +900,12 @@ class PyPIPackageJsonAsset:
             if distribution.get("packagetype") != "bdist_wheel":
                 continue
             file_name: str = distribution.get("filename") or ""
-            if not file_name.endswith(f"{tag}.whl"):
+            try:
+                _, _, _, tags = parse_wheel_filename(file_name)
+            except InvalidWheelFilename:
+                logger.debug("Could not parse wheel name %s.", file_name)
+                continue
+            if not any(fnmatch.fnmatch(str(tag), wheel_tag_pattern) for tag in tags):
                 continue
             self.wheel_filename = file_name
             # Continue to getting url
@@ -960,14 +967,10 @@ class PyPIPackageJsonAsset:
 
         Raises
         ------
-        WheelTagError
-            If download_binaries is True
         SourceCodeError
             If we are unable to download the requested wheel
         """
-        if download_binaries:
-            raise WheelTagError("Macaron does not currently support analysis of non-pure Python wheels.")
-        if not self.download_wheel():
+        if not self.download_wheel(download_binaries):
             raise SourceCodeError("Unable to download requested wheel.")
         try:
             yield
@@ -976,7 +979,7 @@ class PyPIPackageJsonAsset:
                 # Name for cleanup_sourcecode_directory could be refactored here
                 PyPIRegistry.cleanup_sourcecode_directory(self.wheel_path)
 
-    def download_wheel(self) -> bool:
+    def download_wheel(self, download_binaries: bool = False) -> bool:
         """Download and extract wheel metadata to a temporary directory.
 
         Returns
@@ -984,7 +987,11 @@ class PyPIPackageJsonAsset:
         bool
             ``True`` if the wheel is downloaded and extracted successfully; ``False`` if not.
         """
-        url = self.get_wheel_url()
+        url = (
+            self.get_wheel_url("*-linux_x86_64") or self.get_wheel_url("*-manylinux*_x86_64")
+            if download_binaries
+            else self.get_wheel_url()
+        )
         if url:
             try:
                 self.wheel_path = self.pypi_registry.download_package_wheel(url)

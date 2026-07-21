@@ -30,9 +30,13 @@
         }
     ],
     "has_binaries": false,
-    "build_requires": {
-        "setuptools": "==67.7.2"
-    },
+    "build_requires": [
+        {
+            "name": "setuptools",
+            "version": "==67.7.2",
+            "installer": "pip"
+        }
+    ],
     "build_backends": [
         "setuptools.build_meta"
     ],
