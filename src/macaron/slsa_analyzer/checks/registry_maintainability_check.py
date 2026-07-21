@@ -372,6 +372,9 @@ def _check_maven_no_version(
         if not isinstance(pkg_registry, MavenCentralRegistry):
             continue
 
+        registry_url = (
+            f"https://central.sonatype.com/artifact/{namespace}/{ctx.component.name}"
+        )
         try:
             latest_dt = pkg_registry.find_latest_release_timestamp(namespace, ctx.component.name)
         except InvalidHTTPResponseError as error:
@@ -380,7 +383,21 @@ def _check_maven_no_version(
                 ctx.component.purl,
                 error,
             )
-            return None
+            registry_name = type(pkg_registry).__name__.replace("Registry", "")
+            return CheckResultData(
+                result_tables=[
+                    RegistryMaintainabilityFacts(
+                        registry_name=registry_name,
+                        registry_url=registry_url,
+                        remediation=(
+                            "Cannot determine registry status: "
+                            "Maven Central API is unavailable."
+                        ),
+                        confidence=Confidence.LOW,
+                    )
+                ],
+                result_type=CheckResultType.UNKNOWN,
+            )
 
         now = datetime.now(timezone.utc)
         threshold: int = defaults.getint(
@@ -391,10 +408,48 @@ def _check_maven_no_version(
         registry_name = type(pkg_registry).__name__.replace("Registry", "")
 
         if days_since_release > threshold:
+            # Apply the same GitHub rescue signal as the versioned path: if the
+            # GitHub repo shows recent commit activity, treat the package as
+            # still maintained despite the stale Maven Central release.
+            days_since_commit: int | None = None
+            git_service = ctx.dynamic_data.get("git_service")
+            if isinstance(git_service, GitHub) and ctx.component.repository:
+                repo = ctx.component.repository
+                full_name = repo.complete_name.removeprefix("github.com/")
+                repo_data = git_service.api_client.get_repo_data(full_name)
+                if repo_data:
+                    pushed_at: str | None = repo_data.get("pushed_at")
+                    if pushed_at:
+                        try:
+                            commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
+                            days_since_commit = (now - commit_dt).days
+                        except ValueError:
+                            logger.debug(
+                                "Could not parse pushed_at timestamp %r for %s.",
+                                pushed_at,
+                                ctx.component.purl,
+                            )
+
+            if days_since_commit is not None and days_since_commit <= threshold:
+                return CheckResultData(
+                    result_tables=[
+                        RegistryMaintainabilityFacts(
+                            registry_name=registry_name,
+                            registry_url=registry_url,
+                            days_since_release=days_since_release,
+                            last_release_date=last_release_date,
+                            days_since_commit=days_since_commit,
+                            confidence=Confidence.MEDIUM,
+                        )
+                    ],
+                    result_type=CheckResultType.PASSED,
+                )
+
             return CheckResultData(
                 result_tables=[
                     RegistryMaintainabilityFacts(
                         registry_name=registry_name,
+                        registry_url=registry_url,
                         days_since_release=days_since_release,
                         last_release_date=last_release_date,
                         remediation=_REMEDIATION_GENERIC,
@@ -407,6 +462,7 @@ def _check_maven_no_version(
             result_tables=[
                 RegistryMaintainabilityFacts(
                     registry_name=registry_name,
+                    registry_url=registry_url,
                     days_since_release=days_since_release,
                     last_release_date=last_release_date,
                     confidence=Confidence.MEDIUM,
@@ -608,8 +664,16 @@ class RegistryMaintainabilityCheck(BaseCheck):
             remediation = _REMEDIATION_DEPRECATED + reason_suffix
             result_type = CheckResultType.FAILED
         elif days_since_release > threshold:
-            result_type = CheckResultType.FAILED
-            remediation = _REMEDIATION_GENERIC
+            # If the registry release is stale but the GitHub repo shows recent
+            # commit activity, treat the package as still maintained.  This
+            # handles mono-repos where one sub-module has not had its own
+            # registry release in a while but the project as a whole is active.
+            if days_since_commit is not None and days_since_commit <= threshold:
+                result_type = CheckResultType.PASSED
+                remediation = None
+            else:
+                result_type = CheckResultType.FAILED
+                remediation = _REMEDIATION_GENERIC
         elif days_since_commit is not None and days_since_commit > threshold:
             result_type = CheckResultType.FAILED
             remediation = _REMEDIATION_GENERIC

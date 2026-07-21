@@ -10,7 +10,7 @@ tags:
 - macaron-python-package
 
 steps:
-- name: Run macaron analyze on yanked aiohttp version.
+- name: Run macaron analyze on an older aiohttp version.
   kind: analyze
   options:
     command_args:

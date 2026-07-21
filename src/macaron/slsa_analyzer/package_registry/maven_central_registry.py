@@ -243,10 +243,12 @@ class MavenCentralRegistry(PackageRegistry):
         """Return the timestamp of the most recent release of the package on Maven Central.
 
         Uses the same Maven Central Search REST API as ``find_publish_timestamp``
-        but omits the version filter. All releases are fetched and sorted in
-        Python by timestamp to find the most recent one. This allows the registry
-        maintainability check to evaluate release recency without requiring a
-        pinned version in the PURL.
+        but omits the version filter. It fetches up to 100 releases and selects
+        the newest timestamp client-side. For artifacts with more releases than
+        the requested page size, the true latest release may not be returned
+        unless pagination or server-side sorting is added in the future. This
+        allows the registry maintainability check to evaluate release recency
+        without requiring a pinned version in the PURL.
 
         Parameters
         ----------

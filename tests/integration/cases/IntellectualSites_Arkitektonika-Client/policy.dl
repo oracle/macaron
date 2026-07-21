@@ -16,16 +16,14 @@ Policy("test_policy", component_id, "") :-
         _,
         _
     ),
-    check_facts(check_id, _, component_id,_,_).
+    check_facts(check_id, _, component_id,_,_),
+    check_passed(component_id, "mcn_registry_maintainability_1").
 
 apply_policy_to("test_policy", component_id) :-
     is_component(component_id, "pkg:maven/com.intellectualsites.arkitektonika/Arkitektonika-Client@2.1.3").
 
 Policy("registry_maintainability", component_id, "Require the package to be actively maintained.") :-
     check_passed(component_id, "mcn_registry_maintainability_1").
-
-apply_policy_to("registry_maintainability", component_id) :-
-    is_component(component_id, "pkg:maven/com.intellectualsites.arkitektonika/Arkitektonika-Client@2.1.3").
 
 apply_policy_to("registry_maintainability", component_id) :-
     is_component(component_id, "pkg:maven/com.intellectualsites.arkitektonika/Arkitektonika-Client").

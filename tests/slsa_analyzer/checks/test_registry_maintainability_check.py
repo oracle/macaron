@@ -341,11 +341,6 @@ def test_skip_github_for_non_github(
     assert result.result_type == CheckResultType.PASSED
 
 
-# ---------------------------------------------------------------------------
-# Maven-specific tests
-# ---------------------------------------------------------------------------
-
-
 def _make_maven_registry_info() -> PackageRegistryInfo:
     """Build a minimal MavenCentral PackageRegistryInfo suitable for tests."""
     maven_registry = MavenCentralRegistry()
@@ -483,3 +478,100 @@ def test_maven_no_version_unknown_on_api_error(
     check = RegistryMaintainabilityCheck()
     ctx = _mock_maven_ctx(macaron_path, purl=_MAVEN_PURL_NO_VERSION)
     assert check.run_check(ctx).result_type == CheckResultType.UNKNOWN
+
+
+# ---------------------------------------------------------------------------
+# GitHub rescue signal tests
+# ---------------------------------------------------------------------------
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
+)
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
+@patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
+def test_stale_registry_rescued_by_recent_commit(
+    mock_api_client: MagicMock,
+    mock_latest: MagicMock,
+    mock_deprecated: MagicMock,
+    mock_timestamp: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Stale registry release does not fail the check when GitHub shows recent commit activity.
+
+    This covers the mono-repo scenario where a sub-module has not had its own
+    registry release recently but the project as a whole is actively maintained.
+    """
+    _load_registry_config(tmp_path, threshold_days=365)
+    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    recent_push = datetime.now(timezone.utc) - timedelta(days=5)
+    mock_timestamp.return_value = stale
+    mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None  # latest = same as pinned (stale)
+    mock_api_client.get_repo_data.return_value = {
+        "archived": False,
+        "pushed_at": recent_push.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_pypi_ctx(macaron_path)
+    ctx.dynamic_data["git_service"] = _make_github_service()
+    assert check.run_check(ctx).result_type == CheckResultType.PASSED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
+)
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
+@patch("macaron.slsa_analyzer.git_service.github.GitHub.api_client")
+def test_stale_registry_and_stale_commit_fails(
+    mock_api_client: MagicMock,
+    mock_latest: MagicMock,
+    mock_deprecated: MagicMock,
+    mock_timestamp: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Stale registry release fails the check when the GitHub commit is also stale."""
+    _load_registry_config(tmp_path, threshold_days=365)
+    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    mock_timestamp.return_value = stale
+    mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
+    mock_api_client.get_repo_data.return_value = {
+        "archived": False,
+        "pushed_at": stale.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_pypi_ctx(macaron_path)
+    ctx.dynamic_data["git_service"] = _make_github_service()
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
+
+
+@patch(
+    "macaron.slsa_analyzer.package_registry.package_registry.PackageRegistry.find_publish_timestamp"
+)
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._check_deprecated")
+@patch("macaron.slsa_analyzer.checks.registry_maintainability_check._get_latest_release_timestamp")
+def test_stale_registry_no_github_data_fails(
+    mock_latest: MagicMock,
+    mock_deprecated: MagicMock,
+    mock_timestamp: MagicMock,
+    macaron_path: Path,
+    tmp_path: Path,
+) -> None:
+    """Stale registry release fails when there is no GitHub repo to check as a rescue signal."""
+    _load_registry_config(tmp_path, threshold_days=365)
+    stale = datetime.now(timezone.utc) - timedelta(days=500)
+    mock_timestamp.return_value = stale
+    mock_deprecated.return_value = (False, None)
+    mock_latest.return_value = None
+
+    check = RegistryMaintainabilityCheck()
+    ctx = _mock_pypi_ctx(macaron_path)
+    # No GitHub service — NoneGitService is the default in _mock_pypi_ctx, so no change needed.
+    assert check.run_check(ctx).result_type == CheckResultType.FAILED
