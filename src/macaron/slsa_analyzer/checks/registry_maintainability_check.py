@@ -629,7 +629,7 @@ class RegistryMaintainabilityCheck(BaseCheck):
                 if pushed_at:
                     # GitHub timestamps use the ``Z`` suffix; normalise for datetime.fromisoformat() on Python < 3.11.
                     try:
-                        commit_dt = datetime.fromisoformat(pushed_at)
+                        commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
                         days_since_commit = (now - commit_dt).days
                         last_commit_date = commit_dt.strftime("%Y-%m-%d")
                     except ValueError:
