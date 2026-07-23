@@ -307,13 +307,20 @@ requirements.txt: pyproject.toml
 #
 # Remove PYSEC-2026-2132 when Semgrep allows Click >=8.3.3. Click is a
 # transitive dependency of Semgrep
+#
+# GHSA-hvrp-rf83-w775 ignore-vuln GHSA-jpw9-pfvf-9f58, and ignore-vuln GHSA-vj7q-gjh5-988w are advisories
+# for the mcp  package, which is a dependency of semgrep and we cannot update it outselves. Macaron does
+# not use this transitive dependency and we can ignore them for now. Remove them when semgrep is updated and uses
+# a fixed version of mcp.
 
 .PHONY: audit
 audit:
 	if ! $$(python -c "import pip_audit" &> /dev/null); then \
 	  echo "No package pip_audit installed, upgrade your environment!" && exit 1; \
 	fi;
-	python -m pip_audit --skip-editable --desc on --fix --dry-run --ignore-vuln GHSA-vfmq-68hx-4jfw --ignore-vuln PYSEC-2026-2132
+	python -m pip_audit --skip-editable --desc on --fix --dry-run \
+	  --ignore-vuln GHSA-vfmq-68hx-4jfw --ignore-vuln PYSEC-2026-2132 --ignore-vuln GHSA-hvrp-rf83-w775 \
+	  --ignore-vuln GHSA-jpw9-pfvf-9f58 --ignore-vuln GHSA-vj7q-gjh5-988w
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-ruff check-lint check-mypy check-go check-actionlint
