@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the parser for GitHub Actions Workflow files."""
@@ -37,7 +37,7 @@ def parse(workflow_path: str) -> Workflow:
         When parsing fails with errors.
     """
     try:
-        parse_result = yamale.make_data(workflow_path, parser="ruamel")
+        parse_result = yamale.make_data(workflow_path, parser="ruamel")  # type: ignore[no-untyped-call]
     except OSError as error:
         raise ParseError("Cannot parse GitHub Workflow: " + workflow_path) from error
 

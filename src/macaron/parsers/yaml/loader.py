@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the loader for YAML files."""
@@ -38,7 +38,7 @@ class YamlLoader:
         """
         try:
             logger.debug("Loading yaml from file %s", path)
-            return list(yamale.make_data(path))
+            return list(yamale.make_data(path))  # type: ignore[no-untyped-call]
         except YAMLError as error:
             abs_path = os.path.abspath(path)
 
@@ -74,7 +74,7 @@ class YamlLoader:
         """
         try:
             logger.debug("Validate data %s with schema %s.", str(data), str(schema.dict))
-            yamale.validate(schema, data)
+            yamale.validate(schema, data)  # type: ignore[no-untyped-call]
             return True
         except yamale.YamaleError as error:
             logger.debug("Yaml data validation failed.")
@@ -84,7 +84,7 @@ class YamlLoader:
             return False
 
     @classmethod
-    def load(cls, path: os.PathLike | str, schema: Schema = None) -> Any:
+    def load(cls, path: os.PathLike | str, schema: Schema | None = None) -> Any:
         """Load and return a Python object from a yaml file.
 
         If ``schema`` is provided. This method will validate the loaded content against the

@@ -65,9 +65,7 @@ repos:
     name: Check typing annotations
     entry: mypy
     language: python
-    files: ^src/macaron/|^tests/
-    types: [text, python]
-    exclude: ^tests/malware_analyzer/pypi/resources/sourcecode_samples.*
+    pass_filenames: false
     args: [--show-traceback, --config-file, pyproject.toml]
 
 # Enable a whole bunch of useful helper hooks, too.

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module test the yaml loader functions."""
@@ -40,7 +40,7 @@ class TestYamlLoader(TestCase):
         """Test the validate yaml data method."""
         # We are not testing the behavior of yamale methods
         # so the schema and data can be empty.
-        mock_schema = Schema({})
+        mock_schema = Schema({})  # type: ignore[no-untyped-call]
         mock_data: list = []
 
         # No errors
@@ -48,13 +48,13 @@ class TestYamlLoader(TestCase):
             assert YamlLoader.validate_yaml_data(mock_schema, mock_data)
 
         # Errors exist
-        with patch("yamale.validate", side_effect=YamaleError(results=[])):
+        with patch("yamale.validate", side_effect=YamaleError(results=[])):  # type: ignore[no-untyped-call]
             assert not YamlLoader.validate_yaml_data(mock_schema, mock_data)
 
     def test_load(self) -> None:
         """Test the load method of YamlLoader."""
         schema_file = os.path.join(self.RESOURCES_DIR, "schema.yaml")
-        schema: Schema = yamale.make_schema(schema_file)
+        schema: Schema = yamale.make_schema(schema_file)  # type: ignore[no-untyped-call]
 
         assert YamlLoader.load(os.path.join(self.RESOURCES_DIR, "invalid.yaml")) == {None: None}
         assert not YamlLoader.load(os.path.join(self.RESOURCES_DIR, "invalid.yaml"), schema)
