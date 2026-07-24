@@ -1,4 +1,4 @@
-# Copyright (c) 2022 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2022 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # This Dockerfile is for building the base image which contains the necessary components
@@ -9,7 +9,15 @@
 #   Souffle 2.5 compiled and installed from source.
 #   Other runtime libraries (e.g sqlite-devel) which are installed from dnf.
 
-FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:41a867b7f24306cf38c01ba578598164397bd07aa26dbdc9a985bedd9177e82e
+# To update this digest without Docker Hub or a container runtime, query Oracle Container Registry directly:
+#
+# token="$(curl -fsS 'https://container-registry.oracle.com/auth?service=Oracle%20Registry&scope=repository%3Aos%2Foraclelinux%3Apull' | sed -E 's/.*"token":"([^"]+)".*/\1/')"
+# curl -fsSI -H "Authorization: Bearer $token" -H 'Accept: application/vnd.oci.image.index.v1+json' \
+#   'https://container-registry.oracle.com/v2/os/oraclelinux/manifests/9-slim' | tr -d '\r' | \
+#   awk 'BEGIN { IGNORECASE=1 } /^docker-content-digest:/ { print $2 }'
+#
+# Use the returned OCI index digest (not an architecture-specific manifest digest) to preserve multi-architecture builds.
+FROM container-registry.oracle.com/os/oraclelinux:9-slim@sha256:dd5635f6388c828445d00b223ccd0b6aae30fe05b37981cac754840ef1d5382d
 
 ENV HOME="/home/macaron" \
     # Setting Python related environment variables.
