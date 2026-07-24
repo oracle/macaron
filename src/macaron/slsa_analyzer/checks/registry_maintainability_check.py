@@ -6,7 +6,6 @@
 import logging
 import urllib.parse
 from datetime import UTC, datetime
-from typing import ClassVar
 
 from packageurl import PackageURL
 from sqlalchemy import Boolean, ForeignKey, Integer, String
@@ -126,7 +125,7 @@ class RegistryMaintainabilityFacts(CheckFacts):
         info={"justification": JustificationType.TEXT},
     )
 
-    __mapper_args__: ClassVar[dict[str, str]] = {
+    __mapper_args__ = {  # noqa: RUF012
         "polymorphic_identity": "_registry_maintainability_check",
     }
 

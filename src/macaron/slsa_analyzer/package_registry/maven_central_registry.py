@@ -298,42 +298,30 @@ class MavenCentralRegistry(PackageRegistry):
             try:
                 res_obj = response.json()
             except requests.exceptions.JSONDecodeError as error:
-                raise InvalidHTTPResponseError(
-                    f"Failed to process response from Maven Central for {url}."
-                ) from error
+                raise InvalidHTTPResponseError(f"Failed to process response from Maven Central for {url}.") from error
             if not res_obj:
                 raise InvalidHTTPResponseError(f"Empty response returned by {url}.")
             if not res_obj.get("response"):
-                raise InvalidHTTPResponseError(
-                    f"The response returned by {url} misses `response` attribute."
-                )
+                raise InvalidHTTPResponseError(f"The response returned by {url} misses `response` attribute.")
             if not res_obj.get("response").get("docs"):
-                raise InvalidHTTPResponseError(
-                    f"No releases found for {namespace}:{name} on Maven Central."
-                )
+                raise InvalidHTTPResponseError(f"No releases found for {namespace}:{name} on Maven Central.")
 
             # The Maven Central search API does not support server-side sorting,
             # so we sort the returned releases by timestamp in Python to find the newest.
             docs = res_obj["response"]["docs"]
             docs_with_timestamp = [d for d in docs if d.get("timestamp")]
             if not docs_with_timestamp:
-                raise InvalidHTTPResponseError(
-                    f"The timestamp is missing in the response returned by {url}."
-                )
+                raise InvalidHTTPResponseError(f"The timestamp is missing in the response returned by {url}.")
 
             latest_doc = max(docs_with_timestamp, key=lambda d: d["timestamp"])
             timestamp = latest_doc["timestamp"]
 
-            logger.debug(
-                "Found latest release timestamp for %s:%s: %s.", namespace, name, timestamp
-            )
+            logger.debug("Found latest release timestamp for %s:%s: %s.", namespace, name, timestamp)
 
             try:
-                return datetime.fromtimestamp(round(timestamp / 1000), tz=timezone.utc)
+                return datetime.fromtimestamp(round(timestamp / 1000), tz=UTC)
             except (OverflowError, OSError) as error:
-                raise InvalidHTTPResponseError(
-                    f"The timestamp returned by {url} is invalid."
-                ) from error
+                raise InvalidHTTPResponseError(f"The timestamp returned by {url} is invalid.") from error
 
         raise InvalidHTTPResponseError(f"Invalid response from Maven Central for {url}.")
 
