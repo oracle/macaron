@@ -1,0 +1,28 @@
+# Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing a stale PyPI package to verify that mcn_registry_maintainability_1 fails
+  when a package has not had a release within the inactivity threshold (365 days).
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze on stale boto release.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/boto@2.49.0
+- name: Run macaron verify-policy to check maintainability fails.
+  kind: verify
+  options:
+    policy: policy.dl
+  expect_fail: true
+- name: Compare verify policy result.
+  kind: compare
+  options:
+    kind: policy_report
+    result: output/policy_report.json
+    expected: policy_report.json
