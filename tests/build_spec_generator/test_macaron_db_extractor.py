@@ -48,6 +48,7 @@ def macaron_db_session() -> Generator[Session, Any, None]:
     yield session
 
     session.close()
+    engine.dispose()
 
 
 @pytest.fixture()
@@ -64,6 +65,7 @@ def invalid_db_session() -> Generator[Session, Any, None]:
     yield session
 
     session.close()
+    engine.dispose()
 
 
 @pytest.mark.parametrize(

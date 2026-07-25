@@ -37,11 +37,15 @@ def db_man() -> Iterable:
     """Set up the database and ensure it is empty."""
     db_manager = DatabaseManager(DB_PATH, base=Base)
     con = sqlite3.connect(DB_PATH)
-    with con:
-        con.execute("drop table if exists _test_orm_table;")
-        con.execute("drop view if exists test_orm_table;")
-        con.commit()
+    try:
+        with con:
+            con.execute("drop table if exists _test_orm_table;")
+            con.execute("drop view if exists test_orm_table;")
+            con.commit()
+    finally:
+        con.close()
     yield db_manager
+    db_manager.engine.dispose()
     os.remove(DB_PATH)
 
 
@@ -66,7 +70,10 @@ def test_orm_mapping(
 
     query = "select * from _test_orm_table;"
     con = sqlite3.connect(DB_PATH)
-    with con:
-        cursor = con.execute(query)
-        rows = cursor.fetchall()
-        assert (str(rows) == str([(identifier, test_value)])) == expect
+    try:
+        with con:
+            cursor = con.execute(query)
+            rows = cursor.fetchall()
+            assert (str(rows) == str([(identifier, test_value)])) == expect
+    finally:
+        con.close()
