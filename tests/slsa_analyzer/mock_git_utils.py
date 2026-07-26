@@ -39,12 +39,12 @@ def initiate_repo(repo_path: str | os.PathLike, git_init_options: dict | None = 
         os.makedirs(repo_path)
 
     try:
-        git_wrapper = Git(repo_path)
+        git_wrapper = Git(str(repo_path))
         return git_wrapper
     except GitError:
         # No git repo at repo_path.
         git.Repo.init(repo_path, **git_init_options)
-        return Git(repo_path)
+        return Git(str(repo_path))
 
 
 def commit_files(git_wrapper: Git, file_names: list) -> bool:

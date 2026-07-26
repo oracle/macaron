@@ -84,7 +84,7 @@ class YamlLoader:
             return False
 
     @classmethod
-    def load(cls, path: os.PathLike | str, schema: Schema = None) -> Any:
+    def load(cls, path: os.PathLike | str, schema: Schema | None = None) -> Any:
         """Load and return a Python object from a yaml file.
 
         If ``schema`` is provided. This method will validate the loaded content against the

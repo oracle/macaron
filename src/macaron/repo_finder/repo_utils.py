@@ -209,8 +209,8 @@ def get_repo_tags(git_obj: Git) -> dict[str, str]:
 
     # Retrieve tags using a Git subprocess.
     repository_path = git_obj.repo.working_tree_dir
-    if not os.path.isdir(repository_path):
-        logger.debug("")
+    if not repository_path or not os.path.isdir(repository_path):
+        logger.debug("Invalid repository path: %s", repository_path)
         return {}
     try:
         result = subprocess.run(

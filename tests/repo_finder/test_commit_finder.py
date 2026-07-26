@@ -134,7 +134,7 @@ def mocked_repo_expanded_(mocked_repo: Git, mocked_repo_commit: Any, mocked_repo
     mocked_repo.repo.create_tag("4.5", mocked_repo_commit.hexsha)
 
     # Create a tag from a tree.
-    mocked_repo.repo.create_tag("1.0", ref=mocked_repo.repo.heads.master.commit.tree)
+    mocked_repo.repo.create_tag("1.0", mocked_repo.repo.heads.master.commit.tree.hexsha)
 
     # Add a tag with unicode version.
     mocked_repo.repo.create_tag(UNICODE_VERSION, mocked_repo_commit.hexsha)
