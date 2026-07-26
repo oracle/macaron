@@ -65,6 +65,8 @@ repos:
     name: Check typing annotations
     entry: mypy
     language: python
+    files: ^src/macaron/|^tests/
+    types: [text, python]
     pass_filenames: false
     args: [--show-traceback, --config-file, pyproject.toml]
 
