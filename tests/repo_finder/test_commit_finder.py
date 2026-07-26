@@ -7,14 +7,13 @@ import logging
 import os
 import re
 import shutil
-from typing import Any
 
 import hypothesis
 import pytest
 from hypothesis import given, settings
 from hypothesis.strategies import DataObject, data, text
 from packageurl import PackageURL
-from pydriller.git import Git
+from pydriller.git import Git, GitCommit
 
 from macaron.repo_finder import commit_finder
 from macaron.repo_finder.commit_finder import AbstractPurlType, determine_optional_suffix_index
@@ -117,19 +116,19 @@ def mocked_repo_() -> Git:
 
 
 @pytest.fixture(name="mocked_repo_commit")
-def mocked_repo_commit_(mocked_repo: Git) -> Any:
+def mocked_repo_commit_(mocked_repo: Git) -> GitCommit:
     """Add a commit to the mocked repository."""
     return mocked_repo.repo.index.commit(message="Commit_0")
 
 
 @pytest.fixture(name="mocked_repo_empty_commit")
-def mocked_repo_empty_commit_(mocked_repo: Git) -> Any:
+def mocked_repo_empty_commit_(mocked_repo: Git) -> GitCommit:
     """Add an empty commit to the mocked repository."""
     return mocked_repo.repo.index.commit(message="Empty_Commit")
 
 
 @pytest.fixture(name="mocked_repo_expanded")
-def mocked_repo_expanded_(mocked_repo: Git, mocked_repo_commit: Any, mocked_repo_empty_commit: Any) -> Any:
+def mocked_repo_expanded_(mocked_repo: Git, mocked_repo_commit: GitCommit, mocked_repo_empty_commit: GitCommit) -> Git:
     """Add tags to the mocked repository."""
     mocked_repo.repo.create_tag("4.5", mocked_repo_commit.hexsha)
 
@@ -200,7 +199,7 @@ def test_commit_finder_tag_failure(
 )
 def test_commit_finder_success_commit(
     mocked_repo_expanded: Git,
-    mocked_repo_commit: Any,
+    mocked_repo_commit: GitCommit,
     purl_string: str,
 ) -> None:
     """Test Commit Finder on mocked repository that should match valid PURLs."""
@@ -223,7 +222,7 @@ def test_commit_finder_success_commit(
     ],
 )
 def test_commit_finder_success_empty_commit(
-    mocked_repo_expanded: Git, mocked_repo_empty_commit: Any, purl_string: str
+    mocked_repo_expanded: Git, mocked_repo_empty_commit: GitCommit, purl_string: str
 ) -> None:
     """Test Commit Finder on mocked repository that should match value PURLs."""
     match, outcome = commit_finder.find_commit(mocked_repo_expanded, PackageURL.from_string(purl_string))
@@ -231,7 +230,7 @@ def test_commit_finder_success_empty_commit(
     assert outcome == CommitFinderInfo.MATCHED
 
 
-def test_commit_finder_repo_purl_success(mocked_repo_expanded: Git, mocked_repo_commit: Any) -> None:
+def test_commit_finder_repo_purl_success(mocked_repo_expanded: Git, mocked_repo_commit: GitCommit) -> None:
     """Test Commit Finder on mocked repository using a repo type PURL."""
     match, outcome = commit_finder.find_commit(
         mocked_repo_expanded, PackageURL.from_string(f"pkg:github/apache/maven@{mocked_repo_commit.hexsha}")
@@ -254,7 +253,7 @@ def test_commit_finder_optional_suffixes(version: str, parts: list, expected: in
     assert determine_optional_suffix_index(version, parts) == expected
 
 
-def test_get_repo_tags(mocked_repo_empty_commit: Any) -> None:
+def test_get_repo_tags(mocked_repo_empty_commit: GitCommit) -> None:
     """Test the get repo tags utils function."""
     # Create the repository object.
     repo = Git(os.path.join(REPO_DIR))
