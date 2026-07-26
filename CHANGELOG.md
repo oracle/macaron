@@ -1,3 +1,16 @@
+## v0.25.0 (2026-07-26)
+
+### Feat
+
+- add inference for rebuilding Python wheels that bundle Rust binaries. (#1408)
+- new malware sourcecode detection for anti-analysis behaviour (#1388)
+
+### Fix
+
+- **action**: replace string-built GitHub Action commands with a bash argv array and direct execution (#1424)
+- cleanup PyPI package temp directory and prevent leaks (#1404)
+- prefer tag commits over attestation commits (#1401)
+
 ## v0.24.0 (2026-04-24)
 
 ### Feat
