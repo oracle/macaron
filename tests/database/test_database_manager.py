@@ -6,6 +6,7 @@
 import os
 import sqlite3
 from collections.abc import Iterable
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -37,11 +38,13 @@ def db_man() -> Iterable:
     """Set up the database and ensure it is empty."""
     db_manager = DatabaseManager(DB_PATH, base=Base)
     con = sqlite3.connect(DB_PATH)
-    with con:
+    with closing(con), con:
         con.execute("drop table if exists _test_orm_table;")
         con.execute("drop view if exists test_orm_table;")
         con.commit()
+
     yield db_manager
+    db_manager.engine.dispose()
     os.remove(DB_PATH)
 
 
@@ -66,7 +69,7 @@ def test_orm_mapping(
 
     query = "select * from _test_orm_table;"
     con = sqlite3.connect(DB_PATH)
-    with con:
+    with closing(con), con:
         cursor = con.execute(query)
         rows = cursor.fetchall()
         assert (str(rows) == str([(identifier, test_value)])) == expect
