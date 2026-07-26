@@ -35,7 +35,7 @@ jobs:
     # Note: adjust the policy_purl to refer to your repository URL.
     - name: Run Macaron action
       id: run_macaron
-      uses: oracle/macaron@4ddb55e3c9ef2c77b548be55c557078c4476fd9c # v0.24.0
+      uses: oracle/macaron@794eec32782979f577efb5ff71d585f683a3550f # v0.25.0
       with:
         repo_path: ./
         policy_file: check-github-actions
