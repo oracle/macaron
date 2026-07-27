@@ -413,7 +413,7 @@ def _check_maven_no_version(
                         pushed_at: str | None = repo_data.get("pushed_at")
                         if pushed_at:
                             try:
-                                commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
+                                commit_dt = datetime.fromisoformat(pushed_at)
                                 days_since_commit = (now - commit_dt).days
                             except ValueError:
                                 logger.debug(
@@ -626,9 +626,8 @@ class RegistryMaintainabilityCheck(BaseCheck):
                 is_archived = bool(repo_data.get("archived", False))
                 pushed_at: str | None = repo_data.get("pushed_at")
                 if pushed_at:
-                    # GitHub timestamps use the ``Z`` suffix; normalise for datetime.fromisoformat() on Python < 3.11.
                     try:
-                        commit_dt = datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
+                        commit_dt = datetime.fromisoformat(pushed_at)
                         days_since_commit = (now - commit_dt).days
                         last_commit_date = commit_dt.strftime("%Y-%m-%d")
                     except ValueError:
