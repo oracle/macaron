@@ -190,10 +190,10 @@ class DetectMaliciousMetadataCheck(BaseCheck):
         problog_code = f"{facts}\n\n{self.malware_rules_problog_model}"
         logger.debug("Problog model used for evaluation:\n %s", problog_code)
 
-        problog_model = PrologString(problog_code)
-        problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()
+        problog_model = PrologString(problog_code)  # type: ignore[no-untyped-call]
+        problog_results: dict[Term, float] = get_evaluatable().create_from(problog_model).evaluate()  # type: ignore[no-untyped-call]
 
-        confidence = problog_results.pop(Term(self.problog_result_access), 0.0)
+        confidence = problog_results.pop(Term(self.problog_result_access), 0.0)  # type: ignore[no-untyped-call]
         if confidence > 0:  # a rule was triggered
             for term, conf in problog_results.items():
                 if term.args:

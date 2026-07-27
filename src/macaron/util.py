@@ -471,7 +471,7 @@ def check_rate_limit(response: Response) -> None:
     remains = int(response.headers["X-RateLimit-Remaining"]) if "X-RateLimit-Remaining" in response.headers else 2
 
     if remains <= 1:
-        rate_limit_reset = response.headers.get("X-RateLimit-Reset", default="")
+        rate_limit_reset = response.headers.get("X-RateLimit-Reset", "")
 
         if not rate_limit_reset:
             return
