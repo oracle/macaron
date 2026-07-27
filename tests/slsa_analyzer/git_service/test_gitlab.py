@@ -1,8 +1,9 @@
-# Copyright (c) 2023 - 2024, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """Tests for the GitLab git service."""
 
+import collections.abc
 import os
 from pathlib import Path
 from unittest import mock
@@ -117,7 +118,7 @@ def test_self_hosted_gitlab_without_env_set(tmp_path: Path) -> None:
 
 
 @pytest.fixture(name="self_hosted_gitlab")
-def self_hosted_gitlab_repo_fixture(request: pytest.FixtureRequest) -> Git:
+def self_hosted_gitlab_repo_fixture(request: pytest.FixtureRequest) -> collections.abc.Iterable[Git]:
     """Create a mock GitLab self_hosted repo.
 
     This fixture expects ONE parameter of type STR which will be the origin remote url initialized for the self_hosted
@@ -153,7 +154,7 @@ def self_hosted_gitlab_repo_fixture(request: pytest.FixtureRequest) -> Git:
 
     yield gitlab_repo
 
-    gitlab_repo.clear()
+    gitlab_repo.clear()  # type: ignore[no-untyped-call]
 
 
 # The indirect parameter is used to note that ``self_hosted_gitlab`` should be passed to the ``self_hosted_gitlab``
