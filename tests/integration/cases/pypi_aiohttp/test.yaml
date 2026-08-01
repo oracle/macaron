@@ -1,0 +1,28 @@
+# Copyright (c) 2026 - 2026, Oracle and/or its affiliates. All rights reserved.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
+
+description: |
+  Analyzing PyPI package aiohttp to verify that mcn_registry_maintainability_1 passes
+  for an actively maintained package. Although this version is old, aiohttp continues to
+  receive regular releases, so the check correctly reports the package as maintained.
+
+tags:
+- macaron-python-package
+
+steps:
+- name: Run macaron analyze on an older aiohttp version.
+  kind: analyze
+  options:
+    command_args:
+    - -purl
+    - pkg:pypi/aiohttp@3.9.3
+- name: Run macaron verify-policy to check maintainability passes.
+  kind: verify
+  options:
+    policy: policy.dl
+- name: Compare verify policy result.
+  kind: compare
+  options:
+    kind: policy_report
+    result: output/policy_report.json
+    expected: policy_report.json

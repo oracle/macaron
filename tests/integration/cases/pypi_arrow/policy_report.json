@@ -1,6 +1,15 @@
 {
-    "passed_policies": [],
+    "passed_policies": [
+        [
+            "registry-maintainability"
+        ]
+    ],
     "component_satisfies_policy": [
+        [
+            "1",
+            "pkg:pypi/arrow@0.15.0",
+            "registry-maintainability"
+        ],
         [
             "2",
             "pkg:pypi/arrow@1.3.0",
