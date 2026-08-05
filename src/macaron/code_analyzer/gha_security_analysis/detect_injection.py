@@ -6,6 +6,7 @@
 import json
 import os
 import re
+import shlex
 from typing import TypedDict, cast
 
 from macaron.code_analyzer.dataflow_analysis import bash, core, facts
@@ -232,7 +233,10 @@ def _append_action_step_findings(
         if "pull_request_target" in on_keys and ref in UNTRUSTED_PR_REFS:
             _add_finding(
                 findings,
-                f"pr-target-untrusted-checkout: Workflow uses pull_request_target and checks out PR-controlled ref `{ref}`.",
+                (
+                    "pr-target-untrusted-checkout: Workflow uses pull_request_target and checks out "
+                    f"PR-controlled ref `{ref}`."
+                ),
                 PRIORITY_CRITICAL,
             )
 
@@ -241,6 +245,8 @@ def _append_run_step_findings(
     findings: list[PrioritizedIssue], run_step_node: GitHubActionsRunStepNode, nodes: NodeForest
 ) -> None:
     """Append findings derived from a run step node."""
+    append_composite_action_script_injection_findings(findings, run_step_node)
+
     # Traversing a run-step subgraph can reach semantically identical command nodes through
     # multiple CFG/AST paths (for example nested/compound command structures). Track emitted
     # injection findings by stable metadata to avoid duplicate reports for the same command line.
@@ -254,6 +260,244 @@ def _append_run_step_findings(
         # Remote script execution risk is structural: downloader output piped into an executor.
         if isinstance(node, bash.BashPipeNode):
             _append_remote_script_exec_findings(findings, node, run_step_node, nodes)
+
+
+def append_composite_action_script_injection_findings(
+    findings: list[PrioritizedIssue],
+    run_step_node: GitHubActionsRunStepNode,
+) -> None:
+    """Append findings for composite action inputs reaching ``eval`` in local scripts.
+
+    Parameters
+    ----------
+    findings : list[PrioritizedIssue]
+        The finding collection to update.
+    run_step_node : GitHubActionsRunStepNode
+        The composite action run step to inspect.
+    """
+    tainted_env_vars = extract_env_vars_from_action_inputs(run_step_node.definition.get("env"))
+    if not tainted_env_vars:
+        return
+
+    for script_path in extract_local_shell_scripts_from_run_step(run_step_node):
+        eval_findings = find_eval_of_tainted_shell_values(script_path, tainted_env_vars)
+        for script_line, command_text, tainted_values in eval_findings:
+            workflow_line = _extract_run_step_line(run_step_node)
+            issue_payload = {
+                "step_line": workflow_line,
+                "script_path": os.path.relpath(script_path, os.getcwd()),
+                "script_line": script_line,
+                "step": _extract_step_name(run_step_node),
+                "command": command_text,
+                "tainted_env": sorted(tainted_values),
+            }
+            _add_finding(
+                findings,
+                f"composite-action-script-injection: {json.dumps(issue_payload)}",
+                PRIORITY_CRITICAL,
+            )
+
+
+def extract_env_vars_from_action_inputs(env: object) -> set[str]:
+    """Return env var names whose values come from composite action inputs.
+
+    Parameters
+    ----------
+    env : object
+        A parsed GitHub Actions ``env`` block.
+
+    Returns
+    -------
+    set[str]
+        Environment variable names assigned from ``${{ inputs.* }}`` expressions.
+    """
+    if not isinstance(env, dict):
+        return set()
+
+    result: set[str] = set()
+    for key, value in env.items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            continue
+        if re.search(r"\$\{\{\s*inputs\.[A-Za-z0-9_-]+", value):
+            result.add(key)
+    return result
+
+
+def extract_local_shell_scripts_from_run_step(run_step_node: GitHubActionsRunStepNode) -> list[str]:
+    """Resolve local shell scripts invoked by a composite action run step.
+
+    Parameters
+    ----------
+    run_step_node : GitHubActionsRunStepNode
+        The run step whose shell command should be inspected.
+
+    Returns
+    -------
+    list[str]
+        Absolute paths to local ``.sh`` scripts invoked by the run step.
+    """
+    run_script = run_step_node.definition["run"]
+    workflow_path = run_step_node.context.ref.job_context.ref.workflow_context.ref.source_filepath
+    if not workflow_path:
+        return []
+
+    action_dir = os.path.dirname(os.path.abspath(workflow_path))
+    script_paths: list[str] = []
+    for line in run_script.splitlines():
+        try:
+            words = shlex.split(line, comments=True)
+        except ValueError:
+            continue
+        for word in words:
+            if not word.endswith(".sh"):
+                continue
+            resolved = resolve_local_action_script_path(word, action_dir)
+            if resolved and resolved not in script_paths:
+                script_paths.append(resolved)
+    return script_paths
+
+
+def resolve_local_action_script_path(path: str, action_dir: str) -> str | None:
+    """Resolve a script path that may use ``GITHUB_ACTION_PATH``.
+
+    Parameters
+    ----------
+    path : str
+        The script path from the run step.
+    action_dir : str
+        Absolute path to the composite action directory.
+
+    Returns
+    -------
+    str | None
+        The absolute script path when it exists under ``action_dir``; otherwise ``None``.
+    """
+    expanded = path.replace("${GITHUB_ACTION_PATH}", action_dir).replace("$GITHUB_ACTION_PATH", action_dir)
+    if not os.path.isabs(expanded):
+        expanded = os.path.join(action_dir, expanded)
+
+    normalized = os.path.abspath(os.path.normpath(expanded))
+    if os.path.commonpath([action_dir, normalized]) != action_dir:
+        return None
+    if not os.path.isfile(normalized):
+        return None
+    return normalized
+
+
+def find_eval_of_tainted_shell_values(script_path: str, tainted_env_vars: set[str]) -> list[tuple[int, str, set[str]]]:
+    """Find ``eval`` commands whose arguments can include tainted action inputs.
+
+    Parameters
+    ----------
+    script_path : str
+        Path to the shell script to inspect.
+    tainted_env_vars : set[str]
+        Environment variables assigned from composite action inputs.
+
+    Returns
+    -------
+    list[tuple[int, str, set[str]]]
+        Tuples of script line, command text, and tainted shell values reaching ``eval``.
+    """
+    try:
+        with open(script_path, encoding="utf-8") as script_file:
+            lines = script_file.readlines()
+    except OSError:
+        return []
+
+    tainted_shell_vars: set[str] = set()
+    findings: list[tuple[int, str, set[str]]] = []
+    for line_number, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        assigned_var = extract_shell_assignment_name(stripped)
+        if assigned_var and shell_text_references_any_var(stripped, tainted_env_vars | tainted_shell_vars):
+            tainted_shell_vars.add(assigned_var)
+
+        if not is_eval_command(stripped):
+            continue
+
+        tainted_refs = referenced_vars(stripped, tainted_env_vars | tainted_shell_vars)
+        if tainted_refs:
+            findings.append((line_number, stripped, tainted_refs))
+    return findings
+
+
+def extract_shell_assignment_name(line: str) -> str | None:
+    """Extract the assigned variable name from a simple shell assignment.
+
+    Parameters
+    ----------
+    line : str
+        Shell source line.
+
+    Returns
+    -------
+    str | None
+        The assigned variable name, or ``None`` when the line is not a simple assignment.
+    """
+    match = re.match(r"^(?:local\s+|export\s+|readonly\s+)?([A-Za-z_][A-Za-z0-9_]*)\+?=", line)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def is_eval_command(line: str) -> bool:
+    """Return whether a shell line invokes ``eval`` as a command.
+
+    Parameters
+    ----------
+    line : str
+        Shell source line.
+
+    Returns
+    -------
+    bool
+        ``True`` when the line invokes ``eval``.
+    """
+    return bool(re.search(r"(?:^|[;&|]\s*|\b(?:if|then|do)\s+)eval(?:\s|$)", line))
+
+
+def shell_text_references_any_var(text: str, variables: set[str]) -> bool:
+    """Return whether shell text references any variable.
+
+    Parameters
+    ----------
+    text : str
+        Shell text to inspect.
+    variables : set[str]
+        Variable names to search for.
+
+    Returns
+    -------
+    bool
+        ``True`` when ``text`` references at least one variable.
+    """
+    return bool(referenced_vars(text, variables))
+
+
+def referenced_vars(text: str, variables: set[str]) -> set[str]:
+    """Return shell variables referenced as ``$VAR`` or ``${VAR}``.
+
+    Parameters
+    ----------
+    text : str
+        Shell text to inspect.
+    variables : set[str]
+        Variable names to search for.
+
+    Returns
+    -------
+    set[str]
+        Variables referenced in ``text``.
+    """
+    refs: set[str] = set()
+    for variable in variables:
+        if re.search(rf"\$(?:\{{{re.escape(variable)}(?::[-=?+][^}}]*)?\}}|{re.escape(variable)}\b)", text):
+            refs.add(variable)
+    return refs
 
 
 def _append_remote_script_exec_findings(
@@ -310,10 +554,10 @@ def _extract_statement_words(statement_node: bash.BashStatementNode) -> list[str
 
 def _extract_call_words(call_expr: CallExpr) -> list[str]:
     """Extract literal word values from a call expression."""
-    args = call_expr["Args"]
+    args = call_expr.get("Args", [])
     words: list[str] = []
     for arg in args:
-        parts = arg["Parts"]
+        parts = arg.get("Parts", [])
         word = "".join(part.get("Value", "") for part in parts if is_lit(part)).strip()
         if not word:
             return []
