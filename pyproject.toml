@@ -38,7 +38,7 @@ dependencies = [
     "cyclonedx-python-lib[validation] >=9.0.0,<12.0.0",
     "beautifulsoup4 >=4.12.0,<5.0.0",
     "problog >=2.2.6,<3.0.0",
-    "cryptography >=48.0.1,<49.0.0",
+    "cryptography >=50.0.0,<51.0.0",
     "semgrep == 1.171.0",
     "email-validator >=2.2.0,<3.0.0",
     "rich >=13.5.3,<15.0.0",
@@ -76,6 +76,7 @@ actions = [
 ]
 dev = [
     "flit >=3.2.0,<4.0.0",
+    "flit_core >=3.2.0,<4.0.0",
     "mypy >=2.0.0,<3.0.0",
     "types-pyyaml >=6.0.4,<7.0.0",
     "types-requests >=2.25.6,<3.0.0",
