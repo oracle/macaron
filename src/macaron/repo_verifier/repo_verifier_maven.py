@@ -114,6 +114,14 @@ class RepoVerifierMaven(RepoVerifierToolSpecific):
         reported_account = parsed_url.path.strip("/").split("/")[0]
 
         group_parts = self.namespace.split(".")
+        # Fewer than three segments names no account to compare against.
+        if len(group_parts) < 3:
+            return RepositoryVerificationResult(
+                status=RepositoryVerificationStatus.UNKNOWN,
+                reason="git_ns_mismatch",
+                build_tool=self.build_tool,
+            )
+
         for platform in RECOGNIZED_CODE_HOSTING_SERVICES:
             # For artifacts from recognized code hosting services, check if the
             # organization name is the same in maven and the source repository.
