@@ -84,7 +84,7 @@ class MavenBuildSpec(BaseBuildSpec):
         existing = self.data["language_version"][0] if self.data["language_version"] else None
 
         # Select JDK from jar or another source, with a default of version 8.
-        selected_jdk_version = jdk_from_jar or existing if existing else "8"
+        selected_jdk_version = jdk_from_jar or existing or "8"
 
         major_jdk_version = normalize_jdk_version(selected_jdk_version)
         if not major_jdk_version:
