@@ -192,6 +192,10 @@ def recommend_for_workflow_issue(issue: str) -> Recommendation:
         return Recommendation("Never combine pull_request_target with checkout of PR-controlled refs.")
     if issue.startswith("potential-injection:"):
         return Recommendation("Treat GitHub context data as untrusted input; quote/sanitize before shell execution.")
+    if issue.startswith("composite-action-script-injection:"):
+        return Recommendation(
+            "Do not pass composite action inputs into shell commands evaluated by eval; build commands as argv arrays."
+        )
     return Recommendation("Review this workflow finding and apply least-privilege hardening controls.")
 
 

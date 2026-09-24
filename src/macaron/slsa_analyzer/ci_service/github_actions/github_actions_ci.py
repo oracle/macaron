@@ -11,8 +11,12 @@ import os
 import traceback
 from datetime import UTC, datetime, timedelta
 
-from macaron.code_analyzer.dataflow_analysis.analysis import analyse_github_workflow_file
-from macaron.code_analyzer.dataflow_analysis.core import Node, NodeForest
+from macaron.code_analyzer.dataflow_analysis import github
+from macaron.code_analyzer.dataflow_analysis.analysis import (
+    analyse_github_composite_action_file,
+    analyse_github_workflow_file,
+)
+from macaron.code_analyzer.dataflow_analysis.core import Node, NodeForest, traverse_bfs
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.errors import CallGraphError, GitHubActionsValueError, ParseError
@@ -608,6 +612,7 @@ class GitHubActions(BaseCIService):
             Workflows that raise ``ParseError`` are skipped.
         """
         nodes: list[Node] = []
+        reachable_action_paths: set[str] = set()
         for workflow_path in files:
             try:
                 workflow_node = analyse_github_workflow_file(workflow_path, repo_path)
@@ -617,7 +622,33 @@ class GitHubActions(BaseCIService):
                 logger.debug("Reason: %s", traceback.format_exc())
                 continue
             nodes.append(workflow_node)
+            for node in traverse_bfs(workflow_node):
+                if isinstance(node, github.GitHubActionsCompositeActionNode):
+                    reachable_action_paths.add(os.path.abspath(node.action_path))
+
+        for action_path in self._get_local_action_metadata_files(repo_path):
+            if os.path.abspath(action_path) in reachable_action_paths:
+                continue
+            try:
+                action_node = analyse_github_composite_action_file(action_path, repo_path)
+            except (ParseError, CallGraphError):
+                logger.debug("Skip adding local action at %s to the callgraph.", action_path)
+                logger.debug("Reason: %s", traceback.format_exc())
+                continue
+            nodes.append(action_node)
         return NodeForest(nodes)
+
+    def _get_local_action_metadata_files(self, repo_path: str) -> list[str]:
+        """Get root and ``.github/actions`` local action metadata files in a repository."""
+        action_files = []
+        for metadata_name in ("action.yml", "action.yaml"):
+            root_action = os.path.join(repo_path, metadata_name)
+            if os.path.isfile(root_action):
+                action_files.append(root_action)
+            action_files.extend(
+                glob.glob(os.path.join(repo_path, ".github", "actions", "**", metadata_name), recursive=True)
+            )
+        return sorted(set(action_files))
 
     def get_third_party_configurations(self) -> list[str]:
         """Get the list of third-party CI configuration files.

@@ -38,6 +38,55 @@ def test_detect_github_actions_security_issues(
     assert detect_github_actions_security_issues(callgraph) == snapshot
 
 
+def test_detect_composite_action_input_eval_in_external_script(tmp_path: Path) -> None:
+    """Detect composite action inputs flowing through env into eval in a local shell script."""
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir()
+    script_path = scripts_dir / "run.sh"
+    script_path.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "CMD=\"tool --package-url ${PACKAGE_URL}\"",
+                "if eval \"$CMD\"; then",
+                "  echo ok",
+                "fi",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "action.yaml").write_text(
+        "\n".join(
+            [
+                "name: vulnerable composite action",
+                "inputs:",
+                "  package_url:",
+                "    description: Package URL",
+                "runs:",
+                "  using: composite",
+                "  steps:",
+                "  - name: Run helper",
+                "    run: bash \"$GITHUB_ACTION_PATH/scripts/run.sh\"",
+                "    shell: bash",
+                "    env:",
+                "      PACKAGE_URL: ${{ inputs.package_url }}",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    callgraph = GitHubActions().build_call_graph_for_files([], str(tmp_path))
+    findings = detect_github_actions_security_issues(callgraph)
+    issues = [issue["issue"] for finding in findings for issue in finding["issues"]]
+
+    assert any(
+        issue.startswith("composite-action-script-injection:")
+        and "scripts/run.sh" in issue
+        and 'if eval \\"$CMD\\"; then' in issue
+        for issue in issues
+    )
+
+
 def test_extract_workflow_issue_line_from_potential_injection() -> None:
     """Extract the source line from a potential-injection issue payload."""
     issue = (

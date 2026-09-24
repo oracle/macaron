@@ -5,7 +5,9 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterable
+from typing import cast
 
 from macaron.code_analyzer.dataflow_analysis import bash, core, evaluation, facts, github, printing
 from macaron.errors import CallGraphError
@@ -51,7 +53,11 @@ def analyse_github_workflow_file(workflow_path: str, repo_path: str | None, dump
 
 
 def analyse_github_workflow(
-    workflow: github_workflow_model.Workflow, workflow_source_path: str, repo_path: str | None, dump_debug: bool = False
+    workflow: github_workflow_model.Workflow,
+    workflow_source_path: str,
+    repo_path: str | None,
+    dump_debug: bool = False,
+    local_action_stack: tuple[str, ...] = (),
 ) -> core.Node:
     """Perform dataflow analysis for GitHub Actions Workflow.
 
@@ -75,7 +81,9 @@ def analyse_github_workflow(
         analysis_context = core.OwningContextRef(core.AnalysisContext(repo_path))
 
         core.reset_debug_sequence_number()
-        raw_workflow_node = github.RawGitHubActionsWorkflowNode.create(workflow, analysis_context, workflow_source_path)
+        raw_workflow_node = github.RawGitHubActionsWorkflowNode.create(
+            workflow, analysis_context, workflow_source_path, local_action_stack
+        )
         core.increment_debug_sequence_number()
 
         raw_workflow_node.analyse()
@@ -87,6 +95,31 @@ def analyse_github_workflow(
         raise CallGraphError("Failed to analyze github workflow '" + workflow_source_path + "'") from e
 
     return raw_workflow_node
+
+
+def analyse_github_composite_action_file(
+    action_path: str, repo_path: str | None, dump_debug: bool = False
+) -> core.Node:
+    """Perform dataflow analysis for a standalone local composite GitHub Action metadata file.
+
+    The action is wrapped in a synthetic workflow so existing GitHub Actions analyses can traverse
+    its nested ``run`` and ``uses`` steps without a separate root node type.
+    """
+    steps = github.parse_composite_action_steps(action_path)
+    workflow = cast(
+        github_workflow_model.Workflow,
+        {
+            "name": action_path,
+            "on": "workflow_call",
+            "jobs": {
+                "composite-action": {
+                    "runs-on": "ubuntu-latest",
+                    "steps": steps,
+                }
+            },
+        },
+    )
+    return analyse_github_workflow(workflow, action_path, repo_path, dump_debug, (os.path.abspath(action_path),))
 
 
 def analyse_bash_script(
