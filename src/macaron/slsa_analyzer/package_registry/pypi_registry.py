@@ -209,7 +209,8 @@ class PyPIRegistry(PackageRegistry):
         if error_message:
             logger.debug(error_message)
         try:
-            shutil.rmtree(directory, onerror=_handle_temp_dir_clean)
+            # Python 3.11 requires onerror; its replacement onexc was added in Python 3.12.
+            shutil.rmtree(directory, onerror=_handle_temp_dir_clean)  # pylint: disable=deprecated-argument
             logger.debug("Successfully cleaned up temporary directory %s.", directory)
         except SourceCodeError as tempdir_exception:
             tempdir_exception_msg = (

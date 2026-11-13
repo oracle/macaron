@@ -98,7 +98,8 @@ class MockGit(Git):
     repo = Mock(tags=[MockTag()])
 
 
-class MockJFrogRegistry(JFrogMavenRegistry):
+# Inherit JFrog's unsupported timestamp lookup; provenance tests only fetch assets.
+class MockJFrogRegistry(JFrogMavenRegistry):  # pylint: disable=abstract-method
     """Mock JFrogMavenRegistry class."""
 
     def __init__(self, resource_dir: str):
