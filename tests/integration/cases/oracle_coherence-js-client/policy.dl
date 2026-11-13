@@ -16,6 +16,10 @@ Policy("check-github-actions-vulnerabilities", component_id, "Check GitHub Actio
         "aquasecurity/trivy-action",
         "0.32.0",
         _,
+        _,
+        _,
+        _,
+        _,
         "[\"https://osv.dev/vulnerability/GHSA-69fq-xp46-6x23\", \"https://osv.dev/vulnerability/GHSA-9p44-j4g5-cfx5\"]"
     ).
 

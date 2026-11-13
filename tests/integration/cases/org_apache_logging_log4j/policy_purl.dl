@@ -10,7 +10,14 @@ Policy("test_policy", component_id, "") :-
     check_passed_with_confidence(component_id, "mcn_find_artifact_pipeline_1", confidence),
     confidence = 0.7, // Medium confidence because the pipeline was not found from a provenance.
     check_passed(component_id, "mcn_version_control_system_1"),
-    check_passed(component_id, "mcn_githubactions_vulnerabilities_1"),
+    // This revision calls remote reusable workflows through mutable refs.
+    check_failed(component_id, "mcn_githubactions_vulnerabilities_1"),
+    github_actions_vulnerabilities_check(
+        finding_id, _, "unpinned-third-party-action", "third_party_action_risk",
+        _, _, _, "apache/logging-parent/.github/workflows/build-reusable.yaml",
+        "rel/12.1.1", _, _, _, _, _, _
+    ),
+    check_facts(finding_id, _, component_id, _, _),
     check_failed(component_id, "mcn_provenance_available_1"),
     check_failed(component_id, "mcn_provenance_derived_commit_1"),
     check_failed(component_id, "mcn_provenance_derived_repo_1"),

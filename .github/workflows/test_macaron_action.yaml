@@ -158,12 +158,15 @@ jobs:
       uses: ./
       with:
         repo_path: https://github.com/apache/logging-log4j2
+        digest: 028e9fad03ae7bcbf2e49ab8d32d8cfb900f3587
         output_dir: macaron_output/detect_vulnerable_github_actions
         upload_reports: 'false'
         write_job_summary: 'false'
 
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
       id: verify_github_actions_vulns_repo_tutorial
+      # Log4j calls remote reusable workflows through mutable refs, so this policy fails.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
@@ -171,6 +174,17 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-repo
         write_job_summary: 'true'
+
+    - name: Assert expected policy failure for the repository example
+      run: |
+        if [ "${{ steps.verify_github_actions_vulns_repo_tutorial.outcome }}" != "failure" ]; then
+          echo "Expected the repository policy to reject mutable reusable-workflow refs."
+          exit 1
+        fi
+        jq -e '.failed_policies == [["github_actions_vulns_repo"]] and
+          (.component_violates_policy | length > 0)' \
+          macaron_output/detect_vulnerable_github_actions/policy_report.json
+        test ! -e macaron_output/detect_vulnerable_github_actions/vsa.intoto.jsonl
 
     - name: Run Macaron (analyze purl - log4j-core example)
       uses: ./
@@ -182,6 +196,7 @@ jobs:
 
     - name: Run Macaron (verify policy - github_actions_vulns for purl)
       id: verify_github_actions_vulns_purl_tutorial
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
@@ -189,6 +204,17 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-purl
         write_job_summary: 'true'
+
+    - name: Assert expected policy failure for the PURL example
+      run: |
+        if [ "${{ steps.verify_github_actions_vulns_purl_tutorial.outcome }}" != "failure" ]; then
+          echo "Expected the PURL policy to reject mutable reusable-workflow refs."
+          exit 1
+        fi
+        jq -e '.failed_policies == [["github_actions_vulns_purl"]] and
+          (.component_violates_policy | length > 0)' \
+          macaron_output/detect_vulnerable_github_actions/policy_report.json
+        test ! -e macaron_output/detect_vulnerable_github_actions/vsa.intoto.jsonl
 
   tutorial-provenance:
     name: Provenance discovery, extraction, and verification

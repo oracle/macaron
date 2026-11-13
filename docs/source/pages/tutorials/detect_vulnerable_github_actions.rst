@@ -95,6 +95,12 @@ Next, ensure that the ``mcn_githubactions_vulnerabilities_1`` check passes for t
 
 Run the ``verify-policy`` command to check if the ``mcn_githubactions_vulnerabilities_1`` check is successful.
 
+The check also detects mutable references to remote reusable workflows. For
+example, Log4j commit ``028e9fad03ae7bcbf2e49ab8d32d8cfb900f3587`` calls reusable
+workflows through refs such as ``main`` and ``rel/12.1.1``, so it fails this policy
+even when no known action vulnerability is reported. Review the findings before
+deciding which workflow references need to be pinned.
+
 .. code-block:: shell
 
   ./run_macaron.sh verify-policy --database ./output/macaron.db --file ./check_github_actions_vuln.dl

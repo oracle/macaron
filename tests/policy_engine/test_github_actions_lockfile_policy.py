@@ -13,11 +13,14 @@ import pytest
 from sqlalchemy.orm import Session
 
 from macaron.database.database_manager import DatabaseManager
-from macaron.database.table_definitions import MappedCheckResult, RepoFinderMetadata
+from macaron.database.table_definitions import CheckFacts, MappedCheckResult, RepoFinderMetadata
 from macaron.policy_engine.policy_engine import run_souffle
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
-from macaron.slsa_analyzer.checks.check_result import CheckResultType
-from macaron.slsa_analyzer.checks.github_actions_vulnerability_check import GitHubActionsVulnsCheck
+from macaron.slsa_analyzer.checks.check_result import CheckResultType, Confidence
+from macaron.slsa_analyzer.checks.github_actions_vulnerability_check import (
+    GitHubActionsVulnsCheck,
+    GitHubActionsVulnsFacts,
+)
 from macaron.slsa_analyzer.ci_service.base_ci_service import BaseCIService
 from macaron.slsa_analyzer.package_registry.osv_dev import OSVDevService
 from tests.conftest import MockAnalyzeContext
@@ -113,5 +116,92 @@ jobs:
             if mode == "vulnerable":
                 assert "b" * 40 in text
                 assert "example/parent@v1" in text
+    finally:
+        manager.engine.dispose()
+
+
+@pytest.mark.parametrize("case", ["log4j_purl", "log4j_repo", "coherence"])
+@pytest.mark.parametrize("include_finding", [True, False])
+def test_integration_github_actions_policies(tmp_path: Path, case: str, include_finding: bool) -> None:
+    """Integration policies require the intended finding and compile against the current schema."""
+    coherence = case == "coherence"
+    purl = (
+        "pkg:github.com/oracle/coherence-js-client@39166341bc31f75b663ff439dae36170fb3e99a9"
+        if coherence
+        else "pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3"
+    )
+    ctx = MockAnalyzeContext(purl=purl)
+    ctx.component.analysis.analysis_time = datetime.now(UTC)
+    ctx.component.analysis.macaron_version = "test"
+    ctx.component.type, ctx.component.name = (
+        ("github.com", "coherence-js-client") if coherence else ("maven", "log4j-core")
+    )
+    ctx.component.repo_finder_metadata = RepoFinderMetadata(
+        repo_finder_outcome=RepoFinderInfo.NOT_USED,
+        commit_finder_outcome=CommitFinderInfo.NOT_USED,
+        found_url="",
+        found_commit="",
+    )
+    repository = ctx.component.repository
+    repository.full_name = "oracle/coherence-js-client" if coherence else "apache/logging-log4j2"
+    repository.remote_path = f"https://github.com/{repository.full_name}"
+    repository.type, repository.name = "github.com", repository.full_name.split("/")[-1]
+    repository.commit_date = "2026-11-13"
+    check = MappedCheckResult(check_id="mcn_githubactions_vulnerabilities_1", passed=False, component=ctx.component)
+    for check_id, passed in {
+        "mcn_build_as_code_1": True,
+        "mcn_build_script_1": True,
+        "mcn_build_service_1": True,
+        "mcn_find_artifact_pipeline_1": True,
+        "mcn_version_control_system_1": True,
+        "mcn_provenance_available_1": False,
+        "mcn_provenance_derived_commit_1": False,
+        "mcn_provenance_derived_repo_1": False,
+        "mcn_provenance_expectation_1": False,
+        "mcn_provenance_witness_level_one_1": False,
+        "mcn_trusted_builder_level_three_1": False,
+    }.items():
+        result = MappedCheckResult(check_id=check_id, passed=passed, component=ctx.component)
+        if check_id == "mcn_find_artifact_pipeline_1":
+            CheckFacts(checkresult=result, component=ctx.component, confidence=0.7)
+    if include_finding:
+        GitHubActionsVulnsFacts(
+            # Finding identifiers must not accidentally equal the component identifier.
+            id=101,
+            checkresult=check,
+            component=ctx.component,
+            confidence=Confidence.HIGH,
+            caller_workflow=(
+                "https://github.com/oracle/coherence-js-client/blob/39166341bc31f75b663ff439dae36170fb3e99a9/.github/workflows/trivy-scan.yml"
+                if coherence
+                else "https://github.com/apache/logging-log4j2/blob/028e9fad03ae7bcbf2e49ab8d32d8cfb900f3587/.github/workflows/build.yaml"
+            ),
+            finding_type="known-vulnerability" if coherence else "unpinned-third-party-action",
+            finding_group="third_party_action_risk",
+            finding_priority=20,
+            action_name="aquasecurity/trivy-action"
+            if coherence
+            else "apache/logging-parent/.github/workflows/build-reusable.yaml",
+            action_ref="0.32.0" if coherence else "rel/12.1.1",
+            sha_pinned=False,
+            vuln_urls=[
+                "https://osv.dev/vulnerability/GHSA-69fq-xp46-6x23",
+                "https://osv.dev/vulnerability/GHSA-9p44-j4g5-cfx5",
+            ]
+            if coherence
+            else [],
+        )
+    manager = DatabaseManager(str(tmp_path / "macaron.db"))
+    manager.create_tables()
+    try:
+        with Session(manager.engine) as session:
+            session.add(ctx.component)
+            session.commit()
+        directory = "oracle_coherence-js-client" if coherence else "org_apache_logging_log4j"
+        filename = "policy.dl" if coherence else "policy_purl.dl" if case == "log4j_purl" else "policy_repo_url.dl"
+        policy_path = Path(__file__).resolve().parents[1] / "integration/cases" / directory / filename
+        output = run_souffle(str(tmp_path / "macaron.db"), policy_path.read_text(encoding="utf-8"))
+        assert bool(output["passed_policies"]) is include_finding
+        assert bool(output["failed_policies"]) is not include_finding
     finally:
         manager.engine.dispose()
