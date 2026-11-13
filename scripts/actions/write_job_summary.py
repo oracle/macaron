@@ -21,6 +21,27 @@ CHECK_RESULT_DEFAULT_COLUMNS = [
 ]
 
 
+def validate_github_actions_schema(conn: sqlite3.Connection) -> None:
+    """Reject an old findings schema before executing the extended diagnostics SQL.
+
+    This script runs outside the Macaron container using only the standard
+    library, so database compatibility errors use sqlite's error hierarchy.
+    Both the physical table and generated view need the evidence columns.
+    """
+    required = {"pinning_method", "resolved_commit", "lockfile_path", "dependency_chain"}
+    for table in ("_github_actions_vulnerabilities_check", "github_actions_vulnerabilities_check"):
+        exists = conn.execute("SELECT 1 FROM sqlite_master WHERE name = ?", (table,)).fetchone()
+        if exists is None:
+            continue
+        columns = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+        missing = required - columns
+        if missing:
+            raise sqlite3.DatabaseError(
+                f"Incompatible GitHub Actions findings schema in {table}: missing {', '.join(sorted(missing))}. "
+                "Reanalyze into a fresh output directory before generating policy diagnostics."
+            )
+
+
 def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default)
 
@@ -407,6 +428,21 @@ def write_compact_gha_vuln_diagnostics(summary_path: Path, columns: list[str], r
                 pin_state = "yes" if bool(row[pin_idx]) else "no"
                 _append_line(summary_path, f"- Pinned to full commit SHA: `{pin_state}`")
 
+            evidence_columns = {
+                "pinning_method": "Pinning method",
+                "resolved_commit": "Effective commit",
+                "lockfile_path": "Lockfile",
+                "dependency_chain": "Dependency chain",
+            }
+            for column, label in evidence_columns.items():
+                index = col_index.get(column)
+                if index is None or not row[index]:
+                    continue
+                value = str(row[index])
+                if column == "pinning_method" and value == "lockfile":
+                    value = "recorded lockfile coverage (upstream provenance not verified)"
+                _append_line(summary_path, f"- {label}: {_format_table_cell(value)}")
+
             vul_idx = col_index.get("vuln_urls")
             if vul_idx is not None and row[vul_idx]:
                 parsed = _parse_list_cell(str(row[vul_idx]))
@@ -492,6 +528,8 @@ def _write_existing_policy_failure_diagnostics(
     if sql_path:
         sql_query = sql_path.read_text(encoding="utf-8")
         with sqlite3.connect(db_path) as conn:
+            if policy_name == "check-github-actions":
+                validate_github_actions_schema(conn)
             cols, rows = _query_sql(conn, sql_query)
         if cols and rows:
             _append_line(summary_path)

@@ -6,6 +6,7 @@
 import json
 import os
 import re
+from pathlib import Path
 from typing import TypedDict, cast
 
 from macaron.code_analyzer.dataflow_analysis import bash, core, facts
@@ -14,9 +15,11 @@ from macaron.code_analyzer.dataflow_analysis.core import NodeForest, traverse_bf
 from macaron.code_analyzer.dataflow_analysis.github import (
     GitHubActionsActionStepNode,
     GitHubActionsNormalJobNode,
+    GitHubActionsReusableWorkflowCallNode,
     GitHubActionsRunStepNode,
     GitHubActionsWorkflowNode,
 )
+from macaron.code_analyzer.gha_security_analysis.action_resolution import resolve_action_reference
 from macaron.code_analyzer.gha_security_analysis.recommendation import (
     Recommendation,
     parse_unpinned_action_issue,
@@ -26,6 +29,7 @@ from macaron.code_analyzer.gha_security_analysis.recommendation import (
     resolve_action_ref_to_tag,
 )
 from macaron.parsers.bashparser_model import CallExpr, is_call_expr, is_lit, is_param_exp
+from macaron.parsers.github_actions_lockfile import ActionsLockfile
 from macaron.parsers.github_workflow_model import Workflow
 from macaron.slsa_analyzer.git_url import is_commit_hash
 
@@ -57,7 +61,13 @@ class WorkflowFinding(TypedDict):
     issues: list[PrioritizedIssue]
 
 
-def detect_github_actions_security_issues(nodes: NodeForest) -> list[WorkflowFinding]:
+def detect_github_actions_security_issues(
+    nodes: NodeForest,
+    *,
+    lockfile: ActionsLockfile | None = None,
+    repo_root: Path | None = None,
+    unresolved_workflows: frozenset[str] = frozenset(),
+) -> list[WorkflowFinding]:
     """Detect security issues across GitHub Actions workflow nodes.
 
     Parameters
@@ -76,12 +86,19 @@ def detect_github_actions_security_issues(nodes: NodeForest) -> list[WorkflowFin
     for root in nodes.root_nodes:
         for callee in traverse_bfs(root):
             if isinstance(callee, GitHubActionsWorkflowNode):
-                if result := analyze_workflow(callee, nodes=nodes):
+                applicable_lockfile = None if callee.context.ref.source_filepath in unresolved_workflows else lockfile
+                if result := analyze_workflow(callee, nodes=nodes, lockfile=applicable_lockfile, repo_root=repo_root):
                     findings.append(result)
     return findings
 
 
-def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest) -> WorkflowFinding | None:
+def analyze_workflow(
+    workflow_node: GitHubActionsWorkflowNode,
+    nodes: NodeForest,
+    *,
+    lockfile: ActionsLockfile | None = None,
+    repo_root: Path | None = None,
+) -> WorkflowFinding | None:
     """Analyze a GitHub Actions workflow for security issues.
 
     Parameters
@@ -110,6 +127,9 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
     seen_jobs: set[str] = set()
     workflow_permissions_defined = "permissions" in workflow_node.definition
     has_job_without_permissions = False
+    workflow_path = workflow_node.context.ref.source_filepath
+    if repo_root is not None:
+        workflow_path = Path(workflow_path).resolve().relative_to(repo_root.resolve()).as_posix()
 
     for node in core.traverse_bfs(workflow_node):
         if isinstance(node, GitHubActionsWorkflowNode):
@@ -126,7 +146,23 @@ def analyze_workflow(workflow_node: GitHubActionsWorkflowNode, nodes: NodeForest
             continue
 
         if isinstance(node, GitHubActionsActionStepNode):
-            _append_action_step_findings(findings, node, on_keys)
+            raw_uses = node.definition["uses"]
+            covered = raw_uses.startswith(("./", "$/", "docker://"))
+            if "@" in raw_uses and not covered:
+                if lockfile is not None:
+                    resolution = resolve_action_reference(workflow_path, raw_uses, lockfile)
+                    covered = resolution.pinning_method != "none"
+                else:
+                    covered = bool(re.fullmatch(r"[a-fA-F0-9]{40}|[a-fA-F0-9]{64}", raw_uses.rpartition("@")[2]))
+            _append_action_step_findings(findings, node, on_keys, covered=covered)
+            continue
+
+        if isinstance(node, GitHubActionsReusableWorkflowCallNode):
+            raw_uses = node.definition["uses"]
+            if raw_uses.startswith("./"):
+                continue
+            if not re.fullmatch(r"[a-fA-F0-9]{40}|[a-fA-F0-9]{64}", raw_uses.rpartition("@")[2]):
+                _add_finding(findings, f"unpinned-third-party-action: {raw_uses}", PRIORITY_MIN)
             continue
 
         if isinstance(node, GitHubActionsRunStepNode):
@@ -207,11 +243,19 @@ def _append_action_step_findings(
     findings: list[PrioritizedIssue],
     action_node: GitHubActionsActionStepNode,
     on_keys: set[str],
+    *,
+    covered: bool = False,
 ) -> None:
     """Append findings derived from an action step node."""
     uses_name = action_node.uses_name
     uses_version = action_node.uses_version
-    if uses_name and not uses_name.startswith("./") and uses_version and not is_commit_hash(uses_version):
+    if (
+        not covered
+        and uses_name
+        and not uses_name.startswith("./")
+        and uses_version
+        and not is_commit_hash(uses_version)
+    ):
         step_line = _extract_action_step_line(action_node)
         line_marker = f"[step-line={step_line}] " if step_line else ""
         _add_finding(

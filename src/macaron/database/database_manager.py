@@ -10,12 +10,13 @@ import os
 import typing
 
 import sqlalchemy.exc
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, inspect, select
 from sqlalchemy.orm import DeclarativeBase, Session
 
 from macaron.config.defaults import defaults
 from macaron.config.global_config import global_config
 from macaron.database.views import create_view
+from macaron.errors import DatabaseSchemaError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -54,6 +55,21 @@ class DatabaseManager:
         Note: this is specifically to allow the tables to be loaded into souffle:
             https://souffle-lang.github.io/directives#input-directive
         """
+        inspector = inspect(self.engine)
+        existing = set(inspector.get_table_names()) | set(inspector.get_view_names())
+        for table_name, table in self._base.metadata.tables.items():
+            names = (table_name, table_name[1:]) if table_name.startswith("_") else (table_name,)
+            for existing_name in names:
+                if existing_name not in existing:
+                    continue
+                columns = {column["name"] for column in inspector.get_columns(existing_name)}
+                missing = set(table.columns.keys()) - columns
+                if missing:
+                    raise DatabaseSchemaError(
+                        f"Database {self.db_name} has an incompatible schema for {existing_name}: "
+                        f"missing {', '.join(sorted(missing))}. Reanalyze into a fresh output directory; "
+                        "the existing database has not been migrated."
+                    )
         try:
             self._base.metadata.create_all(self.engine, checkfirst=True)
             for table_name, table in self._base.metadata.tables.items():
