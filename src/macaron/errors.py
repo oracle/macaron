@@ -87,6 +87,14 @@ class ParseError(MacaronError):
     """The errors related to parsers."""
 
 
+class ActionsLockfileError(ParseError):
+    """A present GitHub Actions lockfile cannot be interpreted safely."""
+
+
+class DatabaseSchemaError(MacaronError):
+    """An existing database cannot store the current analysis schema."""
+
+
 class CallGraphError(MacaronError):
     """The errors related to callgraphs."""
 

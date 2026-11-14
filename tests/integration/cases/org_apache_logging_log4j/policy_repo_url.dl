@@ -4,7 +4,14 @@
 #include "prelude.dl"
 
 Policy("test_policy", component_id, "") :-
-    check_passed(component_id, "mcn_githubactions_vulnerabilities_1").
+    // This revision calls remote reusable workflows through mutable refs.
+    check_failed(component_id, "mcn_githubactions_vulnerabilities_1"),
+    github_actions_vulnerabilities_check(
+        finding_id, _, "unpinned-third-party-action", "third_party_action_risk",
+        _, _, _, "apache/logging-parent/.github/workflows/build-reusable.yaml",
+        "rel/12.1.1", _, _, _, _, _, _
+    ),
+    check_facts(finding_id, _, component_id, _, _).
 
 apply_policy_to("test_policy", component_id) :-
     is_repo_url(component_id, "https://github.com/apache/logging-log4j2").

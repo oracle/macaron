@@ -12,6 +12,10 @@ SELECT
     gha_check.finding_message,
     gha_check.recommended_ref,
     gha_check.sha_pinned,
+    gha_check.pinning_method,
+    gha_check.resolved_commit,
+    gha_check.lockfile_path,
+    gha_check.dependency_chain,
     gha_check.caller_workflow AS vulnerable_workflow,
     analysis.analysis_time
 FROM github_actions_vulnerabilities_check AS gha_check

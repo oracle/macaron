@@ -6,8 +6,12 @@
 from __future__ import annotations
 
 import importlib.util
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 from types import ModuleType
+
+import pytest
 
 
 def _load_write_job_summary_module() -> ModuleType:
@@ -20,6 +24,57 @@ def _load_write_job_summary_module() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_summary_preserves_locked_vulnerability_evidence(tmp_path: Path) -> None:
+    """A locked vulnerable tag shows the effective commit and dependency chain."""
+    module = _load_write_job_summary_module()
+    summary = tmp_path / "summary.md"
+    columns = [
+        "finding_group",
+        "finding_priority",
+        "finding_type",
+        "action_name",
+        "action_ref",
+        "vulnerable_workflow",
+        "finding_message",
+        "sha_pinned",
+        "pinning_method",
+        "resolved_commit",
+        "lockfile_path",
+        "dependency_chain",
+    ]
+    rows = [
+        (
+            "third_party_action_risk",
+            100,
+            "known-vulnerability",
+            "example/child",
+            "Main",
+            "ci.yml",
+            "Locked commit is vulnerable",
+            0,
+            "lockfile",
+            "b" * 40,
+            ".github/workflows/actions.lock",
+            '["example/parent@v1", "example/child@Main"]',
+        )
+    ]
+    assert module.write_compact_gha_vuln_diagnostics(summary, columns, rows) is True
+    output = summary.read_text(encoding="utf-8")
+    assert "b" * 40 in output
+    assert "example/parent@v1" in output
+    assert ".github/workflows/actions.lock" in output
+    assert "recorded lockfile coverage" in output.lower()
+
+
+def test_old_database_diagnostics_are_actionable(tmp_path: Path) -> None:
+    """The extended SQL must not run against a pre-feature view and fail obscurely."""
+    module = _load_write_job_summary_module()
+    with closing(sqlite3.connect(tmp_path / "old.db")) as connection:
+        connection.execute("CREATE TABLE github_actions_vulnerabilities_check (id INTEGER)")
+        with pytest.raises(sqlite3.DatabaseError, match="fresh output directory"):
+            module.validate_github_actions_schema(connection)
 
 
 def test_workflow_security_table_includes_summary_column(tmp_path: Path) -> None:

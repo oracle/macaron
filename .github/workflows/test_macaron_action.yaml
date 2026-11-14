@@ -158,12 +158,15 @@ jobs:
       uses: ./
       with:
         repo_path: https://github.com/apache/logging-log4j2
+        digest: 028e9fad03ae7bcbf2e49ab8d32d8cfb900f3587
         output_dir: macaron_output/detect_vulnerable_github_actions
         upload_reports: 'false'
         write_job_summary: 'false'
 
     - name: Run Macaron (verify policy - github_actions_vulns for repo)
       id: verify_github_actions_vulns_repo_tutorial
+      # Log4j calls remote reusable workflows through mutable refs, so this policy fails.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_repo.dl
@@ -171,6 +174,17 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-repo
         write_job_summary: 'true'
+
+    - name: Assert expected policy failure for the repository example
+      run: |
+        if [ "${{ steps.verify_github_actions_vulns_repo_tutorial.outcome }}" != "failure" ]; then
+          echo "Expected the repository policy to reject mutable reusable-workflow refs."
+          exit 1
+        fi
+        jq -e '.failed_policies == [["github_actions_vulns_repo"]] and
+          (.component_violates_policy | length > 0)' \
+          macaron_output/detect_vulnerable_github_actions/policy_report.json
+        test ! -e macaron_output/detect_vulnerable_github_actions/vsa.intoto.jsonl
 
     - name: Run Macaron (analyze purl - log4j-core example)
       uses: ./
@@ -182,6 +196,7 @@ jobs:
 
     - name: Run Macaron (verify policy - github_actions_vulns for purl)
       id: verify_github_actions_vulns_purl_tutorial
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_vulnerable_github_actions/check_github_actions_vuln_purl.dl
@@ -189,6 +204,17 @@ jobs:
         upload_reports: 'true'
         reports_artifact_name: macaron-reports-vulnerable-actions-purl
         write_job_summary: 'true'
+
+    - name: Assert expected policy failure for the PURL example
+      run: |
+        if [ "${{ steps.verify_github_actions_vulns_purl_tutorial.outcome }}" != "failure" ]; then
+          echo "Expected the PURL policy to reject mutable reusable-workflow refs."
+          exit 1
+        fi
+        jq -e '.failed_policies == [["github_actions_vulns_purl"]] and
+          (.component_violates_policy | length > 0)' \
+          macaron_output/detect_vulnerable_github_actions/policy_report.json
+        test ! -e macaron_output/detect_vulnerable_github_actions/vsa.intoto.jsonl
 
   tutorial-provenance:
     name: Provenance discovery, extraction, and verification
@@ -370,6 +396,45 @@ jobs:
           echo "Expected verify step to fail, but it did not."
           exit 1
         fi
+
+  test-github-actions-lockfiles:
+    name: Recognizing workflow lockfile coverage
+    runs-on: ubuntu-latest
+    env:
+      MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
+      DOCKER_PULL: never
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Download test Docker image artifact
+      if: ${{ inputs.docker_image_artifact_name != '' }}
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.docker_image_artifact_name }}
+        path: /tmp
+    - name: Load test Docker image
+      if: ${{ inputs.docker_image_artifact_name != '' }}
+      run: docker load --input /tmp/macaron-test-image.tar
+    - name: Analyze the pinned GraalVM workflow lockfile
+      id: lockfile_analysis
+      # Other security findings may fail this real project's policy. Inspect the facts below.
+      continue-on-error: true
+      uses: ./
+      with:
+        repo_path: https://github.com/graalvm/setup-graalvm
+        digest: 35ad4c011e7cfc84f7370397221f82823c74ce35
+        policy_file: check-github-actions
+        policy_purl: pkg:github.com/graalvm/setup-graalvm@.*
+        output_dir: macaron_output/github_actions_lockfiles
+        upload_reports: 'true'
+        reports_artifact_name: macaron-workflow-lockfile-regression
+        write_job_summary: 'true'
+    - name: Assert lockfile recognition and policy results
+      if: ${{ always() }}
+      env:
+        ACTION_OUTCOME: ${{ steps.lockfile_analysis.outcome }}
+      run: |
+        python3 tests/tutorial_resources/detect_vulnerable_github_actions/assert_lockfile_regression.py \
+          macaron_output/github_actions_lockfiles "$ACTION_OUTCOME"
 
   test-detect-potential-injection:
     name: How to detect vulnerable GitHub Actions

@@ -1,4 +1,4 @@
-.. Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+.. Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 .. Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 .. _detect-vuln-gh-actions:
@@ -95,6 +95,12 @@ Next, ensure that the ``mcn_githubactions_vulnerabilities_1`` check passes for t
 
 Run the ``verify-policy`` command to check if the ``mcn_githubactions_vulnerabilities_1`` check is successful.
 
+The check also detects mutable references to remote reusable workflows. For
+example, Log4j commit ``028e9fad03ae7bcbf2e49ab8d32d8cfb900f3587`` calls reusable
+workflows through refs such as ``main`` and ``rel/12.1.1``, so it fails this policy
+even when no known action vulnerability is reported. Review the findings before
+deciding which workflow references need to be pinned.
+
 .. code-block:: shell
 
   ./run_macaron.sh verify-policy --database ./output/macaron.db --file ./check_github_actions_vuln.dl
@@ -182,6 +188,31 @@ For example, to pin the ``tj-actions/changed-files`` action to a specific versio
   uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
 
 Refer to GitHub's security hardening guide for more information on managing third-party actions securely: `GitHub Security <https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions#using-third-party-actions>`_.
+
++++++++++++++++++++++++++++
+Workflow dependency locking
++++++++++++++++++++++++++++
+
+The same check and the predefined ``check-github-actions`` policy recognize
+``.github/workflows/actions.lock`` in GA format ``v0.0.3``. You can pin an action
+inline to its full commit SHA or use a tag backed by applicable lockfile coverage.
+No additional Macaron action input or policy is needed.
+
+After reviewing the dependencies you want to execute, generate a lockfile with
+GitHub's CLI extension and commit the generated changes:
+
+.. code-block:: shell
+
+   gh extension install github/gh-actions-lock
+   gh actions-lock
+
+Lockfile adoption is per workflow. A dependency recorded only for another workflow
+does not remove an unpinned finding. Missing lockfiles preserve inline SHA checks;
+invalid or unsupported present lockfiles produce actionable findings. Regenerate
+and review the lockfile when dependencies change.
+
+For further reading, see GitHub's announcement:
+`GitHub Actions workflow lockfiles are generally available <https://github.blog/changelog/2026-10-28-github-actions-workflow-lockfiles-are-generally-available/>`_.
 
 ---------------------
 Why This is Important
