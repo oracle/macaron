@@ -1,3 +1,14 @@
+## v0.26.0 (2026-11-14)
+
+### Feat
+
+- support GitHub Actions workflow lockfiles (#1492)
+- add package registry and maintainability check (#1400) (#1403)
+
+### Fix
+
+- use the JDK version from the JAR when no language version is recorded (#1466)
+
 ## v0.25.0 (2026-07-26)
 
 ### Feat
