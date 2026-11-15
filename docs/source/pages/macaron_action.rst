@@ -24,7 +24,7 @@ When you use this action, you can reference it directly in your workflow. For a 
       steps:
         - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         - name: Run Macaron Security Analysis Action
-          uses: oracle/macaron@794eec32782979f577efb5ff71d585f683a3550f # v0.25.0
+          uses: oracle/macaron@5d8f162a5d33f91a7048e861f1ff946a9791fe64 # v0.26.0
           with:
             repo_path: ./
             policy_file: check-github-actions
@@ -45,7 +45,7 @@ verification reads the matching ``macaron.db``.
 .. code-block:: yaml
 
   - name: Verify policy
-    uses: oracle/macaron@794eec32782979f577efb5ff71d585f683a3550f # v0.25.0
+    uses: oracle/macaron@5d8f162a5d33f91a7048e861f1ff946a9791fe64 # v0.26.0
     with:
       policy_file: policy.dl
 

@@ -26,6 +26,7 @@ on:
     secrets:
       REPO_ACCESS_TOKEN:
         required: true
+        description: Token with contents and pull-request write access
 
 permissions:
   contents: read
@@ -33,6 +34,7 @@ permissions:
 jobs:
   rebase:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
 
     - name: Check out repository
@@ -41,6 +43,14 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.REPO_ACCESS_TOKEN }}
         ref: ${{ github.ref_name }}
+
+    - name: Trigger and wait for OCA if required
+      run: bash scripts/release_scripts/wait_for_oca.sh
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        TO_HEAD: ${{ inputs.to_head }}
+        FROM_BASE: ${{ inputs.from_base }}
 
     - name: Do rebase
       run: |
