@@ -14,7 +14,7 @@ Use Macaron as a GitHub Action
 To use the Macaron GitHub Action, add the following step to your workflow (adjust the version as needed). In this example, we use an example policy. For detailed instructions and a comprehensive list of available options, please refer to the [Macaron GitHub Action documentation](https://oracle.github.io/macaron/pages/macaron_action.html).
 
 ```yaml
-- uses: oracle/macaron@794eec32782979f577efb5ff71d585f683a3550f # v0.25.0
+- uses: oracle/macaron@5d8f162a5d33f91a7048e861f1ff946a9791fe64 # v0.26.0
   with:
     repo_path: ./
     policy_file: check-github-actions
