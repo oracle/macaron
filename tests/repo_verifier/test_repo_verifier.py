@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from macaron.repo_verifier.repo_verifier_base import RepositoryVerificationStatus
 from macaron.repo_verifier.repo_verifier_gradle import RepoVerifierGradle
 from macaron.repo_verifier.repo_verifier_maven import RepoVerifierMaven
 from macaron.slsa_analyzer.build_tool.base_build_tool import BaseBuildTool
@@ -140,3 +141,46 @@ def test_extract_group_id_from_pom(
     """
     verifier = maven_repo_verifier(build_tools["maven"], str(mock_repo))
     assert (verifier.extract_group_id_from_pom() is not None) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("namespace", "expected_status", "expected_reason"),
+    [
+        # A three-segment namespace under a recognized code hosting service still
+        # matches, which is the behaviour the short-namespace guard must not change.
+        ("com.github.example", RepositoryVerificationStatus.PASSED, "git_ns_match"),
+        ("io.github.example", RepositoryVerificationStatus.PASSED, "git_ns_match"),
+        # Fewer than three segments cannot name an account, so the comparison has
+        # no answer to give and must report a mismatch rather than raise IndexError.
+        ("com.github", RepositoryVerificationStatus.UNKNOWN, "git_ns_mismatch"),
+        ("io.github", RepositoryVerificationStatus.UNKNOWN, "git_ns_mismatch"),
+        ("com", RepositoryVerificationStatus.UNKNOWN, "git_ns_mismatch"),
+        ("io", RepositoryVerificationStatus.UNKNOWN, "git_ns_mismatch"),
+        # A short namespace outside the io/com prefixes was already safe and stays so.
+        ("org.example", RepositoryVerificationStatus.UNKNOWN, "git_ns_mismatch"),
+    ],
+)
+def test_verify_domains_handles_short_namespaces(
+    build_tools: dict[str, BaseBuildTool],
+    namespace: str,
+    expected_status: RepositoryVerificationStatus,
+    expected_reason: str,
+) -> None:
+    """A Maven namespace with fewer than three segments must not crash the repository check.
+
+    The namespace reaches this code as ``parsed_purl.namespace`` straight from the analysis
+    target, and the analyzer wraps the call in no exception handler, so an IndexError here
+    aborts the whole analysis.
+    """
+    verifier = RepoVerifierMaven(
+        namespace=namespace,
+        name="artifact",
+        version="1.0.0",
+        reported_repo_url="https://github.com/example/example",
+        reported_repo_fs="/nonexistent",
+        build_tool=build_tools["maven"],
+        provenance_repo_url=None,
+    )
+    result = verifier.verify_domains_from_recognized_code_hosting_services()
+    assert result.status == expected_status
+    assert result.reason == expected_reason
