@@ -104,6 +104,28 @@ def test_is_affected_version_invalid_response() -> None:
             "tj-actions/changed-files",
             id="Test missing events",
         ),
+        pytest.param(
+            {
+                "id": "GHSA-6f4g-xm8v-pgv6",
+                "affected": [
+                    {
+                        "package": {"name": "tmatens/compose-lint", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {
+                                "type": "GIT",
+                                "repo": "https://github.com/tmatens/compose-lint",
+                                "events": [
+                                    {"introduced": "60c091c7cc8f86c6b0c5954031097364fea0a201"},
+                                    {"fixed": "a6a7a76736de1c72abfa96c41ff8af556ffdc55f"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "tmatens/compose-lint",
+            id="Test only GIT ranges",
+        ),
     ],
 )
 def test_is_affected_version_invalid_osv_vulns(vuln: dict, workflow: str) -> None:
@@ -213,6 +235,234 @@ def test_is_affected_version_invalid_osv_vulns(vuln: dict, workflow: str) -> Non
             "46.0.1",
             False,
             id="Test fix version",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-5xjx-3w67-w9x9",
+                "affected": [
+                    {
+                        "package": {"name": "pypa/gh-action-pypi-publish", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "1.14.3"}]},
+                            {
+                                "type": "GIT",
+                                "repo": "https://github.com/pypa/gh-action-pypi-publish",
+                                "events": [{"introduced": "0"}, {"fixed": "7245906fb61fa33a13554f9d5fb856fe61758086"}],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "pypa/gh-action-pypi-publish",
+            "v1.14.3",
+            False,
+            id="Test fixed version with a GIT range",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-5xjx-3w67-w9x9",
+                "affected": [
+                    {
+                        "package": {"name": "pypa/gh-action-pypi-publish", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "1.14.3"}]},
+                            {
+                                "type": "GIT",
+                                "repo": "https://github.com/pypa/gh-action-pypi-publish",
+                                "events": [{"introduced": "0"}, {"fixed": "7245906fb61fa33a13554f9d5fb856fe61758086"}],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "pypa/gh-action-pypi-publish",
+            "v1.14.2",
+            True,
+            id="Test affected version with a GIT range",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-6f4g-xm8v-pgv6",
+                "affected": [
+                    {
+                        "package": {"name": "tmatens/compose-lint", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {"type": "ECOSYSTEM", "events": [{"introduced": "0.2.0"}, {"fixed": "0.31.0"}]},
+                            {
+                                "type": "GIT",
+                                "repo": "https://github.com/tmatens/compose-lint",
+                                "events": [
+                                    {"introduced": "60c091c7cc8f86c6b0c5954031097364fea0a201"},
+                                    {"fixed": "a6a7a76736de1c72abfa96c41ff8af556ffdc55f"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "tmatens/compose-lint",
+            "0.1.0",
+            False,
+            id="Test version before introduced with a GIT range",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-6f4g-xm8v-pgv6",
+                "affected": [
+                    {
+                        "package": {"name": "tmatens/compose-lint", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {"type": "ECOSYSTEM", "events": [{"introduced": "0.2.0"}, {"fixed": "0.31.0"}]},
+                            {
+                                "type": "GIT",
+                                "repo": "https://github.com/tmatens/compose-lint",
+                                "events": [
+                                    {"introduced": "60c091c7cc8f86c6b0c5954031097364fea0a201"},
+                                    {"fixed": "a6a7a76736de1c72abfa96c41ff8af556ffdc55f"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "tmatens/compose-lint",
+            "0.31.0",
+            False,
+            id="Test fix version with a GIT range",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-r4fj-r33x-8v88",
+                "affected": [
+                    {
+                        "package": {"name": "njzjz/wenxian", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"last_affected": "0.3.1"}]},
+                        ],
+                    }
+                ],
+            },
+            "njzjz/wenxian",
+            "0.3.1",
+            True,
+            id="Test last_affected version",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-r4fj-r33x-8v88",
+                "affected": [
+                    {
+                        "package": {"name": "njzjz/wenxian", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"last_affected": "0.3.1"}]},
+                        ],
+                    }
+                ],
+            },
+            "njzjz/wenxian",
+            "0.3.2",
+            False,
+            id="Test version after last_affected",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-test-multiple-intervals",
+                "affected": [
+                    {
+                        "package": {"name": "rlespinasse/github-slug-action", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {
+                                "type": "ECOSYSTEM",
+                                "events": [
+                                    {"introduced": "0"},
+                                    {"fixed": "1.1.1"},
+                                    {"introduced": "2.0.0"},
+                                    {"fixed": "2.1.1"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "rlespinasse/github-slug-action",
+            "1.0.0",
+            True,
+            id="Test version in the first interval",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-test-multiple-intervals",
+                "affected": [
+                    {
+                        "package": {"name": "rlespinasse/github-slug-action", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {
+                                "type": "ECOSYSTEM",
+                                "events": [
+                                    {"introduced": "0"},
+                                    {"fixed": "1.1.1"},
+                                    {"introduced": "2.0.0"},
+                                    {"fixed": "2.1.1"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "rlespinasse/github-slug-action",
+            "1.2.0",
+            False,
+            id="Test version between two intervals",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-test-multiple-intervals",
+                "affected": [
+                    {
+                        "package": {"name": "rlespinasse/github-slug-action", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {
+                                "type": "ECOSYSTEM",
+                                "events": [
+                                    {"introduced": "0"},
+                                    {"fixed": "1.1.1"},
+                                    {"introduced": "2.0.0"},
+                                    {"fixed": "2.1.1"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "rlespinasse/github-slug-action",
+            "2.0.0",
+            True,
+            id="Test version in the second interval",
+        ),
+        pytest.param(
+            {
+                "id": "GHSA-test-multiple-intervals",
+                "affected": [
+                    {
+                        "package": {"name": "rlespinasse/github-slug-action", "ecosystem": "GitHub Actions"},
+                        "ranges": [
+                            {
+                                "type": "ECOSYSTEM",
+                                "events": [
+                                    {"introduced": "0"},
+                                    {"fixed": "1.1.1"},
+                                    {"introduced": "2.0.0"},
+                                    {"fixed": "2.1.1"},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            },
+            "rlespinasse/github-slug-action",
+            "2.1.1",
+            False,
+            id="Test fix version of the second interval",
         ),
     ],
 )
