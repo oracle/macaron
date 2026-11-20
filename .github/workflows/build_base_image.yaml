@@ -13,7 +13,7 @@ permissions:
 jobs:
   build-base-image:
     name: Build base image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       packages: write # To push the base Docker image.
     steps:

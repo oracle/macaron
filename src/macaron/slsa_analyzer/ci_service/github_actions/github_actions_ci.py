@@ -604,20 +604,23 @@ class GitHubActions(BaseCIService):
         Returns
         -------
         NodeForest
-            A forest containing one root node per successfully parsed workflow.
-            Workflows that raise ``ParseError`` are skipped.
+            A forest containing successfully analyzed workflows and diagnostics for skipped files.
         """
         nodes: list[Node] = []
+        analysis_errors: dict[str, str] = {}
         for workflow_path in files:
             try:
                 workflow_node = analyse_github_workflow_file(workflow_path, repo_path)
 
-            except (ParseError, CallGraphError):
-                logger.debug("Skip adding workflow at %s to the callgraph.", workflow_path)
+            except (ParseError, CallGraphError) as error:
+                # Preserve the concise parser diagnostic instead of the schema/instance traceback.
+                cause = error.__cause__ if isinstance(error.__cause__, (ParseError, CallGraphError)) else error
+                analysis_errors[workflow_path] = str(cause)
+                logger.warning("Cannot analyze GitHub Actions workflow %s: %s", workflow_path, cause)
                 logger.debug("Reason: %s", traceback.format_exc())
                 continue
             nodes.append(workflow_node)
-        return NodeForest(nodes)
+        return NodeForest(nodes, analysis_errors=analysis_errors)
 
     def get_third_party_configurations(self) -> list[str]:
         """Get the list of third-party CI configuration files.

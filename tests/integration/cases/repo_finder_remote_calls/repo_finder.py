@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2023 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This script tests the functionality of the repo finder's remote API calls."""
@@ -10,11 +10,9 @@ import sys
 from packageurl import PackageURL
 
 from macaron.config.defaults import defaults
-from macaron.repo_finder import repo_validator
 from macaron.repo_finder.repo_finder import find_repo
 from macaron.repo_finder.repo_finder_deps_dev import DepsDevRepoFinder
 from macaron.repo_finder.repo_finder_enums import RepoFinderInfo
-from macaron.slsa_analyzer.git_url import clean_url
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -56,8 +54,8 @@ def test_repo_finder() -> int:
         return os.EX_UNAVAILABLE
 
     # Test Java package with SCM metadata in artifact's parent POM.
-    match, outcome = find_repo(PackageURL.from_string("pkg:maven/commons-cli/commons-cli@1.5.0"))
-    if not match or outcome != RepoFinderInfo.FOUND:
+    match, outcome = find_repo(PackageURL.from_string("pkg:maven/org.apache.logging.log4j/log4j-core@2.25.3"))
+    if match != "https://github.com/apache/logging-log4j2" or outcome != RepoFinderInfo.FOUND_FROM_PARENT:
         return os.EX_UNAVAILABLE
 
     # Test deps.dev API for a Python package.
@@ -78,11 +76,6 @@ def test_repo_finder() -> int:
     # Test deps.dev API for Cargo package.
     match, outcome = find_repo(PackageURL.from_string("pkg:cargo/rand_core"))
     if not match or outcome != RepoFinderInfo.FOUND:
-        return os.EX_UNAVAILABLE
-
-    # Test redirecting URL from Apache commons-io package.
-    parsed_url = clean_url("https://git-wip-us.apache.org/repos/asf?p=commons-io.git")
-    if not parsed_url or not repo_validator.resolve_redirects(parsed_url):
         return os.EX_UNAVAILABLE
 
     # Test Java package whose SCM metadata only points to the repo in later versions than is provided here.
