@@ -286,11 +286,14 @@ class NodeForest:
     root_nodes: list[Node]
     #: Mapping of nodes to their parent nodes.
     parents: dict[Node, Node]
+    #: Source files that could not be analyzed, with concise diagnostics for consumers.
+    analysis_errors: dict[str, str]
 
-    def __init__(self, root_nodes: list[Node]) -> None:
+    def __init__(self, root_nodes: list[Node], *, analysis_errors: dict[str, str] | None = None) -> None:
         """Construct a NodeForest for the given nodes, and build the parent mapping."""
         self.root_nodes = root_nodes
         self.parents = {}
+        self.analysis_errors = dict(analysis_errors) if analysis_errors is not None else {}
         for root_node in root_nodes:
             root_node_parents = build_parent_mapping(root_node)
             self.parents.update(root_node_parents)
