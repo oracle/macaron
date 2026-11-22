@@ -311,6 +311,13 @@ requirements.txt: pyproject.toml
 # files or untrusted request metadata.
 # Temporarily ignore these advisories until Semgrep allows mcp >=1.30.0 and
 # opentelemetry-api >=1.45.2. Reassess these exceptions if Macaron's usage changes.
+#
+# wcmatch GHSA-53pm-wgxf-c6qf (CVE-2026-132276) is fixed in >=11.2, but
+# Semgrep 1.185.0 and the latest checked release, 1.186.0 (2026-11-23), require
+# wcmatch ~=8.3. Temporarily ignore until Semgrep supports the patched version.
+# This remains a denial-of-service risk when matching crafted file names against
+# multi-star patterns during scans; this exception does not remediate the issue.
+# Advisory: https://github.com/advisories/GHSA-53pm-wgxf-c6qf
 
 .PHONY: audit
 audit:
@@ -321,7 +328,8 @@ audit:
 	  --ignore-vuln GHSA-84m7-p3x7-pcfv --ignore-vuln GHSA-5h93-6whr-6q8j \
 	  --ignore-vuln GHSA-w4fh-qvv9-3v23 --ignore-vuln GHSA-rwrf-2pqf-9j8j \
 	  --ignore-vuln GHSA-qx49-fqc8-xw99 \
-	  --ignore-vuln GHSA-xcq7-p3pf-p88h --ignore-vuln GHSA-mf5v-w3w3-f6cg
+	  --ignore-vuln GHSA-xcq7-p3pf-p88h --ignore-vuln GHSA-mf5v-w3w3-f6cg \
+	  --ignore-vuln GHSA-53pm-wgxf-c6qf
 
 # Run some or all checks over the package code base.
 .PHONY: check check-code check-ruff check-lint check-mypy check-go check-actionlint
