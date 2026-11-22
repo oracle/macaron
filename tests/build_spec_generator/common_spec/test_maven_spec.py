@@ -59,6 +59,9 @@ def _resolve(language_version: list[str], jdk_from_jar: str | None) -> list[str]
         # No JAR evidence: fall back to what the database recorded, then to the default of 8.
         (["11"], None, ["11"]),
         ([], None, ["8"]),
+        # A JDK released after the normalizer was written must still be resolved, not left empty.
+        ([], "25", ["25"]),
+        (["25.0.1"], None, ["25"]),
     ],
 )
 def test_resolve_fields_selects_jdk_version(existing: list[str], jdk_from_jar: str | None, expected: list[str]) -> None:

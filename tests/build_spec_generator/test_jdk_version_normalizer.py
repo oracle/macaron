@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 """This module contains the tests for the jdk version normalizer module."""
@@ -52,8 +52,35 @@ from macaron.build_spec_generator.common_spec.jdk_version_normalizer import norm
             "22",
             id="pkg_maven_org.jboss.logging_jboss-logging_3.6.1.Final",
         ),
+        # JDK 25 and later were released after the original list of supported versions was written.
+        # Build-Jdk-Spec: 25 in the MANIFEST.MF of org.apache.commons:commons-lang3:3.20.0 on Maven Central.
+        pytest.param(
+            "25",
+            "25",
+            id="pkg_maven_org.apache.commons_commons-lang3_3.20.0",
+        ),
+        pytest.param(
+            "25.0.1",
+            "25",
+            id="jdk_25_with_patch_version",
+        ),
+        pytest.param(
+            "26-ea",
+            "26",
+            id="jdk_26_early_access",
+        ),
+        pytest.param(
+            "1.4.2_19",
+            None,
+            id="unsupported_old_version",
+        ),
+        pytest.param(
+            "unknown",
+            None,
+            id="no_version_number",
+        ),
     ],
 )
-def test_jdk_version_normalizer(version_string: str, expected: str) -> None:
+def test_jdk_version_normalizer(version_string: str, expected: str | None) -> None:
     """Test the jdk_version_normalizer function."""
     assert normalize_jdk_version(version_string) == expected
