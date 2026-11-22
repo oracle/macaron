@@ -10,6 +10,7 @@ from typing import cast
 
 import jsonschema
 import yamale
+from ruamel.yaml.error import MarkedYAMLError
 
 from macaron import MACARON_PATH
 from macaron.errors import ParseError
@@ -40,6 +41,12 @@ def parse(workflow_path: str) -> Workflow:
         parse_result = yamale.make_data(workflow_path, parser="ruamel")  # type: ignore[no-untyped-call]
     except OSError as error:
         raise ParseError("Cannot parse GitHub Workflow: " + workflow_path) from error
+    except MarkedYAMLError as error:
+        location = ""
+        if error.problem_mark is not None:
+            location = f" at line {error.problem_mark.line + 1}, column {error.problem_mark.column + 1}"
+        problem = error.problem or error.context or "Invalid YAML syntax"
+        raise ParseError(f"Cannot parse GitHub workflow {workflow_path}: invalid YAML{location}: {problem}") from error
 
     if len(parse_result) != 1:
         raise ParseError("Cannot parse GitHub Workflow: " + workflow_path)
@@ -52,7 +59,10 @@ def parse(workflow_path: str) -> Workflow:
     try:
         jsonschema.validate(parse_result[0][0], schema)
     except jsonschema.ValidationError as e:
-        raise ParseError("Cannot parse GitHub Workflow, schema validation failed: " + workflow_path) from e
+        raise ParseError(
+            f"Cannot parse GitHub workflow {workflow_path}: schema validation failed at {e.json_path}: {e.message}. "
+            "Check the workflow syntax: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
+        ) from e
 
     return cast(Workflow, parse_result[0][0])
 

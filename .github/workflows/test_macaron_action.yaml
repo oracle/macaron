@@ -23,7 +23,7 @@ permissions:
 jobs:
   tutorial-commit-finder:
     name: Analyzing and comparing different versions of an artifact
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -73,7 +73,7 @@ jobs:
 
   tutorial-detect-malicious-package:
     name: Detecting malicious packages
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -138,7 +138,7 @@ jobs:
 
   tutorial-detect-vulnerable-actions:
     name: How to detect vulnerable GitHub Actions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -218,7 +218,7 @@ jobs:
 
   tutorial-provenance:
     name: Provenance discovery, extraction, and verification
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -291,7 +291,7 @@ jobs:
 
   tutorial-detect-malicious-java-dep:
     name: Detecting Java dependencies manually uploaded to Maven Central
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -325,7 +325,7 @@ jobs:
 
   tutorial-exclude-include-checks:
     name: Exclude and include checks in Macaron
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -358,7 +358,7 @@ jobs:
 
   test-detect-vulnerable-actions:
     name: How to detect vulnerable GitHub Actions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -399,7 +399,7 @@ jobs:
 
   test-github-actions-lockfiles:
     name: Recognizing workflow lockfile coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never
@@ -438,7 +438,7 @@ jobs:
 
   test-detect-potential-injection:
     name: How to detect vulnerable GitHub Actions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MACARON_IMAGE_TAG: ${{ inputs.macaron_image_tag }}
       DOCKER_PULL: never

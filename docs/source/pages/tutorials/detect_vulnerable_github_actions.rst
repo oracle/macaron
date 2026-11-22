@@ -211,6 +211,12 @@ does not remove an unpinned finding. Missing lockfiles preserve inline SHA check
 invalid or unsupported present lockfiles produce actionable findings. Regenerate
 and review the lockfile when dependencies change.
 
+If Macaron cannot parse or analyze a workflow, it reports
+``workflow-analysis-incomplete`` with the affected workflow and available error
+details. For schema validation failures, the message identifies the rejected
+field or value and its location. Fix the workflow error and rerun the analysis;
+regenerating the lockfile does not resolve a workflow parsing failure.
+
 For further reading, see GitHub's announcement:
 `GitHub Actions workflow lockfiles are generally available <https://github.blog/changelog/2026-10-28-github-actions-workflow-lockfiles-are-generally-available/>`_.
 

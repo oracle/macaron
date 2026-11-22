@@ -302,11 +302,13 @@ requirements.txt: pyproject.toml
 # found an issue. If an advisory needs to be ignored, use the --ignore-vuln option.
 #
 # Semgrep 1.185.0 pins mcp to 1.29.0 and restricts opentelemetry-api to 1.37.x.
-# The four MCP advisories below affect MCP server/client functionality. Macaron
-# invokes `semgrep scan` and does not use that functionality. OpenTelemetry
-# GHSA-xcq7-p3pf-p88h affects tracestate parsing; GHSA-mf5v-w3w3-f6cg affects
-# traceparent parsing. Semgrep's scan telemetry constructs only traceparent from
-# process environment variables, not scanned files or untrusted request metadata.
+# The five MCP advisories below affect MCP server/client functionality. Macaron
+# invokes `semgrep scan` and does not use that functionality. In particular,
+# GHSA-qx49-fqc8-xw99 affects OAuth-enabled MCP HTTP clients, which Macaron does not use.
+# OpenTelemetry GHSA-xcq7-p3pf-p88h affects tracestate parsing;
+# GHSA-mf5v-w3w3-f6cg affects traceparent parsing. Semgrep's scan telemetry
+# constructs only traceparent from process environment variables, not scanned
+# files or untrusted request metadata.
 # Temporarily ignore these advisories until Semgrep allows mcp >=1.30.0 and
 # opentelemetry-api >=1.45.2. Reassess these exceptions if Macaron's usage changes.
 
@@ -318,6 +320,7 @@ audit:
 	python -m pip_audit --skip-editable --desc on --fix --dry-run \
 	  --ignore-vuln GHSA-84m7-p3x7-pcfv --ignore-vuln GHSA-5h93-6whr-6q8j \
 	  --ignore-vuln GHSA-w4fh-qvv9-3v23 --ignore-vuln GHSA-rwrf-2pqf-9j8j \
+	  --ignore-vuln GHSA-qx49-fqc8-xw99 \
 	  --ignore-vuln GHSA-xcq7-p3pf-p88h --ignore-vuln GHSA-mf5v-w3w3-f6cg
 
 # Run some or all checks over the package code base.

@@ -1,4 +1,4 @@
-# Copyright (c) 2025 - 2025, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2025 - 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/.
 
 # Builds and deploys documentation to GitHub Pages on demand.
@@ -11,7 +11,7 @@ on: workflow_dispatch
 permissions:
   contents: read
 env:
-  ARTIFACT_NAME: artifact-ubuntu-latest-python-3.11
+  ARTIFACT_NAME: artifact-ubuntu-24.04-python-3.11
 
 jobs:
   # Build the artifact.
@@ -31,5 +31,5 @@ jobs:
       pages: write
       id-token: write
     with:
-      artifact-name: artifact-ubuntu-latest-python-3.11
+      artifact-name: artifact-ubuntu-24.04-python-3.11
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
