@@ -358,46 +358,25 @@ class OSVDevService:
         if not affected_ranges:
             raise APIAccessError(f"Failed to extract affected versions for {pkg_name}@{pkg_version}.")
 
+        try:
+            parsed_version = version.Version(pkg_version)
+        except version.InvalidVersion as error:
+            raise APIAccessError(f"Failed to parse version string {pkg_version}.") from error
+
+        checked_range = False
         for affected_range in affected_ranges:
+            # GIT ranges use commit hashes for their events, which cannot be compared with a version.
+            # The ECOSYSTEM range of the same record describes the affected versions.
+            if json_extract(affected_range, ["type"], str) == "GIT":
+                continue
+
             events = json_extract(affected_range, ["events"], list)
             if not events:
                 raise APIAccessError(f"Failed to extract affected versions for {pkg_name}@{pkg_version}.")
 
-            introduced = None
-            fixed = None
-            for e in events:
-                if "introduced" in e:
-                    introduced = e["introduced"]
-                if "fixed" in e:
-                    fixed = e["fixed"]
-
-            # TODO: convert commit to tag & version
-            parsed_introduced = version.Version("0")
-            if introduced:
-                try:
-                    parsed_introduced = version.Version(introduced)
-                except version.InvalidVersion as error:
-                    logger.debug(error)
-
-            parsed_fix = None
-            if fixed:
-                try:
-                    parsed_fix = version.Version(fixed)
-                except version.InvalidVersion as error:
-                    logger.debug(error)
-
+            checked_range = True
             try:
-                parsed_version = version.Version(pkg_version)
-            except version.InvalidVersion as error:
-                raise APIAccessError(f"Failed to parse version string {pkg_version}.") from error
-
-            try:
-                if parsed_version > parsed_introduced or parsed_version == parsed_introduced:
-                    if parsed_fix is not None:
-                        if parsed_version == parsed_fix or parsed_version > parsed_fix:
-                            continue
-
-                    # If a fixed version does not exist, the current version is affected.
+                if OSVDevService._is_version_in_events(parsed_version, events):
                     return True
             # We should not get this error, but if we do, we avoid false positives and continue with the next
             # version range.
@@ -405,5 +384,97 @@ class OSVDevService:
                 logger.debug(error)
                 continue
 
-        # If current version is smaller than the introduced version, it is not affected.
+        if not checked_range:
+            raise APIAccessError(f"Failed to find a version range for {pkg_name}@{pkg_version}.")
+
+        # The version is not in any of the affected version ranges.
         return False
+
+    @staticmethod
+    def _is_version_in_events(parsed_version: version.Version, events: list) -> bool:
+        """Check whether a version is in one of the intervals described by OSV range events.
+
+        This follows the OSV evaluation algorithm (https://ossf.github.io/osv-schema/#evaluation): the events
+        are sorted by version, because OSV does not require them to be ordered, and are then applied in that
+        order. An ``introduced`` event at or below the version marks it affected, a ``fixed`` event at or below
+        the version (exclusive end) and a ``last_affected`` event below the version (inclusive end) mark it
+        unaffected again.
+
+        An ``introduced`` value of ``0`` or one that cannot be parsed is the lowest possible version, and so is
+        a missing ``introduced`` event. A ``fixed`` or ``last_affected`` value that cannot be parsed is ignored,
+        so the interval it would end stays open.
+
+        Parameters
+        ----------
+        parsed_version : version.Version
+            The version to check.
+        events : list
+            The ``events`` list of an OSV ``ECOSYSTEM`` or ``SEMVER`` range.
+
+        Returns
+        -------
+        bool
+            True if the version is in one of the intervals, otherwise False.
+        """
+        # Each entry is (event version, event type). An event version of None is lower than every version.
+        parsed_events: list[tuple[version.Version | None, str]] = []
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+            if "introduced" in event:
+                start = event["introduced"]
+                parsed_events.append(
+                    (None if start == "0" else OSVDevService._parse_event_version(start), "introduced")
+                )
+                continue
+            for event_type in ("fixed", "last_affected"):
+                if event_type in event:
+                    if (parsed_end := OSVDevService._parse_event_version(event[event_type])) is not None:
+                        parsed_events.append((parsed_end, event_type))
+                    break
+
+        if not any(event_type == "introduced" for _, event_type in parsed_events):
+            parsed_events.append((None, "introduced"))
+
+        # At the same version, apply "introduced" before the end events, so that an interval that starts and ends
+        # at the same version is empty for "fixed" and contains that one version for "last_affected".
+        parsed_events.sort(
+            key=lambda item: (item[0] is not None, item[0] or version.Version("0"), item[1] != "introduced")
+        )
+
+        affected = False
+        for event_version, event_type in parsed_events:
+            if event_type == "introduced":
+                if event_version is None or parsed_version >= event_version:
+                    affected = True
+            elif event_version is None:
+                continue
+            elif event_type == "fixed":
+                if parsed_version >= event_version:
+                    affected = False
+            elif parsed_version > event_version:
+                affected = False
+
+        return affected
+
+    @staticmethod
+    def _parse_event_version(value: object) -> version.Version | None:
+        """Parse the version of an OSV range event.
+
+        Parameters
+        ----------
+        value : object
+            The value of the event.
+
+        Returns
+        -------
+        version.Version | None
+            The parsed version, or None if the value is missing or not a valid version.
+        """
+        if not value or not isinstance(value, str):
+            return None
+        try:
+            return version.Version(value)
+        except version.InvalidVersion as error:
+            logger.debug(error)
+            return None
