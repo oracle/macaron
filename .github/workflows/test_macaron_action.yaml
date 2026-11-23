@@ -316,12 +316,33 @@ jobs:
         deps_depth: '1'
         upload_reports: 'false'
 
+    - name: Assert the SBOM dependencies were analyzed
+      run: |
+        jq -e 'map(.purl) |
+          index("pkg:maven/io.github.behnazh-w.demo/jackson-databind@1.0?type=jar") != null and
+          index("pkg:maven/org.apache.logging.log4j/log4j-core@3.0.0-beta2?type=jar") != null' \
+          macaron_output/detect_malicious_java_dep/reports/maven/io_github_behnazh-w_demo/example-maven-app/dependencies.json
+
     - name: Run Macaron (verify policy - detect-malicious-upload)
+      id: verify_detect_malicious_upload
+      # Missing publishing-pipeline evidence is expected for this tutorial's dependencies.
+      continue-on-error: true
       uses: ./
       with:
         policy_file: ./tests/tutorial_resources/detect_malicious_java_dep/example-maven-app.dl
         output_dir: macaron_output/detect_malicious_java_dep
         upload_reports: 'false'
+
+    - name: Assert expected policy failure for the Java dependency example
+      run: |
+        if [ "${{ steps.verify_detect_malicious_upload.outcome }}" != "failure" ]; then
+          echo "Expected the dependency policy to reject missing publishing-pipeline evidence."
+          exit 1
+        fi
+        jq -e '.failed_policies == [["detect-malicious-upload"]] and
+          (.component_violates_policy | length > 0)' \
+          macaron_output/detect_malicious_java_dep/policy_report.json
+        test ! -e macaron_output/detect_malicious_java_dep/vsa.intoto.jsonl
 
   tutorial-exclude-include-checks:
     name: Exclude and include checks in Macaron

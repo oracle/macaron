@@ -7,8 +7,9 @@ Policy("test_policy", component_id, "") :-
     check_passed(component_id, "mcn_build_as_code_1"),
     check_passed(component_id, "mcn_build_script_1"),
     check_passed(component_id, "mcn_build_service_1"),
-    check_passed_with_confidence(component_id, "mcn_find_artifact_pipeline_1", confidence),
-    confidence = 0.7, // Medium confidence because the pipeline was not found from a provenance.
+    // GitHub no longer returns workflow runs for this release commit or its
+    // publication window (checked 2026-11-23). A publishing pipeline cannot be verified.
+    check_failed(component_id, "mcn_find_artifact_pipeline_1"),
     check_passed(component_id, "mcn_version_control_system_1"),
     // This revision calls remote reusable workflows through mutable refs.
     check_failed(component_id, "mcn_githubactions_vulnerabilities_1"),
