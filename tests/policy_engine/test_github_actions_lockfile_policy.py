@@ -13,7 +13,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from macaron.database.database_manager import DatabaseManager
-from macaron.database.table_definitions import CheckFacts, MappedCheckResult, RepoFinderMetadata
+from macaron.database.table_definitions import MappedCheckResult, RepoFinderMetadata
 from macaron.policy_engine.policy_engine import run_souffle
 from macaron.repo_finder.repo_finder_enums import CommitFinderInfo, RepoFinderInfo
 from macaron.slsa_analyzer.checks.check_result import CheckResultType, Confidence
@@ -122,7 +122,10 @@ jobs:
 
 @pytest.mark.parametrize("case", ["log4j_purl", "log4j_repo", "coherence"])
 @pytest.mark.parametrize("include_finding", [True, False])
-def test_integration_github_actions_policies(tmp_path: Path, case: str, include_finding: bool) -> None:
+@pytest.mark.parametrize("pipeline_passed", [False, True])
+def test_integration_github_actions_policies(
+    tmp_path: Path, case: str, include_finding: bool, pipeline_passed: bool
+) -> None:
     """Integration policies require the intended finding and compile against the current schema."""
     coherence = case == "coherence"
     purl = (
@@ -152,7 +155,7 @@ def test_integration_github_actions_policies(tmp_path: Path, case: str, include_
         "mcn_build_as_code_1": True,
         "mcn_build_script_1": True,
         "mcn_build_service_1": True,
-        "mcn_find_artifact_pipeline_1": True,
+        "mcn_find_artifact_pipeline_1": pipeline_passed,
         "mcn_version_control_system_1": True,
         "mcn_provenance_available_1": False,
         "mcn_provenance_derived_commit_1": False,
@@ -161,9 +164,7 @@ def test_integration_github_actions_policies(tmp_path: Path, case: str, include_
         "mcn_provenance_witness_level_one_1": False,
         "mcn_trusted_builder_level_three_1": False,
     }.items():
-        result = MappedCheckResult(check_id=check_id, passed=passed, component=ctx.component)
-        if check_id == "mcn_find_artifact_pipeline_1":
-            CheckFacts(checkresult=result, component=ctx.component, confidence=0.7)
+        MappedCheckResult(check_id=check_id, passed=passed, component=ctx.component)
     if include_finding:
         GitHubActionsVulnsFacts(
             # Finding identifiers must not accidentally equal the component identifier.
@@ -201,7 +202,10 @@ def test_integration_github_actions_policies(tmp_path: Path, case: str, include_
         filename = "policy.dl" if coherence else "policy_purl.dl" if case == "log4j_purl" else "policy_repo_url.dl"
         policy_path = Path(__file__).resolve().parents[1] / "integration/cases" / directory / filename
         output = run_souffle(str(tmp_path / "macaron.db"), policy_path.read_text(encoding="utf-8"))
-        assert bool(output["passed_policies"]) is include_finding
-        assert bool(output["failed_policies"]) is not include_finding
+        # Only the Log4j PURL policy requires the pipeline check to fail because
+        # GitHub no longer returns the release's historical workflow runs.
+        expected_pass = include_finding and (case != "log4j_purl" or not pipeline_passed)
+        assert bool(output["passed_policies"]) is expected_pass
+        assert bool(output["failed_policies"]) is not expected_pass
     finally:
         manager.engine.dispose()

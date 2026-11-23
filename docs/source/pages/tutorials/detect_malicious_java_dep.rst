@@ -112,10 +112,18 @@ As you scroll down in the HTML report, you will see a section for the dependenci
 * ``io.github.behnazh-w.demo:jackson-databind:1.0``
 * ``org.apache.logging.log4j:log4j-core:2.25.3``
 
-When we open the reports for each dependency, we see that ``mcn_find_artifact_pipeline_1`` is passed for ``org.apache.logging.log4j:log4j-core:2.25.3``
-and a GitHub Actions workflow run is found for publishing version ``2.25.3``. However, this check is failing for ``io.github.behnazh-w.demo:jackson-databind:1.0``.
+In the reports captured below, ``mcn_find_artifact_pipeline_1`` passed for ``org.apache.logging.log4j:log4j-core:2.25.3``
+because a GitHub Actions workflow run was found for publishing version ``2.25.3``. The check failed for ``io.github.behnazh-w.demo:jackson-databind:1.0``.
 This means that ``io.github.behnazh-w.demo:jackson-databind:1.0`` could have been built and published manually to Maven Central
 and could potentially be malicious.
+
+.. note::
+
+   As of November 23, 2026, GitHub no longer returns workflow runs for the Log4j
+   release commit or its publication window. The pipeline check now fails for
+   Log4j as well, so both dependencies violate the policy below. Missing historical
+   workflow data does not by itself establish that an artifact was published
+   manually or is malicious. The screenshots show the earlier results.
 
 .. _fig_find_artifact_pipeline_log4j:
 

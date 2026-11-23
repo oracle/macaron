@@ -21,7 +21,8 @@ CMD+=(--output "$OUTPUT_DIR" -lr . analyze)
 
 if [ -n "${REPO_PATH:-}" ]; then
   CMD+=(-rp "$REPO_PATH")
-elif [ -n "${PACKAGE_URL:-}" ]; then
+fi
+if [ -n "${PACKAGE_URL:-}" ]; then
   CMD+=(-purl "$PACKAGE_URL")
 fi
 
