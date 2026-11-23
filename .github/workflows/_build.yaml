@@ -9,7 +9,7 @@
 #
 # Even though we run the build in a matrix to check against different platforms, due to a known
 # limitation of reusable workflows that do not support setting strategy property from the caller
-# workflow, we only generate artifacts for ubuntu-latest and Python 3.11, which can be used to
+# workflow, we only generate artifacts for Ubuntu 24.04 and Python 3.11, which can be used to
 # create a release. For details see:
 #
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
@@ -32,7 +32,7 @@ on:
 permissions:
   contents: read
 env:
-  ARTIFACT_OS: ubuntu-latest # The default OS for release.
+  ARTIFACT_OS: ubuntu-24.04 # The default OS for release.
   ARTIFACT_PYTHON: '3.11' # The default Python version for release.
   PACKAGE_PATH: src/macaron   # The relative Python package path to the repo.
 
@@ -45,9 +45,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # It is recommended to pin a Runner version specifically:
-        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [ubuntu-latest]
+        # Souffle 2.5 provides Ubuntu 22.04/24.04 packages, but none for 26.04.
+        # Pin the supported runner instead of following ubuntu-latest migrations.
+        os: [ubuntu-24.04]
         python: ['3.11']
     steps:
 
@@ -155,4 +155,4 @@ jobs:
       artifact-sha256: ${{ needs.build.outputs.artifacts-sha256 }}
       # TODO: use ${{ env.ARTIFACT_OS }} and ${{ env.ARTIFACT_PYTHON }}
       # when this issue is addressed: https://github.com/actions/runner/issues/2394.
-      artifact-name: artifact-ubuntu-latest-python-3.11
+      artifact-name: artifact-ubuntu-24.04-python-3.11
