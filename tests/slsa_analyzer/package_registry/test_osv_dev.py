@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 from macaron.config.defaults import load_defaults
 from macaron.errors import APIAccessError
@@ -472,6 +473,70 @@ def test_is_affected_version_ranges(vuln: dict, workflow: str, version: str, exp
         OSVDevService.is_version_affected(vuln=vuln, pkg_name=workflow, pkg_version=version, ecosystem="GitHub Actions")
         == expected
     )
+
+
+UNSORTED_EVENTS_CASES = [
+    pytest.param(
+        [{"fixed": "1.0.0"}, {"introduced": "0"}],
+        {"0.9.0": True, "1.0.0": False, "2.0.0": False},
+        id="fixed before introduced",
+    ),
+    pytest.param(
+        [{"last_affected": "1.0.0"}, {"introduced": "0"}],
+        {"0.9.0": True, "1.0.0": True, "1.0.1": False},
+        id="last_affected before introduced",
+    ),
+    pytest.param(
+        [{"fixed": "3.0.0"}, {"introduced": "0"}, {"introduced": "2.0.0"}, {"fixed": "1.0.0"}],
+        {
+            "0.5.0": True,
+            "2.0.0": True,
+            "2.5.0": True,
+            "1.0.0": False,
+            "1.5.0": False,
+            "3.0.0": False,
+            "3.5.0": False,
+        },
+        id="multiple intervals shuffled",
+    ),
+]
+
+
+def _sorted_events(events: list[dict]) -> list[dict]:
+    """Return the events in chronological (version) order, with "introduced": "0" first."""
+
+    def key(event: dict) -> tuple[bool, Version]:
+        value = next(iter(event.values()))
+        return (value != "0", Version(value))
+
+    return sorted(events, key=key)
+
+
+@pytest.mark.parametrize("ordered", [False, True], ids=["unsorted", "sorted"])
+@pytest.mark.parametrize(("events", "expected"), UNSORTED_EVENTS_CASES)
+def test_is_affected_version_event_order(events: list[dict], expected: dict[str, bool], ordered: bool) -> None:
+    """Test that the order of the events in a range does not change the result."""
+    if ordered:
+        events = _sorted_events(events)
+    vuln = {
+        "id": "GHSA-test-event-order",
+        "affected": [
+            {
+                "package": {"name": "rlespinasse/github-slug-action", "ecosystem": "GitHub Actions"},
+                "ranges": [{"type": "ECOSYSTEM", "events": events}],
+            }
+        ],
+    }
+    for pkg_version, affected in expected.items():
+        assert (
+            OSVDevService.is_version_affected(
+                vuln=vuln,
+                pkg_name="rlespinasse/github-slug-action",
+                pkg_version=pkg_version,
+                ecosystem="GitHub Actions",
+            )
+            == affected
+        ), pkg_version
 
 
 @pytest.mark.parametrize(
